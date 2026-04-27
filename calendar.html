@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <title>Calendar</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="page-layout">
+
+  <!-- LEFT -->
+  <div class="sidebar-left">
+    <button class="side-btn"><i class="fa-solid fa-house"></i></button>
+  </div>
+
+  <!-- CENTER -->
+  <div class="main-content">
+
+    <div class="header">
+      <h1>Calendar</h1>
+      <p>View your schedule and friends' events</p>
+
+      <div class="calendar-controls-wrapper">
+        <div class="calendar-controls">
+          <button onclick="setView('month')" class="card-btn">Monthly</button>
+          <button onclick="setView('week')" class="card-btn">Weekly</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="calendar-layout">
+
+      <!-- SIDEBAR -->
+      <div class="calendar-sidebar">
+        <h3>Calendars</h3>
+
+        <label class="calendar-you">
+          You
+          <input type="checkbox" checked onchange="toggleCalendar('You')">
+        </label>
+
+        <label class="calendar-alex">
+          Alex
+          <input type="checkbox" checked onchange="toggleCalendar('Alex')">
+        </label>
+
+        <label class="calendar-jordan">
+          Jordan
+          <input type="checkbox" checked onchange="toggleCalendar('Jordan')">
+        </label>
+
+        <label class="calendar-group">
+          Group
+          <input type="checkbox" checked onchange="toggleCalendar('Group')">
+        </label>
+      </div>
+
+      <!-- CALENDAR -->
+      <div class="calendar-main">
+        <div class="calendar-container" id="calendar"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- RIGHT -->
+  <div class="sidebar-right">
+    <button class="side-btn"><i class="fa-solid fa-user"></i></button>
+    <button class="side-btn"><i class="fa-solid fa-calendar"></i></button>
+    <button class="side-btn"><i class="fa-solid fa-user-group"></i></button>
+  </div>
+
+</div>
+
+<script src="calendar.js"></script>
+</body>
+</html>
