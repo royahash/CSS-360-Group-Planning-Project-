@@ -44,6 +44,10 @@ body {
     color: red
 }
 
+.side-btn:hover {
+  color: #000;
+}
+
 .event-container {
   display: flex;
   justify-content: center;
