@@ -61,7 +61,7 @@ if (typeof document !== "undefined") {
     btn.addEventListener("click", () => {
       const result = toggleSave(title);
       if (result === "saved") {
-        btn.innerText = "Saved ✓";
+        btn.innerText = "Saved";
         btn.style.background = "#a5d6a7";
       } else {
         btn.innerText = "Save";
