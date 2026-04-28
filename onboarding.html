@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <title>Onboarding</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .interests-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 40px;
+    }
+
+    .interest-tile {
+      background-color: white;
+      padding: 30px;
+      width: calc(30% - 20px);
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 500;
+      transition: transform 0.2s;
+    }
+
+    .interest-tile:hover {
+      transform: translateY(-5px);
+    }
+
+    .interest-tile.selected {
+      background-color: #f7c8d8;
+      color: #333;
+    }
+
+    .skip-btn {
+      margin-top: 40px;
+      background: rgb(233, 241, 233);
+      border: black solid 0.5px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 10px 20px;
+    }
+
+    .skip-btn:hover {
+      background: #e0f2e0;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="page-layout">
+
+  <!-- LEFT -->
+  <div class="sidebar-left">
+    <a href="index.html">
+        <button class="side-btn"><i class="fa-solid fa-house"></i></button>
+    </a>
+  </div>
+
+  <!-- CENTER -->
+  <div class="main-content">
+
+    <div class="header">
+      <h1>What sparks your interests?</h1>
+      <p>Choose the categories that interest you to personalize your experience</p>
+    </div>
+
+    <div class="interests-container">
+      <div class="interest-tile" onclick="selectInterest(this, 'Music & Concerts')">
+        Music & Concerts
+      </div>
+      <div class="interest-tile" onclick="selectInterest(this, 'Food & Drink')">
+        Food & Drink
+      </div>
+      <div class="interest-tile" onclick="selectInterest(this, 'Networking & Business')">
+        Networking & Business
+      </div>
+      <div class="interest-tile" onclick="selectInterest(this, 'Workshops & Classes')">
+        Workshops & Classes
+      </div>
+      <div class="interest-tile" onclick="selectInterest(this, 'Arts & Culture')">
+        Arts & Culture
+      </div>
+      <div class="interest-tile" onclick="selectInterest(this, 'Sports & Fitness')">
+        Sports & Fitness
+      </div>
+    </div>
+
+    <div style="text-align: center;">
+      <button class="skip-btn" onclick="skipOnboarding()">Skip</button>
+    </div>
+
+  </div>
+
+  <!-- RIGHT -->
+  <div class="sidebar-right">
+    <!-- Empty for now -->
+  </div>
+
+</div>
+
+<script>
+  let selectedInterests = [];
+
+  function selectInterest(tile, interest) {
+    if (selectedInterests.includes(interest)) {
+      // Deselect
+      selectedInterests = selectedInterests.filter(i => i !== interest);
+      tile.classList.remove('selected');
+    } else {
+      // Select
+      selectedInterests.push(interest);
+      tile.classList.add('selected');
+    }
+  }
+
+  function skipOnboarding() {
+    // For now, just redirect to index
+    // In a real app, you might save the selected interests
+    console.log('Selected interests:', selectedInterests);
+    window.location.href = 'index.html';
+  }
+</script>
+
+</body>
+</html>
