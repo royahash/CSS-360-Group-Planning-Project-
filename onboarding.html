@@ -71,27 +71,28 @@
     </div>
 
     <div class="interests-container">
-      <div class="interest-tile" onclick="selectInterest(this, 'Music & Concerts')">
+      <div class="interest-tile" data-interest="Music & Concerts" onclick="selectInterest(this, 'Music & Concerts')">
         Music & Concerts
       </div>
-      <div class="interest-tile" onclick="selectInterest(this, 'Food & Drink')">
+      <div class="interest-tile" data-interest="Food & Drink" onclick="selectInterest(this, 'Food & Drink')">
         Food & Drink
       </div>
-      <div class="interest-tile" onclick="selectInterest(this, 'Networking & Business')">
+      <div class="interest-tile" data-interest="Networking & Business" onclick="selectInterest(this, 'Networking & Business')">
         Networking & Business
       </div>
-      <div class="interest-tile" onclick="selectInterest(this, 'Workshops & Classes')">
+      <div class="interest-tile" data-interest="Workshops & Classes" onclick="selectInterest(this, 'Workshops & Classes')">
         Workshops & Classes
       </div>
-      <div class="interest-tile" onclick="selectInterest(this, 'Arts & Culture')">
+      <div class="interest-tile" data-interest="Arts & Culture" onclick="selectInterest(this, 'Arts & Culture')">
         Arts & Culture
       </div>
-      <div class="interest-tile" onclick="selectInterest(this, 'Sports & Fitness')">
+      <div class="interest-tile" data-interest="Sports & Fitness" onclick="selectInterest(this, 'Sports & Fitness')">
         Sports & Fitness
       </div>
     </div>
 
-    <div style="text-align: center;">
+    <div style="text-align: center; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin-top: 30px;">
+      <button class="skip-btn" onclick="saveOnboarding()">Save & continue</button>
       <button class="skip-btn" onclick="skipOnboarding()">Skip</button>
     </div>
 
@@ -107,24 +108,37 @@
 <script>
   let selectedInterests = [];
 
+  function loadOnboardingSelection() {
+    selectedInterests = JSON.parse(localStorage.getItem('selectedInterests') || '[]');
+    document.querySelectorAll('.interest-tile').forEach(tile => {
+      const interest = tile.dataset.interest;
+      if (selectedInterests.includes(interest)) {
+        tile.classList.add('selected');
+      }
+    });
+  }
+
   function selectInterest(tile, interest) {
     if (selectedInterests.includes(interest)) {
-      // Deselect
       selectedInterests = selectedInterests.filter(i => i !== interest);
       tile.classList.remove('selected');
     } else {
-      // Select
       selectedInterests.push(interest);
       tile.classList.add('selected');
     }
   }
 
+  function saveOnboarding() {
+    localStorage.setItem('selectedInterests', JSON.stringify(selectedInterests));
+    window.location.href = 'profile.html';
+  }
+
   function skipOnboarding() {
-    // For now, just redirect to index
-    // In a real app, you might save the selected interests
-    console.log('Selected interests:', selectedInterests);
+    localStorage.setItem('selectedInterests', JSON.stringify([]));
     window.location.href = 'index.html';
   }
+
+  document.addEventListener('DOMContentLoaded', loadOnboardingSelection);
 </script>
 
 </body>
