@@ -38,27 +38,32 @@
       <div class="calendar-sidebar">
         <h3>Calendars</h3>
 
+        <!-- SELECT ALL -->
+        <label class="calendar-select-all">
+          Select All
+          <input id="check-all" type="checkbox" checked onchange="toggleSelectAll()">
+        </label>
+
+        <!-- DIVIDER (optional but nice) -->
+        <hr>
+
+        <!-- INDIVIDUALS -->
         <label class="calendar-you">
           You
-          <input type="checkbox" checked onchange="toggleCalendar('You')">
+          <input id="check-you" type="checkbox" checked onchange="togglePerson()">
         </label>
 
         <label class="calendar-alex">
           Alex
-          <input type="checkbox" checked onchange="toggleCalendar('Alex')">
+          <input id="check-alex" type="checkbox" checked onchange="togglePerson()">
         </label>
 
         <label class="calendar-jordan">
           Jordan
-          <input type="checkbox" checked onchange="toggleCalendar('Jordan')">
-        </label>
-
-        <label class="calendar-group">
-          Group
-          <input type="checkbox" checked onchange="toggleCalendar('Group')">
+          <input id="check-jordan" type="checkbox" checked onchange="togglePerson()">
         </label>
       </div>
-
+      
       <!-- CALENDAR -->
       <div class="calendar-main">
         <div class="calendar-container" id="calendar"></div>
