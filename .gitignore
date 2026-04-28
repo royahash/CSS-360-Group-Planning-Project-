@@ -1,0 +1,27 @@
+# Node modules (do NOT push dependencies)
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment variables (if you ever add them later)
+.env
+
+# Jest / coverage output (optional but common)
+coverage/
+
+# IDE / editor folders
+.vscode/
+.idea/
+
+# Optional build or cache folders
+dist/
+build/
+.cache/
