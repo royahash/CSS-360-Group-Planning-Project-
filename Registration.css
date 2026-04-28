@@ -1,0 +1,81 @@
+/* style.css */
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    width: 320px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+h2 {
+    text-align: center;
+    margin-top: 0;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background: gray;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: not-allowed;
+    transition: background 0.3s ease;
+}
+
+/* Turns button green when the 'disabled' attribute is removed */
+button:not(:disabled) {
+    background: #28a745;
+    cursor: pointer;
+}
+
+.error {
+    color: red;
+    font-size: 0.85em;
+    min-height: 1.2em; /* Prevents layout jumping */
+    margin-bottom: -5px;
+    margin-top: 5px;
+}
+
+.link {
+    color: blue;
+    cursor: pointer;
+    text-align: center;
+    display: block;
+    margin-top: 15px;
+    text-decoration: none;
+    font-size: 0.9em;
+}
+
+#togglePassword {
+    background: none;
+    color: #555;
+    cursor: pointer;
+    border: none;
+    font-size: 0.75em;
+    margin-top: 0;
+    padding: 5px;
+    text-align: right;
+    width: auto;
+    float: right;
+}

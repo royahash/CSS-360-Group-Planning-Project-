@@ -1,0 +1,37 @@
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+h1 {
+    font-size: 100px;
+    text-align: center;
+    margin-bottom: 250px;
+}
+
+.button-container {
+    display: flex;
+    gap: 15px; /* space between buttons */
+    position: absolute;
+    bottom: 25%; /* 1/4 up from bottom */
+}
+
+.button { 
+    background-color: #1c87c9; 
+    border: none; 
+    color: white; 
+    padding: 10px 18px; /* smaller buttons */
+    text-align: center; 
+    text-decoration: none; 
+    font-size: 30px; 
+    cursor: pointer; 
+    border-radius: 6px;
+}
+
+.button:hover {
+  background-color: #093753; /* Changed color */
+}
