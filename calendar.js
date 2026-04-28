@@ -126,3 +126,13 @@ function renderWeek() {
 }
 
 renderCalendar();
+
+if (typeof module !== "undefined") {
+  module.exports = {
+    toggleCalendar,
+    setView,
+    shouldShowEvent,
+    renderCalendar,
+    events
+  };
+}
