@@ -1,0 +1,30 @@
+{
+  "name": "css-360-group-planning-project-",
+  "version": "1.0.0",
+  "description": "",
+  "main": "calendar.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/royahash/CSS-360-Group-Planning-Project-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/royahash/CSS-360-Group-Planning-Project-/issues"
+  },
+  "homepage": "https://github.com/royahash/CSS-360-Group-Planning-Project-#readme",
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "jest": "^30.3.0",
+    "jest-environment-jsdom": "^30.3.0",
+    "jsdom": "^29.1.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom"
+  }
+}

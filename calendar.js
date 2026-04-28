@@ -155,3 +155,18 @@ function renderWeek() {
 }
 
 renderCalendar();
+
+if (typeof module !== "undefined") {
+  module.exports = {
+    toggleSelectAll,
+    togglePerson,
+    updateActiveCalendars,
+    shouldShowEvent,
+    renderCalendar,
+    setView,
+    events,
+    checkboxes,
+    selectAllCheckbox
+  };
+}
+
