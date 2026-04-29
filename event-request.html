@@ -1,64 +1,66 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Request</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="event-request.css">
+  <title>Request an Event</title>
+
+  <!-- Font Awesome (for icons) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Your CSS -->
+  <link rel="stylesheet" href="event-request.css">
 </head>
+
 <body>
-    <div class="page-layout">
-        <aside class="sidebar-left">
-            <button class="side-btn" onclick="window.location.href='index.html'" aria-label="Home">⌂</button>
-            <button class="side-btn" onclick="window.location.href='calendar.html'" aria-label="Calendar">☷</button>
-            <button class="side-btn active" onclick="window.location.href='event-request.html'" aria-label="Request Event">＋</button>
-        </aside>
 
-        <main class="main-content">
-            <header class="header">
-                <h1>Request an Event</h1>
-                <p>Suggest a date, time, and location for friends to accept or deny.</p>
-            </header>
+  <!-- Top Left Navigation -->
+  <div class="top-left-nav">
+    <a href="index.html">
+      <button class="nav-btn"><i class="fa-solid fa-house"></i></button>
+    </a>
 
-            <section class="request-wrapper">
-                <form id="eventForm" class="request-card">
-                    <h2>Send Event Request</h2>
+    <a href="profile.html">
+      <button class="nav-btn"><i class="fa-solid fa-user"></i></button>
+    </a>
 
-                    <label for="eventName">Event Name</label>
-                    <input type="text" id="eventName" placeholder="Example: Study Group" required>
+    <a href="calendar.html">
+      <button class="nav-btn"><i class="fa-solid fa-calendar"></i></button>
+    </a>
+  </div>
 
-                    <label for="eventDate">Date</label>
-                    <input type="date" id="eventDate" required>
+  <!-- Page Title -->
+  <div class="header">
+    <h1>Request an Event</h1>
+    <p>Suggest a date, time, and location for friends to accept or deny.</p>
+  </div>
 
-                    <label for="eventTime">Time</label>
-                    <input type="time" id="eventTime" required>
+  <!-- Pink Background Section -->
+  <div class="pink-section">
 
-                    <label for="eventLocation">Location</label>
-                    <input type="text" id="eventLocation" placeholder="Example: UW Bothell Library" required>
+    <!-- Form Card -->
+    <div class="form-card">
 
-                    <button type="submit" class="card-btn request-submit-btn">Create Request</button>
-                </form>
+      <h2>Send Event Request</h2>
 
-                <article id="eventCard" class="request-card event-preview hidden">
-                    <h2 id="displayName">Event Name</h2>
-                    <p><strong>Date:</strong> <span id="displayDate"></span></p>
-                    <p><strong>Time:</strong> <span id="displayTime"></span></p>
-                    <p><strong>Location:</strong> <span id="displayLocation"></span></p>
+      <form id="eventForm">
 
-                    <div class="request-actions">
-                        <button id="acceptBtn" class="card-btn accept-btn" type="button">Accept</button>
-                        <button id="denyBtn" class="card-btn deny-btn" type="button">Deny</button>
-                    </div>
+        <label>Event Name</label>
+        <input type="text" placeholder="Example: Study Group" required>
 
-                    <p id="responseMessage" class="response-message"></p>
-                </article>
-            </section>
-        </main>
+        <label>Date</label>
+        <input type="date" required>
 
-        <aside class="sidebar-right"></aside>
+        <label>Time</label>
+        <input type="time" required>
+
+        <label>Location</label>
+        <input type="text" placeholder="Example: UW Bothell Library" required>
+
+        <button type="submit" class="submit-btn">Create Request</button>
+
+      </form>
+
     </div>
+  </div>
 
-    <script src="event-request.js"></script>
 </body>
 </html>
