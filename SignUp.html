@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="Registration.css">
+</head>
+<body>  
+    <div class="container">
+        <h2>Sign Up</h2>
+        <div class="error" id="error"></div>
+        
+        <input id="username" placeholder="Username">
+        <input id="email" placeholder="Email">
+        <input id="password" type="password" placeholder="Password">
+        <div class="error" id="confirmError"></div>
+        <input id="confirmPassword" type="password" placeholder="Confirm Password">
+        
+        <button id="signupButton" disabled>Sign Up</button>
+        <button id="togglePassword" type="button">Show/Hide Password</button>
+        
+        <span class="link" onclick="window.location.href = 'LogIn.html'">Already have an account?</span>
+    </div>
+
+    <script type="module">
+        import { addUser } from './auth.js';
+        const signupButton = document.getElementById("signupButton");
+        const errorDiv = document.getElementById("error");
+        const confirmError = document.getElementById("confirmError");
+        const confirm = document.getElementById("confirmPassword");
+        const password = document.getElementById("password");
+
+        signupButton.onclick = () => {
+            errorDiv.textContent = "";
+            confirmError.textContent = "";
+            if(confirm.value !== password.value)
+            {
+                confirmError.textContent = "Passwords don't match!";
+            }
+            else{
+                const userData = {
+                username: document.getElementById('username').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                password: document.getElementById('password').value
+            };
+            try {
+                addUser(userData);
+                window.location.href = 'LogIn.html';
+            } catch (err) {
+                errorDiv.textContent = err.message;
+            }
+            }
+        };
+    </script>
+</body>
+</html>
