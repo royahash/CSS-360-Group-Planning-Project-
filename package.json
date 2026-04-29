@@ -1,0 +1,27 @@
+{
+  "name": "360group-homepage",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/royahash/CSS-360-Group-Planning-Project-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/royahash/CSS-360-Group-Planning-Project-/issues"
+  },
+  "homepage": "https://github.com/royahash/CSS-360-Group-Planning-Project-#readme",
+  "devDependencies": {
+    "jest": "^30.3.0"
+  }
+}
