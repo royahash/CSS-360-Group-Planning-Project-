@@ -1,36 +1,97 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Event Request</title>
-  <link rel="stylesheet" href="style.css">
+
+  <link rel="stylesheet" href="event-request.css" />
 </head>
 <body>
 
-  <div class="container">
-    <h1>Request an Event</h1>
+  <div class="app-container">
 
-    <form id="eventForm">
-      <input type="text" id="eventName" placeholder="Event name" required>
-      <input type="date" id="eventDate" required>
-      <input type="time" id="eventTime" required>
-      <input type="text" id="eventLocation" placeholder="Location" required>
+    <!-- Side Panel -->
+    <aside class="side-panel">
+      <h1 class="logo">Gatherly</h1>
 
-      <button type="submit">Send Event Request</button>
-    </form>
+      <nav class="nav-buttons">
+        <a href="index.html" class="side-button">Home</a>
+        <a href="#" class="side-button">Polls</a>
+        <a href="event-request.html" class="side-button active">Event Request</a>
+        <a href="#" class="side-button">Group Chat</a>
+      </nav>
+    </aside>
 
-    <div id="eventCard" class="hidden">
-      <h2 id="displayName"></h2>
-      <p><strong>Date:</strong> <span id="displayDate"></span></p>
-      <p><strong>Time:</strong> <span id="displayTime"></span></p>
-      <p><strong>Location:</strong> <span id="displayLocation"></span></p>
+    <!-- Main Content -->
+    <main class="main-content">
 
-      <button id="acceptBtn">Accept</button>
-      <button id="denyBtn">Deny</button>
+      <section class="hero-section">
+        <h2>Request an Event</h2>
+        <p>
+          Suggest an event idea for your friends to review, accept, or deny.
+        </p>
+      </section>
 
-      <p id="responseMessage"></p>
-    </div>
+      <section class="form-card">
+        <form id="eventRequestForm">
+
+          <div class="form-group">
+            <label for="eventTitle">Event Title</label>
+            <input
+              type="text"
+              id="eventTitle"
+              placeholder="Example: Movie night"
+              required
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="eventDate">Proposed Date</label>
+              <input type="date" id="eventDate" required />
+            </div>
+
+            <div class="form-group">
+              <label for="eventTime">Proposed Time</label>
+              <input type="time" id="eventTime" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="eventLocation">Location</label>
+            <input
+              type="text"
+              id="eventLocation"
+              placeholder="Example: Bellevue Square"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="eventDescription">Description</label>
+            <textarea
+              id="eventDescription"
+              rows="5"
+              placeholder="Add details about the event..."
+            ></textarea>
+          </div>
+
+          <button type="submit" class="submit-button">
+            Submit Event Request
+          </button>
+
+        </form>
+      </section>
+
+      <section id="confirmationMessage" class="confirmation hidden">
+        <h3>Event Request Submitted!</h3>
+        <p>Your friends can now review your event request.</p>
+      </section>
+
+    </main>
   </div>
 
-  <script src="script.js"></script>
+  <script src="event-request.js"></script>
 </body>
 </html>
