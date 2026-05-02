@@ -2,17 +2,25 @@ const calendarEl = document.getElementById("calendar");
 
 let currentView = "month";
 
-let activeCalendars = ["You", "Alex", "Jordan", "Group"];
+let activeCalendars = ["You", "Alex", "Jordan"];
+
+// CHECKBOXES
+const checkboxes = {
+  "You": document.getElementById("check-you"),
+  "Alex": document.getElementById("check-alex"),
+  "Jordan": document.getElementById("check-jordan")
+};
+
+const selectAllCheckbox = document.getElementById("check-all");
 
 // MOCK EVENTS
 const events = [
   { title: "Music Festival", date: "2026-04-22", owner: "You" },
   { title: "Art Show", date: "2026-04-25", owner: "Alex" },
-  { title: "Study Group", date: "2026-04-24", owner: "Jordan" },
-  { title: "Farmers Market", date: "2026-04-27", owner: "You" }
+  { title: "Study Group", date: "2026-04-24", owner: "Jordan" }
 ];
 
-// GET COLORS FROM CSS
+// COLOR HELPER
 function getColor(variable) {
   return getComputedStyle(document.documentElement)
     .getPropertyValue(variable)
@@ -25,25 +33,46 @@ const ownerColors = {
   "Jordan": () => getColor("--color-jordan")
 };
 
-function toggleCalendar(name) {
-  if (activeCalendars.includes(name)) {
-    activeCalendars = activeCalendars.filter(c => c !== name);
-  } else {
-    activeCalendars.push(name);
-  }
+// SELECT ALL
+function toggleSelectAll() {
+  const isChecked = selectAllCheckbox.checked;
+
+  Object.values(checkboxes).forEach(cb => {
+    cb.checked = isChecked;
+  });
+
+  updateActiveCalendars();
+}
+
+// INDIVIDUAL TOGGLE
+function togglePerson() {
+  const allChecked = Object.values(checkboxes).every(cb => cb.checked);
+  selectAllCheckbox.checked = allChecked;
+
+  updateActiveCalendars();
+}
+
+// UPDATE ACTIVE LIST
+function updateActiveCalendars() {
+  activeCalendars = Object.keys(checkboxes).filter(name => {
+    return checkboxes[name].checked;
+  });
+
   renderCalendar();
 }
 
+// VIEW SWITCH
 function setView(view) {
   currentView = view;
   renderCalendar();
 }
 
+// FILTER
 function shouldShowEvent(event) {
-  if (activeCalendars.includes("Group")) return true;
   return activeCalendars.includes(event.owner);
 }
 
+// RENDER
 function renderCalendar() {
   calendarEl.innerHTML = "";
 
@@ -54,7 +83,7 @@ function renderCalendar() {
   }
 }
 
-// MONTH VIEW
+// MONTH
 function renderMonth() {
   calendarEl.className = "calendar-container month-view";
 
@@ -85,7 +114,7 @@ function renderMonth() {
   }
 }
 
-// WEEK VIEW (simple but functional)
+// WEEK
 function renderWeek() {
   calendarEl.className = "calendar-container week-view";
 
@@ -126,13 +155,3 @@ function renderWeek() {
 }
 
 renderCalendar();
-
-if (typeof module !== "undefined") {
-  module.exports = {
-    toggleCalendar,
-    setView,
-    shouldShowEvent,
-    renderCalendar,
-    events
-  };
-}

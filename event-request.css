@@ -1,0 +1,89 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background-color: #f5f5f5;
+}
+
+/* Top Left Navigation */
+.top-left-nav {
+  display: flex;
+  gap: 10px;
+  margin: 10px;
+}
+
+.nav-btn {
+  background-color: #f1f1f1;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 12px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.nav-btn:hover {
+  background-color: #ffd6e0;
+  transform: scale(1.05);
+}
+
+/* Header */
+.header {
+  padding: 10px 20px;
+}
+
+/* Pink Section */
+.pink-section {
+  background-color: #e8a8b3;
+  padding: 40px 0;
+  display: flex;
+  justify-content: center;
+  border-radius: 10px;
+  margin: 20px;
+}
+
+/* Form Card */
+.form-card {
+  background-color: #f3f3f3;
+  padding: 25px;
+  border-radius: 12px;
+  width: 350px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Title */
+.form-card h2 {
+  text-align: center;
+  color: red;
+}
+
+/* Form */
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+input {
+  padding: 10px;
+  margin-top: 5px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+/* Button */
+.submit-btn {
+  margin-top: 20px;
+  padding: 12px;
+  background-color: #1e73d8;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.submit-btn:hover {
+  background-color: #155bb5;
+}

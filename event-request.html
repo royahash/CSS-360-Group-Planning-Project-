@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Request an Event</title>
+
+  <!-- Font Awesome (for icons) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Your CSS -->
+  <link rel="stylesheet" href="event-request.css">
+</head>
+
+<body>
+
+  <!-- Top Left Navigation -->
+  <div class="top-left-nav">
+    <a href="index.html">
+      <button class="nav-btn"><i class="fa-solid fa-house"></i></button>
+    </a>
+
+    <a href="profile.html">
+      <button class="nav-btn"><i class="fa-solid fa-user"></i></button>
+    </a>
+
+    <a href="calendar.html">
+      <button class="nav-btn"><i class="fa-solid fa-calendar"></i></button>
+    </a>
+  </div>
+
+  <!-- Page Title -->
+  <div class="header">
+    <h1>Request an Event</h1>
+    <p>Suggest a date, time, and location for friends to accept or deny.</p>
+  </div>
+
+  <!-- Pink Background Section -->
+  <div class="pink-section">
+
+    <!-- Form Card -->
+    <div class="form-card">
+
+      <h2>Send Event Request</h2>
+
+      <form id="eventForm">
+
+        <label>Event Name</label>
+        <input type="text" placeholder="Example: Study Group" required>
+
+        <label>Date</label>
+        <input type="date" required>
+
+        <label>Time</label>
+        <input type="time" required>
+
+        <label>Location</label>
+        <input type="text" placeholder="Example: UW Bothell Library" required>
+
+        <button type="submit" class="submit-btn">Create Request</button>
+
+      </form>
+
+    </div>
+  </div>
+
+</body>
+</html>
