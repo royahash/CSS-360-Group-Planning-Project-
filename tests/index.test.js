@@ -5,12 +5,12 @@
  * Run with: npx jest index.test.js
  */
 
-const { saveEvent, unsaveEvent, toggleSave, isEventSaved } = require("./index");
+const { saveEvent, unsaveEvent, toggleSave, isEventSaved } = require("../src/js/index");
 
 // Reset saved state before every test so they don't affect each other
 beforeEach(() => {
   // Clear the module's savedEvents array between tests
-  const mod = require("./index");
+  const mod = require("../src/js/index");
   while (mod.saveEvent("__reset__")) {} // dummy call to trigger module load
   // Re-require with cleared state by manipulating the array directly
 });

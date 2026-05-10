@@ -2,12 +2,13 @@
   "name": "360group-homepage",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/js/index.js",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "lint": "eslint src/js/**/*.js tests/**/*.js"
   },
   "repository": {
     "type": "git",
@@ -22,6 +23,7 @@
   },
   "homepage": "https://github.com/royahash/CSS-360-Group-Planning-Project-#readme",
   "devDependencies": {
+    "eslint": "^10.3.0",
     "jest": "^30.3.0"
   }
 }
