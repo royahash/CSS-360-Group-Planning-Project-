@@ -1,23 +1,23 @@
-const calendarEl = document.getElementById("calendar");
+const calendarEl = document.getElementById('calendar');
 
-let currentView = "month";
+let currentView = 'month';
 
-let activeCalendars = ["You", "Alex", "Jordan"];
+let activeCalendars = ['You', 'Alex', 'Jordan'];
 
 // CHECKBOXES
 const checkboxes = {
-  "You": document.getElementById("check-you"),
-  "Alex": document.getElementById("check-alex"),
-  "Jordan": document.getElementById("check-jordan")
+  You: document.getElementById('check-you'),
+  Alex: document.getElementById('check-alex'),
+  Jordan: document.getElementById('check-jordan'),
 };
 
-const selectAllCheckbox = document.getElementById("check-all");
+const selectAllCheckbox = document.getElementById('check-all');
 
 // MOCK EVENTS
 const events = [
-  { title: "Music Festival", date: "2026-04-22", owner: "You" },
-  { title: "Art Show", date: "2026-04-25", owner: "Alex" },
-  { title: "Study Group", date: "2026-04-24", owner: "Jordan" }
+  { title: 'Music Festival', date: '2026-04-22', owner: 'You' },
+  { title: 'Art Show', date: '2026-04-25', owner: 'Alex' },
+  { title: 'Study Group', date: '2026-04-24', owner: 'Jordan' },
 ];
 
 // COLOR HELPER
@@ -28,16 +28,16 @@ function getColor(variable) {
 }
 
 const ownerColors = {
-  "You": () => getColor("--color-you"),
-  "Alex": () => getColor("--color-alex"),
-  "Jordan": () => getColor("--color-jordan")
+  You: () => getColor('--color-you'),
+  Alex: () => getColor('--color-alex'),
+  Jordan: () => getColor('--color-jordan'),
 };
 
 // SELECT ALL
 function toggleSelectAll() {
   const isChecked = selectAllCheckbox.checked;
 
-  Object.values(checkboxes).forEach(cb => {
+  Object.values(checkboxes).forEach((cb) => {
     cb.checked = isChecked;
   });
 
@@ -46,7 +46,7 @@ function toggleSelectAll() {
 
 // INDIVIDUAL TOGGLE
 function togglePerson() {
-  const allChecked = Object.values(checkboxes).every(cb => cb.checked);
+  const allChecked = Object.values(checkboxes).every((cb) => cb.checked);
   selectAllCheckbox.checked = allChecked;
 
   updateActiveCalendars();
@@ -54,7 +54,7 @@ function togglePerson() {
 
 // UPDATE ACTIVE LIST
 function updateActiveCalendars() {
-  activeCalendars = Object.keys(checkboxes).filter(name => {
+  activeCalendars = Object.keys(checkboxes).filter((name) => {
     return checkboxes[name].checked;
   });
 
@@ -74,9 +74,9 @@ function shouldShowEvent(event) {
 
 // RENDER
 function renderCalendar() {
-  calendarEl.innerHTML = "";
+  calendarEl.innerHTML = '';
 
-  if (currentView === "month") {
+  if (currentView === 'month') {
     renderMonth();
   } else {
     renderWeek();
@@ -85,25 +85,25 @@ function renderCalendar() {
 
 // MONTH
 function renderMonth() {
-  calendarEl.className = "calendar-container month-view";
+  calendarEl.className = 'calendar-container month-view';
 
   for (let i = 1; i <= 30; i++) {
-    const day = document.createElement("div");
-    day.className = "calendar-day";
+    const day = document.createElement('div');
+    day.className = 'calendar-day';
 
-    const date = `2026-04-${String(i).padStart(2, "0")}`;
+    const date = `2026-04-${String(i).padStart(2, '0')}`;
     day.innerHTML = `<strong>${i}</strong>`;
 
-    events.forEach(event => {
+    events.forEach((event) => {
       if (event.date === date && shouldShowEvent(event)) {
-        const eventEl = document.createElement("div");
-        eventEl.className = "calendar-event";
+        const eventEl = document.createElement('div');
+        eventEl.className = 'calendar-event';
         eventEl.innerText = event.title;
 
         eventEl.style.backgroundColor = ownerColors[event.owner]();
 
         eventEl.onclick = () => {
-          window.location.href = "event.html";
+          window.location.href = 'event.html';
         };
 
         day.appendChild(eventEl);
@@ -116,34 +116,34 @@ function renderMonth() {
 
 // WEEK
 function renderWeek() {
-  calendarEl.className = "calendar-container week-view";
+  calendarEl.className = 'calendar-container week-view';
 
   const weekDates = [
-    "2026-04-22",
-    "2026-04-23",
-    "2026-04-24",
-    "2026-04-25",
-    "2026-04-26",
-    "2026-04-27",
-    "2026-04-28"
+    '2026-04-22',
+    '2026-04-23',
+    '2026-04-24',
+    '2026-04-25',
+    '2026-04-26',
+    '2026-04-27',
+    '2026-04-28',
   ];
 
   weekDates.forEach((date, index) => {
-    const day = document.createElement("div");
-    day.className = "calendar-day";
+    const day = document.createElement('div');
+    day.className = 'calendar-day';
 
     day.innerHTML = `<strong>Day ${index + 1}</strong>`;
 
-    events.forEach(event => {
+    events.forEach((event) => {
       if (event.date === date && shouldShowEvent(event)) {
-        const eventEl = document.createElement("div");
-        eventEl.className = "calendar-event";
+        const eventEl = document.createElement('div');
+        eventEl.className = 'calendar-event';
         eventEl.innerText = event.title;
 
         eventEl.style.backgroundColor = ownerColors[event.owner]();
 
         eventEl.onclick = () => {
-          window.location.href = "event.html";
+          window.location.href = 'event.html';
         };
 
         day.appendChild(eventEl);
@@ -155,3 +155,16 @@ function renderWeek() {
 }
 
 renderCalendar();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    checkboxes,
+    selectAllCheckbox,
+    toggleSelectAll,
+    togglePerson,
+    shouldShowEvent,
+    updateActiveCalendars,
+    renderCalendar,
+    setView,
+  };
+}

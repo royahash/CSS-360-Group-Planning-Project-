@@ -25,7 +25,7 @@ function saveEvent(title) {
  */
 function unsaveEvent(title) {
   if (!savedEvents.includes(title)) return false;
-  savedEvents = savedEvents.filter(e => e !== title);
+  savedEvents = savedEvents.filter((e) => e !== title);
   return true;
 }
 
@@ -36,10 +36,10 @@ function unsaveEvent(title) {
 function toggleSave(title) {
   if (savedEvents.includes(title)) {
     unsaveEvent(title);
-    return "unsaved";
+    return 'unsaved';
   } else {
     saveEvent(title);
-    return "saved";
+    return 'saved';
   }
 }
 
@@ -51,27 +51,27 @@ function isEventSaved(title) {
 }
 
 // ── DOM Logic (only runs in the browser, not during tests) ─────────────────
-if (typeof document !== "undefined") {
-  const cards = document.querySelectorAll(".event-card");
+if (typeof document !== 'undefined') {
+  const cards = document.querySelectorAll('.event-card');
 
-  cards.forEach(card => {
-    const title = card.querySelector("h3").innerText;
-    const btn = card.querySelector(".card-btn");
+  cards.forEach((card) => {
+    const title = card.querySelector('h3').innerText;
+    const btn = card.querySelector('.card-btn');
 
-    btn.addEventListener("click", () => {
+    btn.addEventListener('click', () => {
       const result = toggleSave(title);
-      if (result === "saved") {
-        btn.innerText = "Saved";
-        btn.style.background = "#a5d6a7";
+      if (result === 'saved') {
+        btn.innerText = 'Saved';
+        btn.style.background = '#a5d6a7';
       } else {
-        btn.innerText = "Save";
-        btn.style.background = "";
+        btn.innerText = 'Save';
+        btn.style.background = '';
       }
     });
   });
 }
 
 // ── Exports (for Jest tests) ───────────────────────────────────────────────
-if (typeof module !== "undefined") {
+if (typeof module !== 'undefined') {
   module.exports = { saveEvent, unsaveEvent, toggleSave, isEventSaved };
 }
