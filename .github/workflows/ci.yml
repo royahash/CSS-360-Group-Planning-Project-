@@ -18,8 +18,14 @@ jobs:
 
       - run: npm install
 
-      - run: npm run lint
+      - name: Check formatting (Prettier)
+        run: npm run format
 
-      - run: npm test
+      - name: Lint code
+        run: npm run lint
 
-      - run: npm run audit
+      - name: Run tests
+        run: npm test
+
+      - name: Security audit
+        run: npm run audit
