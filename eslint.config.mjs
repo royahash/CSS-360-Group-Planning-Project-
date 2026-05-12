@@ -12,7 +12,11 @@ export default [
   {
     files: ["tests/**/*.js"],
     languageOptions: {
-      globals: { ...globals.jest, ...globals.node },
+      globals: { 
+        ...globals.browser,
+        ...globals.jest,
+        ...globals.node
+      }
     },
     rules: js.configs.recommended.rules,
   },
