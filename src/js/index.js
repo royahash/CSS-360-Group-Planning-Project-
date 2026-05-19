@@ -42,33 +42,11 @@ function toggleSave(title) {
     return 'saved';
   }
 }
-
 /**
  * Returns true if the event is currently saved.
  */
 function isEventSaved(title) {
   return savedEvents.includes(title);
-}
-
-// ── DOM Logic (only runs in the browser, not during tests) ─────────────────
-if (typeof document !== 'undefined') {
-  const cards = document.querySelectorAll('.event-card');
-
-  cards.forEach((card) => {
-    const title = card.querySelector('h3').innerText;
-    const btn = card.querySelector('.card-btn');
-
-    btn.addEventListener('click', () => {
-      const result = toggleSave(title);
-      if (result === 'saved') {
-        btn.innerText = 'Saved';
-        btn.style.background = '#a5d6a7';
-      } else {
-        btn.innerText = 'Save';
-        btn.style.background = '';
-      }
-    });
-  });
 }
 
 // ── Exports (for Jest tests) ───────────────────────────────────────────────
