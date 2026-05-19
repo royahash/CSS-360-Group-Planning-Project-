@@ -9,23 +9,54 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1 - Pull latest code from repository
       - uses: actions/checkout@v4
 
+      # Step 2 - Set up Node.js
       - name: Use Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      # Step 3 - Install dependencies
       - run: npm install
 
+      # Step 4 - Verify static analysis (Prettier formatter)
       - name: Check formatting (Prettier)
         run: npm run format
 
+      # Step 5 - Verify static analysis (ESLint linter)
       - name: Lint code
         run: npm run lint
 
+      # Step 6 - Run Unit, Integration and Smoke tests
       - name: Run tests
         run: npm test
 
+      # Step 7 - Security audit (dynamic analysis)
       - name: Security audit
         run: npm run audit
+
+      # Step 8 - Build Docker image (only if all tests pass)
+      - name: Build Docker image
+        run: docker build -t css-360-group-project .
+
+      # Step 9 - Verify Docker image was built successfully
+      - name: Verify Docker image exists
+        run: docker image inspect css-360-group-project
+
+      # Step 10 - Deploy to Vercel (skipped until production environment is configured)
+      - name: Deploy to Vercel
+        if: false
+        run: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      # Step 11 - Verify deployment is live (skipped until production environment is configured)
+      - name: Verify deployment is live
+        if: false
+        run: |
+          sleep 10
+          curl --fail https://css-360-group-project.vercel.app/src/html/index.html
+          echo "Deployment verified successfully"
