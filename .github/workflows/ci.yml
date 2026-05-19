@@ -47,7 +47,6 @@ jobs:
 
       # Step 10 - Deploy to Vercel (skipped until production environment is configured)
       - name: Deploy to Vercel
-        if: false
         run: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -55,7 +54,6 @@ jobs:
 
       # Step 11 - Verify deployment is live (skipped until production environment is configured)
       - name: Verify deployment is live
-        if: false
         run: |
           sleep 10
           curl --fail https://css-360-group-project.vercel.app/src/html/index.html
