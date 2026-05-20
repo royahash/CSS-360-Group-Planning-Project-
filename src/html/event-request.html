@@ -3,16 +3,25 @@
 <head>
   <title>Request an Event</title>
 
-  <!-- Font Awesome (for icons) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <!-- Your CSS -->
   <link rel="stylesheet" href="event-request.css">
+
+  <style>
+    .hidden { display: none !important; }
+    .success-card {
+      margin-top: 20px;
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      border: 1px solid #ccc;
+    }
+  </style>
 </head>
 
 <body>
 
-  <!-- Top Left Navigation -->
   <div class="top-left-nav">
     <a href="index.html">
       <button class="nav-btn"><i class="fa-solid fa-house"></i></button>
@@ -27,16 +36,13 @@
     </a>
   </div>
 
-  <!-- Page Title -->
   <div class="header">
     <h1>Request an Event</h1>
     <p>Suggest a date, time, and location for friends to accept or deny.</p>
   </div>
 
-  <!-- Pink Background Section -->
   <div class="pink-section">
 
-    <!-- Form Card -->
     <div class="form-card">
 
       <h2>Send Event Request</h2>
@@ -44,16 +50,16 @@
       <form id="eventForm">
 
         <label>Event Name</label>
-        <input type="text" placeholder="Example: Study Group" required>
+        <input type="text" id="eventName" placeholder="Example: Study Group" required>
 
         <label>Date</label>
-        <input type="date" required>
+        <input type="date" id="eventDate" required>
 
         <label>Time</label>
-        <input type="time" required>
+        <input type="time" id="eventTime" required>
 
         <label>Location</label>
-        <input type="text" placeholder="Example: UW Bothell Library" required>
+        <input type="text" id="eventLocation" placeholder="Example: UW Bothell Library" required>
 
         <button type="submit" class="submit-btn">Create Request</button>
 
@@ -62,5 +68,6 @@
     </div>
   </div>
 
+  <script src="event-request.js"></script>
 </body>
 </html>
