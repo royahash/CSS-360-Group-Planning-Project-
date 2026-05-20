@@ -3,13 +3,24 @@ require('dotenv').config();
 const express  = require('express');
 const mongoose = require('mongoose');
 const path     = require('path');
+const fs       = require('fs');
 const cors     = require('cors');
 
 const app = express();
 
+const htmlDir = path.join(__dirname, 'src', 'html');
+
 // ── Middleware ────────────────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
+
+// Ticketmaster key for the browser (optional; set TICKETMASTER_API_KEY in .env)
+app.get('/js/config.js', (req, res) => {
+  const key = process.env.TICKETMASTER_API_KEY || '';
+  res.type('application/javascript');
+  res.send(`const CONFIG = { TICKETMASTER_API_KEY: ${JSON.stringify(key)} };`);
+});
+
 app.use(express.static(path.join(__dirname, 'src')));
 
 // ── MongoDB ───────────────────────────────────────────────────────────────
@@ -38,9 +49,17 @@ app.use('/api/polls',          pollRouter);
 app.use('/api/calendar',       calendarRouter);
 app.use('/api/preferences',    preferenceRouter);
 
-// ── Fallback (Express 5 requires a named wildcard, not '*') ───────────────
-app.get('/{*splat}', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src/html/index.html'));
+// ── HTML routing (pages expect to live under /html/ for relative asset paths) ─
+app.get('/', (req, res) => {
+  res.redirect('/html/index.html');
+});
+
+app.get('/:page.html', (req, res, next) => {
+  const filePath = path.join(htmlDir, `${req.params.page}.html`);
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+  next();
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────

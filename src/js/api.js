@@ -4,10 +4,13 @@ function getAuthHeader() {
 }
 
 async function getSavedEvents() {
-  const res = await fetch('/api/events', { 
-    headers: getAuthHeader() 
+  if (!localStorage.getItem('token')) return [];
+  const res = await fetch('/api/events', {
+    headers: getAuthHeader()
   });
-  return res.json();
+  if (!res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
 }
 
 async function saveEventToDatabase(eventData) {
