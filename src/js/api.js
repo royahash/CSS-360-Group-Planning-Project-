@@ -23,3 +23,11 @@ async function deleteSavedEvent(ticketmasterId) {
     method: 'DELETE',
   });
 }
+
+if (typeof module !== 'undefined') {
+  module.exports = {
+    getSavedEvents,
+    saveEventToDatabase,
+    deleteSavedEvent,
+  };
+}

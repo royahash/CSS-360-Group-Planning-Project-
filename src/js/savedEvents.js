@@ -75,3 +75,10 @@ async function handleSaveEvent(
 
   return 'saved';
 }
+
+if (typeof module !== 'undefined') {
+  module.exports = {
+    handleSaveEvent,
+    isEventSaved,
+  };
+}
