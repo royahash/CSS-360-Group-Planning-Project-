@@ -11,6 +11,8 @@ const API_KEY = (typeof CONFIG !== "undefined") ? CONFIG.TICKETMASTER_API_KEY : 
 //if CONFIG exists use the real key, otherwise use the placeholder string test_key. During testing Jest will use test_key. 
 //const CITY = "Seattle";
 let currentSort = "date,asc";
+let currentPage = 0;
+let allEvents = [];
 function getCurrentSort() { return currentSort; }
 //const API_URL = `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${API_KEY}&latlong=47.6062,-122.3321&radius=30&unit=miles&size=100&expand=venues`;
 function getApiUrl() {  //builds the URL fresh each time using whatever sort is current
@@ -90,34 +92,93 @@ function buildEventCard(event) {
 // ── Fetch events and display them ──────────────────────────────────────────
 function loadEvents() {
   const container = document.querySelector(".event-container");
-  
-  // Show loading message while we wait
   container.innerHTML = "<p>Loading events...</p>";
 
   return fetch(getApiUrl())
     .then(response => response.json())
     .then(data => {
-      // Clear the loading message
-      container.innerHTML = "";
-
-      // Get the events array from the response
       const events = data._embedded.events;
       const uniqueEvents = events.filter((event, index, self) =>
         index === self.findIndex(e => e.name === event.name)
       );
-      const shuffled = uniqueEvents.sort(() => Math.random() - 0.5);
-      const twelveEvents = shuffled.slice(0, 12);
-
-      // Build a card for each event and add it to the page
-      twelveEvents.forEach(event => {
-        const card = buildEventCard(event);
-        container.appendChild(card);
-      });
+      // Store shuffled events once — reused across all page navigation
+      allEvents = uniqueEvents.sort(() => Math.random() - 0.5);
+      currentPage = 0;
+      renderPage();
     })
     .catch(error => {
       container.innerHTML = "<p>Failed to load events. Please try again later.</p>";
       console.error("Error fetching events:", error);
     });
+}
+
+function renderPage() {
+  const container = document.querySelector(".event-container");
+  container.innerHTML = "";
+
+  const start = currentPage * 12;
+  const end = start + 12;
+  const pageEvents = allEvents.slice(start, end);
+
+  pageEvents.forEach(event => {
+    const card = buildEventCard(event);
+    container.appendChild(card);
+  });
+
+  renderPagination();
+}
+
+function renderPagination() {
+  // Remove existing pagination if any
+  const existing = document.querySelector(".pagination");
+  if (existing) existing.remove();
+
+  const totalPages = Math.ceil(allEvents.length / 12);
+  if (totalPages <= 1) return;
+
+  const pagination = document.createElement("div");
+  pagination.className = "pagination";
+
+  // Previous button
+  const prevBtn = document.createElement("button");
+  prevBtn.className = "page-btn";
+  prevBtn.innerText = "← Previous";
+  prevBtn.disabled = currentPage === 0;
+  prevBtn.addEventListener("click", () => {
+    currentPage--;
+    renderPage();
+    window.scrollTo(0, 0);
+  });
+  pagination.appendChild(prevBtn);
+
+  // Page number buttons
+  for (let i = 0; i < totalPages; i++) {
+    const pageBtn = document.createElement("button");
+    pageBtn.className = "page-btn" + (i === currentPage ? " active-page" : "");
+    pageBtn.innerText = i + 1;
+    pageBtn.addEventListener("click", () => {
+      currentPage = i;
+      renderPage();
+      window.scrollTo(0, 0);
+    });
+    pagination.appendChild(pageBtn);
+  }
+
+  // Next button
+  const nextBtn = document.createElement("button");
+  nextBtn.className = "page-btn";
+  nextBtn.innerText = "Next →";
+  nextBtn.disabled = currentPage === totalPages - 1;
+  nextBtn.addEventListener("click", () => {
+    currentPage++;
+    renderPage();
+    window.scrollTo(0, 0);
+  });
+  pagination.appendChild(nextBtn);
+
+  // Insert after the event container
+  const container = document.querySelector(".event-container");
+  container.insertAdjacentElement("afterend", pagination);
 }
 
 // ── Run when page loads ────────────────────────────────────────────────────
@@ -127,5 +188,5 @@ if (typeof window !== "undefined" && typeof module === "undefined") {
 
 // ── Exports (for Jest tests) ──────────────────────────────────────────────
 if (typeof module !== "undefined") {
-  module.exports = { getApiUrl, buildEventCard, loadEvents, setSort, getCurrentSort };
+  module.exports = { getApiUrl, buildEventCard, loadEvents, setSort, getCurrentSort, renderPage, renderPagination };
 }
