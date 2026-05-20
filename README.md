@@ -1,49 +1,9 @@
-# Event Explorer
 ### CSS 360 Group Planning Project
 
-A web application for discovering local events near you. Users can browse real events pulled from the Ticketmaster API, save events they're interested in, and view event details.
+This is a website dedicated to finding local events near the user. Users can browse real events pulled from the Ticketmaster API, save events they're interested in, and view the event details, see events on a shared calendar. Our website also includes a event request system where users can make their own events and use the polling feature to vote on details, we included a reminder system that notifies the user before an event happens.
 
+## Team Members: Sophia Garcia-Avella, Roya Hashimi, Subhasheni Venkatesh, Salsabila Abu, Iliya Hosseinisianaki.
 ---
-
-## Team Members
-- Sophia Garcia-Avella
-- Roya Hashimi
-- Subhasheni Venkatesh
-- Salsabila Abu
-- Iliya Hosseinisianaki
-
----
-
-## Project Structure
-
-```
-CSS-360-Group-Planning-Project/
-├── src/
-│   ├── html/          # All HTML pages
-│   ├── css/           # All CSS stylesheets
-│   └── js/            # All JavaScript files
-├── tests/             # All test files
-├── .github/
-│   └── workflows/
-│       └── ci.yml     # CI/CD pipeline
-├── Dockerfile         # Docker image configuration
-├── vercel.json        # Vercel deployment routing
-└── package.json       # Project dependencies
-```
-
----
-
-## Prerequisites
-
-Before setting up the project make sure you have the following installed:
-
-- **Git** — https://git-scm.com
-- **Node.js** (v20 or higher) — https://nodejs.org
-- **Docker** — https://www.docker.com/get-started
-- A **Ticketmaster API key** — https://developer.ticketmaster.com
-
----
-
 ## Step 1 — Pull the Project from GitHub
 
 Open a terminal and run:
@@ -65,6 +25,10 @@ npm install
 This installs all required packages including Jest, ESLint, and Prettier.
 
 ---
+
+## Step 2.5 — Set Up Environment Variables
+Create a .env file in the project root with:
+MONGODB_URI=your_mongodb_connection_string
 
 ## Step 3 — Set Up API Key
 
@@ -121,7 +85,7 @@ PASS tests/events.test.js
 PASS tests/calendar.dom.test.js
 
 Test Suites: 5 passed, 5 total
-Tests:       65 passed,  65 total
+Tests:       53 passed,  53 total
 ```
 
 To run a specific test file:
@@ -133,9 +97,10 @@ npx jest tests/index.test.js
 ---
 
 ## Step 6 — Run the Project Locally
-
-Open `src/html/index.html` in your browser. If you have VS Code with the Live Server extension, right click on `index.html` and select **Open with Live Server**.
-
+run
+npm run dev
+then open
+(http://localhost:3000/html/index.html)
 ---
 
 ## Step 7 — Build the Docker Image
@@ -176,8 +141,8 @@ The project uses **GitHub Actions** as its CI/CD pipeline. The pipeline is defin
 | Security audit | Runs `npm audit` to check for vulnerabilities |
 | Build Docker image | Builds the Docker image using the Dockerfile |
 | Verify Docker image | Confirms the image was built successfully |
-| Deploy to Vercel | Deploys to the production environment (in progress) |
-| Verify deployment | Confirms the live site is accessible (in progress) |
+| Deploy to Vercel | Deploys to the production environment |
+| Verify deployment | Confirms the live site is accessible |
 
 ### To trigger the pipeline manually:
 
