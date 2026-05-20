@@ -1,0 +1,16 @@
+[
+  {
+    "title": "Hiking at Rattlesnake Ledge",
+    "date": "2026-05-24",
+    "owner": "Alex",
+    "description": "Morning group hike with scenic lake views and beginner friendly trails. Bring water, snacks, and hiking shoes.",
+    "location": "Rattlesnake Ledge Trail"
+  },
+  {
+    "title": "Study Group at UW Bothell Library",
+    "date": "2026-05-26",
+    "owner": "Jordan",
+    "description": "Preparing for finals together with shared notes, laptops, and coffee.",
+    "location": "UW Bothell Library"
+  }
+]

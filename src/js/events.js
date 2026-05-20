@@ -67,20 +67,14 @@ function buildEventCard(event) {
   `;
 
   card.addEventListener("click", () => {
-    window.location.href = "event.html";
+    window.location.href = `event.html?id=${event.id}`;
   });
 
-    const btn = card.querySelector(".card-btn");
-    btn.addEventListener("click", () => {
-      const result = toggleSave(event.name);
-      if (result === "saved") {
-        btn.textContent = "Saved";
-        btn.style.background = "#a5d6a7";
-      } else {
-        btn.textContent = "Save";
-        btn.style.background = "";
-      }
-    });
+  const btn = card.querySelector(".card-btn");
+
+  btn.addEventListener("click", async () => {
+    await handleSaveEvent(event, btn);
+  });
 
   return card;
 }
