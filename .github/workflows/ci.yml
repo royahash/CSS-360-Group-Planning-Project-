@@ -56,5 +56,5 @@ jobs:
       - name: Verify deployment is live
         run: |
           sleep 10
-          curl --fail https://css-360-group-project.vercel.app/src/html/index.html
+          curl --fail https://css-360-group-project.vercel.app/html/index.html
           echo "Deployment verified successfully"
