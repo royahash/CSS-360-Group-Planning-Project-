@@ -13,9 +13,13 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'src')));
 
 // ── MongoDB ───────────────────────────────────────────────────────────────
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+if (!process.env.MONGODB_URI) {
+  console.error('MONGODB_URI is not set. Copy .env.example to .env and add your connection string.');
+} else {
+  mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 5000 })
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('MongoDB connection error:', err.message));
+}
 
 // ── Routes ────────────────────────────────────────────────────────────────
 const { router: authRouter }  = require('./src/routes/authRoutes');
@@ -34,8 +38,8 @@ app.use('/api/polls',          pollRouter);
 app.use('/api/calendar',       calendarRouter);
 app.use('/api/preferences',    preferenceRouter);
 
-// ── Fallback ──────────────────────────────────────────────────────────────
-app.get('*', (req, res) => {
+// ── Fallback (Express 5 requires a named wildcard, not '*') ───────────────
+app.get('/{*splat}', (req, res) => {
   res.sendFile(path.join(__dirname, 'src/html/index.html'));
 });
 
