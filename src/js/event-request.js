@@ -6,6 +6,8 @@ const displayDate = document.getElementById('displayDate');
 const displayTime = document.getElementById('displayTime');
 const displayLocation = document.getElementById('displayLocation');
 const responseMessage = document.getElementById('responseMessage');
+const acceptBtn = document.getElementById('acceptBtn');
+const denyBtn = document.getElementById('denyBtn');
 
 function formatDate(dateValue) {
   if (!dateValue) return '';
@@ -66,6 +68,7 @@ eventForm.addEventListener('submit', async function (event) {
       displayLocation.textContent = location;
 
       eventCard.classList.remove('hidden');
+      responseMessage.textContent = '';
       
   } catch (error) {
       console.error("Error scheduling event:", error);
@@ -75,6 +78,7 @@ eventForm.addEventListener('submit', async function (event) {
       displayLocation.textContent = location;
       
       eventCard.classList.remove('hidden');
+      responseMessage.textContent = '';
   }
 });
 
