@@ -1,3 +1,5 @@
+/* global getSavedEvents */
+
 const calendarEl = document.getElementById('calendar');
 
 let currentView = 'month';
