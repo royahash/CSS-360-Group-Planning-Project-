@@ -1,23 +1,122 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <link rel="stylesheet" href="style.css">
-  <title>Event Details</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <title>Event Request</title>
+  <link rel="stylesheet" href="event-request.css">
 </head>
+
 <body>
 
-<div class="main-content">
-  <div class="header">
-    <h1>Music Festival</h1>
-    <p>Seattle, WA</p>
+  <div class="page-layout">
+
+    <!-- Left Navigation -->
+    <div class="sidebar-left">
+      <a href="index.html">
+        <button class="side-btn"><i class="fa-solid fa-house"></i></button>
+      </a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+      <div class="header">
+        <h1>Event Request</h1>
+        <p>Create an event request and let your group vote on the details</p>
+      </div>
+
+      <div class="request-container">
+
+        <!-- Event Request Form -->
+        <div class="request-card">
+          <h2>Request an Event</h2>
+
+          <form id="eventRequestForm">
+            <label for="eventName">Event Name</label>
+            <input type="text" id="eventName" placeholder="Example: Movie Night" required>
+
+            <label for="eventDate">Date</label>
+            <input type="date" id="eventDate" required>
+
+            <label for="eventTime">Time</label>
+            <input type="time" id="eventTime" required>
+
+            <label for="eventLocation">Location</label>
+            <input type="text" id="eventLocation" placeholder="Example: UW Bothell Library" required>
+
+            <label for="eventActivity">Activity</label>
+            <input type="text" id="eventActivity" placeholder="Example: Dinner, study group, concert" required>
+
+            <button type="submit" class="submit-btn">Submit Event Request</button>
+          </form>
+
+          <p id="requestMessage"></p>
+        </div>
+
+        <!-- Poll System -->
+        <div class="request-card">
+          <h2>Group Poll</h2>
+          <p class="poll-description">
+            Vote on the best date, time, location, or activity for the event.
+          </p>
+
+          <div class="poll-section">
+            <h3>Choose a Date</h3>
+            <button class="poll-btn" data-category="date" data-option="Friday">Friday</button>
+            <button class="poll-btn" data-category="date" data-option="Saturday">Saturday</button>
+            <button class="poll-btn" data-category="date" data-option="Sunday">Sunday</button>
+          </div>
+
+          <div class="poll-section">
+            <h3>Choose a Time</h3>
+            <button class="poll-btn" data-category="time" data-option="3:00 PM">3:00 PM</button>
+            <button class="poll-btn" data-category="time" data-option="5:00 PM">5:00 PM</button>
+            <button class="poll-btn" data-category="time" data-option="7:00 PM">7:00 PM</button>
+          </div>
+
+          <div class="poll-section">
+            <h3>Choose a Location</h3>
+            <button class="poll-btn" data-category="location" data-option="Cafe">Cafe</button>
+            <button class="poll-btn" data-category="location" data-option="Library">Library</button>
+            <button class="poll-btn" data-category="location" data-option="Park">Park</button>
+          </div>
+
+          <div class="poll-section">
+            <h3>Choose an Activity</h3>
+            <button class="poll-btn" data-category="activity" data-option="Dinner">Dinner</button>
+            <button class="poll-btn" data-category="activity" data-option="Movie">Movie</button>
+            <button class="poll-btn" data-category="activity" data-option="Study Group">Study Group</button>
+          </div>
+
+          <div class="poll-results">
+            <h3>Your Current Votes</h3>
+            <p><strong>Date:</strong> <span id="dateVote">None</span></p>
+            <p><strong>Time:</strong> <span id="timeVote">None</span></p>
+            <p><strong>Location:</strong> <span id="locationVote">None</span></p>
+            <p><strong>Activity:</strong> <span id="activityVote">None</span></p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Right Navigation -->
+    <div class="sidebar-right">
+      <a href="profile.html">
+        <button class="side-btn"><i class="fa-solid fa-user"></i></button>
+      </a>
+
+      <a href="calendar.html">
+        <button class="side-btn"><i class="fa-solid fa-calendar"></i></button>
+      </a>
+
+      <a href="event-request.html">
+        <button class="side-btn active"><i class="fa-solid fa-user-group"></i></button>
+      </a>
+    </div>
+
   </div>
 
-  <div class="event-card">
-    <p>Date: April 22, 2026</p>
-    <p>Created by: You</p>
-    <p>Description: A fun outdoor concert with friends.</p>
-  </div>
-</div>
-
+  <script src="event-request.js"></script>
 </body>
 </html>
