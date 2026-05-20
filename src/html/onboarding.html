@@ -111,8 +111,7 @@
   function loadOnboardingSelection() {
     selectedInterests = JSON.parse(localStorage.getItem('selectedInterests') || '[]');
     document.querySelectorAll('.interest-tile').forEach(tile => {
-      const interest = tile.dataset.interest;
-      if (selectedInterests.includes(interest)) {
+      if (selectedInterests.includes(tile.dataset.interest)) {
         tile.classList.add('selected');
       }
     });
@@ -128,9 +127,21 @@
     }
   }
 
-  function saveOnboarding() {
+  async function saveOnboarding() {
     localStorage.setItem('selectedInterests', JSON.stringify(selectedInterests));
-    window.location.href = 'profile.html';
+
+    const token = localStorage.getItem('token');
+    if (token) {
+      await fetch('/api/preferences', {
+        method:  'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ interests: selectedInterests })
+      });
+    }
+    window.location.href = 'index.html';
   }
 
   function skipOnboarding() {

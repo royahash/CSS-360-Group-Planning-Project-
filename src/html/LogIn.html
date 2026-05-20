@@ -22,27 +22,41 @@
         <span class="link" onclick="window.location.href = 'SignUp.html'">Create account</span>
     </div>
 
-    <script type="module">
-        import { findUser, checkCredentials } from '../js/auth.js';
-        const loginButton = document.getElementById("loginButton");
-        
-        loginButton.onclick = () => {
-            const userError = document.getElementById("userError");
-            const passError = document.getElementById("passError");
-            userError.textContent = "";
-            passError.textContent = "";
+        <script type="module">
+    const loginButton = document.getElementById("loginButton");
 
-            const id = document.getElementById('usernameOrEmail').value.trim();
-            const pass = document.getElementById('password').value;
+    loginButton.onclick = async () => {
+        const userError = document.getElementById("userError");
+        const passError = document.getElementById("passError");
+        userError.textContent = "";
+        passError.textContent = "";
 
-            if (!findUser(id)) {
-                userError.textContent = "Username/email not found";
-            } else if (!checkCredentials(id, pass)) {
-                passError.textContent = "Incorrect password";
-            } else {
-                window.location.href = 'onboarding.html';
+        const identifier = document.getElementById('usernameOrEmail').value.trim();
+        const password   = document.getElementById('password').value;
+
+        try {
+            const res = await fetch('/api/auth/login', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ identifier, password })
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                if (data.error === 'User not found')   userError.textContent = data.error;
+                else if (data.error === 'Incorrect password') passError.textContent = data.error;
+                else userError.textContent = data.error;
+                return;
             }
-        };
-    </script>
+
+            localStorage.setItem('token',    data.token);
+            localStorage.setItem('username', data.username);
+            localStorage.setItem('userId',   data.userId);
+            window.location.href = 'index.html';
+        } catch (err) {
+            userError.textContent = 'Login failed. Try again.';
+        }
+    };
+        </script>
 </body>
 </html>

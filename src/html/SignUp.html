@@ -23,46 +23,42 @@
         <span class="link" onclick="window.location.href = 'LogIn.html'">Already have an account?</span>
     </div>
 
-    <script type="module">
-        import { addUser } from '../js/auth.js';
-        const signupButton = document.getElementById("signupButton");
-        const errorDiv = document.getElementById("error");
-        const confirmError = document.getElementById("confirmError");
-        const confirm = document.getElementById("confirmPassword");
-        const password = document.getElementById("password");
+        <script type="module">
+    const signupButton  = document.getElementById("signupButton");
+    const errorDiv      = document.getElementById("error");
+    const confirmError  = document.getElementById("confirmError");
 
-        signupButton.onclick = () => {
-            errorDiv.textContent = "";
-            confirmError.textContent = "";
-            if(confirm.value !== password.value)
-            {
-                confirmError.textContent = "Passwords don't match!";
-                const userData = {
-                username: document.getElementById('username').value.trim(),
-                email: document.getElementById('email').value.trim(),
-                password: document.getElementById('password').value
-                };
-                try {
-                    addUser(userData);
-                    window.location.href = 'LogIn.html';
-                } catch (err) {
-                    errorDiv.textContent = err.message;
-                }
-            }
-            else{
-                const userData = {
-                username: document.getElementById('username').value.trim(),
-                email: document.getElementById('email').value.trim(),
-                password: document.getElementById('password').value
-            };
-            try {
-                addUser(userData);
-                window.location.href = 'LogIn.html';
-            } catch (err) {
-                errorDiv.textContent = err.message;
-            }
-            }
-        };
-    </script>
+    signupButton.onclick = async () => {
+        errorDiv.textContent      = "";
+        confirmError.textContent  = "";
+
+        const username = document.getElementById('username').value.trim();
+        const email    = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const confirm  = document.getElementById('confirmPassword').value;
+
+        if (password !== confirm) {
+            confirmError.textContent = "Passwords don't match!";
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/auth/register', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ username, email, password })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+
+            localStorage.setItem('token',    data.token);
+            localStorage.setItem('username', data.username);
+            localStorage.setItem('userId',   data.userId);
+            window.location.href = 'onboarding.html';
+        } catch (err) {
+            errorDiv.textContent = err.message;
+        }
+    };
+        </script>
 </body>
 </html>

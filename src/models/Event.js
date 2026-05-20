@@ -1,23 +1,15 @@
 const mongoose = require('mongoose');
 
 const EventSchema = new mongoose.Schema({
-  ticketmasterId: String,
-
-  title: String,
-
-  description: String,
-
-  image: String,
-
-  venue: String,
-
-  city: String,
-
-  address: String,
-
-  startDate: String,
-
-  endDate: String,
+  ticketmasterId: { type: String, required: true },
+  title: { type: String, required: true },
+  description: { type: String, default: '' },
+  image: { type: String, default: '' },
+  venue: { type: String, default: '' },
+  city: { type: String, default: '' },
+  address: { type: String, default: '' },
+  startDate: { type: String, required: true },
+  endDate: { type: String, default: '' },
 
   owner: {
     type: String,
@@ -27,6 +19,10 @@ const EventSchema = new mongoose.Schema({
   saved: {
     type: Boolean,
     default: true,
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
   },
 });
 

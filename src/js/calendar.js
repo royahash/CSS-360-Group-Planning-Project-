@@ -22,44 +22,36 @@ let events = [];
 // LOAD EVENTS
 async function loadCalendarEvents() {
   try {
-    // DATABASE EVENTS
-    const savedEvents = await getSavedEvents();
+    const token = localStorage.getItem('token');
 
-    const savedEventsArray = Array.isArray(savedEvents)
-      ? savedEvents
-      : [];
+    if (token) {
+      // Logged in — load from database
+      const res     = await fetch('/api/calendar', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      events = await res.json();
+    } else {
+      // Not logged in — fall back to saved events + mock data
+      const savedEvents  = await getSavedEvents();
+      const savedArray   = Array.isArray(savedEvents) ? savedEvents : [];
+      const mockRes      = await fetch('/data/mockFriends.json');
+      const friendEvents = await mockRes.json();
 
-    // MOCK FRIEND EVENTS
-    const response =
-      await fetch('/data/mockFriends.json');
-
-    const friendEvents = await response.json();
-
-    // COMBINE
-    events = [
-      ...savedEventsArray.map((event) => ({
-        title: event.title,
-        date: event.startDate,
-        owner: event.owner,
-        ticketmasterId:
-          event.ticketmasterId || '',
-      })),
-
-      ...friendEvents,
-    ];
+      events = [
+        ...savedArray.map(e => ({
+          title:           e.title,
+          date:            e.startDate,
+          owner:           e.owner,
+          ticketmasterId:  e.ticketmasterId || ''
+        })),
+        ...friendEvents
+      ];
+    }
 
     renderCalendar();
   } catch (error) {
-    console.error(
-      'Failed to load calendar events:',
-      error
-    );
-
-    calendarEl.innerHTML = `
-      <p style="padding:20px;">
-        Failed to load calendar events
-      </p>
-    `;
+    console.error('Failed to load calendar events:', error);
+    calendarEl.innerHTML = '<p style="padding:20px;">Failed to load calendar events</p>';
   }
 }
 
