@@ -143,17 +143,17 @@ Open `src/html/index.html` in your browser. If you have VS Code with the Live Se
 Make sure Docker is installed and running, then:
 
 ```bash
-docker build -t css-360-group-project .
+docker build -t css-360-group-planning-project .
 ```
 
 To verify the image was built:
 ```bash
-docker image inspect css-360-group-project
+docker image inspect css-360-group-planning-project
 ```
 
 To run the Docker container locally:
 ```bash
-docker run -p 8080:80 css-360-group-project
+docker run -p 8080:80 css-360-group-planning-project
 ```
 
 Then open `http://localhost:8080/html/index.html` in your browser.
