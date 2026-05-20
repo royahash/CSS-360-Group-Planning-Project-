@@ -71,7 +71,7 @@ This installs all required packages including Jest, ESLint, and Prettier.
 The homepage loads real events from the Ticketmaster API. To run the project locally you need an API key.
 
 1. Get a free API key at https://developer.ticketmaster.com
-2. Create a file called `config.js` in the root of the project:
+2. Create a file called `config.js` and put in under the js folder of the project:
 
 ```javascript
 // config.js - DO NOT COMMIT THIS FILE
