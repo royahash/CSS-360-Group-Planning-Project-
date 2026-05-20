@@ -55,6 +55,17 @@ async function loadEventDetails() {
       <i class="fa-solid fa-calendar" style="color:red;"></i>
       ${event.dates.start.localDate}
     `;
+     // Category segment
+    const segment = event.classifications?.[0]?.segment?.name;
+    if (segment) {
+      const categoryEl = document.createElement("p");
+      categoryEl.id = "event-category";
+      categoryEl.innerHTML = `
+        <i class="fa-solid fa-tag" style="color:red;"></i>
+        ${segment}
+      `;
+      document.getElementById("event-date").insertAdjacentElement("afterend", categoryEl);
+    }
 
     document.getElementById(
       'event-description'
