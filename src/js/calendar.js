@@ -62,7 +62,12 @@ async function loadCalendarEvents() {
 }
 
 // LOAD ON START
-loadCalendarEvents();
+if (
+  typeof window !== 'undefined' &&
+  typeof getSavedEvents !== 'undefined'
+) {
+  loadCalendarEvents();
+}
 
 // COLOR HELPER
 function getColor(variable) {
