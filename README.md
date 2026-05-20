@@ -208,8 +208,7 @@ All pull requests must pass all three tools before being merged.
 
 The project is deployed to **Vercel** for frontend hosting.
 
-> **Note:** Production deployment is currently being configured. The Vercel deployment and verification steps in the CI pipeline are in progress and will be activated once the production environment is fully connected to the team repository.
-
+The project is live at: https://css-360-group-planning-project.vercel.app/src/html/index.html
 ---
 
 ## API Keys and Secrets

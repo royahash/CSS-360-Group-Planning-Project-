@@ -52,9 +52,9 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      # Step 11 - Verify deployment is live (skipped until production environment is configured)
+      # Step 11 - Verify deployment is live
       - name: Verify deployment is live
         run: |
           sleep 10
-          curl --fail https://css-360-group-project.vercel.app/html/index.html
+          curl --fail https://css-360-group-planning-project.vercel.app/src/html/index.html
           echo "Deployment verified successfully"
