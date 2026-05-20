@@ -1,3 +1,4 @@
+
 const eventForm = document.getElementById('eventForm');
 const eventCard = document.getElementById('eventCard');
 const displayName = document.getElementById('displayName');
@@ -5,8 +6,6 @@ const displayDate = document.getElementById('displayDate');
 const displayTime = document.getElementById('displayTime');
 const displayLocation = document.getElementById('displayLocation');
 const responseMessage = document.getElementById('responseMessage');
-const acceptBtn = document.getElementById('acceptBtn');
-const denyBtn = document.getElementById('denyBtn');
 
 function formatDate(dateValue) {
   if (!dateValue) return '';
@@ -32,7 +31,7 @@ function formatTime(timeValue) {
   });
 }
 
-eventForm.addEventListener('submit', function (event) {
+eventForm.addEventListener('submit', async function (event) {
   event.preventDefault();
 
   const name = document.getElementById('eventName').value.trim();
@@ -40,13 +39,43 @@ eventForm.addEventListener('submit', function (event) {
   const time = document.getElementById('eventTime').value;
   const location = document.getElementById('eventLocation').value.trim();
 
-  displayName.textContent = name;
-  displayDate.textContent = formatDate(date);
-  displayTime.textContent = formatTime(time);
-  displayLocation.textContent = location;
+  const eventDateTime = new Date(`${date}T${time}:00`).toISOString();
 
-  eventCard.classList.remove('hidden');
-  responseMessage.textContent = '';
+  const eventPayload = {
+      eventName: name, 
+      eventLocation: location,
+      eventDate: eventDateTime,
+      eventUsers: [{ username: "Event Host", email: "iliyahosseini05@gmail.com" }], 
+      eventURL: "http://127.0.0.1:5500/event.html"
+  };
+
+  try {
+      const response = await fetch('http://localhost:3000/api/schedule-event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(eventPayload)
+      });
+
+      if (!response.ok) {
+          throw new Error('Server responded with an error');
+      }
+
+      displayName.textContent = name;
+      displayDate.textContent = formatDate(date);
+      displayTime.textContent = formatTime(time);
+      displayLocation.textContent = location;
+
+      eventCard.classList.remove('hidden');
+      
+  } catch (error) {
+      console.error("Error scheduling event:", error);
+      displayName.textContent = name;
+      displayDate.textContent = formatDate(date);
+      displayTime.textContent = formatTime(time);
+      displayLocation.textContent = location;
+      
+      eventCard.classList.remove('hidden');
+  }
 });
 
 acceptBtn.addEventListener('click', function () {
