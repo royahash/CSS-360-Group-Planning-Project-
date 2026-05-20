@@ -1,3 +1,5 @@
+/* global CONFIG, handleSaveEvent, isEventSaved */
+
 const params = new URLSearchParams(
   window.location.search
 );
@@ -9,6 +11,9 @@ const eventTitle =
 
 const API_KEY =
   CONFIG.TICKETMASTER_API_KEY;
+
+const saveBtn =
+  document.getElementById('save-btn');
 
 async function loadEventDetails() {
 
@@ -57,7 +62,40 @@ async function loadEventDetails() {
       <p>
         ${event.info || 'No description available.'}
       </p>
+
+      <br>
+
+      <p>
+        Enjoy a live experience with music,
+        entertainment, food, and activities.
+      </p>
     `;
+
+    // =========================
+    // INITIAL SAVE STATE
+    // =========================
+    const alreadySaved =
+      await isEventSaved(event.id);
+
+    if (alreadySaved) {
+      saveBtn.textContent = 'Saved';
+
+      saveBtn.style.background =
+        '#a5d6a7';
+    }
+
+    // =========================
+    // SAVE BUTTON
+    // =========================
+    saveBtn.addEventListener(
+      'click',
+      async () => {
+        await handleSaveEvent(
+          event,
+          saveBtn
+        );
+      }
+    );
 
     return;
   }
@@ -81,9 +119,9 @@ async function loadEventDetails() {
     if (!event) return;
 
     document.querySelector(
-        '.event-details-img'
+      '.event-details-img'
     ).src =
-        event.image;
+      event.image;
 
     document.getElementById(
       'event-title'
@@ -109,6 +147,9 @@ async function loadEventDetails() {
     ).innerHTML = `
       <p>${event.description}</p>
     `;
+
+    // Friend events should not be saved
+    saveBtn.style.display = 'none';
   }
 }
 

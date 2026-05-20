@@ -3,8 +3,7 @@
  * Fetches real events from Ticketmaster API and builds event cards
  * on the homepage dynamically.
  */
-/* global CONFIG, toggleSave */
-
+/* global CONFIG, handleSaveEvent, isEventSaved */
 // ── Config ─────────────────────────────────────────────────────────────────
 // TODO: Move API_KEY to backend server before production deployment
 // Do not commit this file with a real key - move to .env
@@ -72,6 +71,15 @@ function buildEventCard(event) {
 
   const btn = card.querySelector(".card-btn");
 
+  // LOAD INITIAL BUTTON STATE
+  isEventSaved(event.id).then(saved => {
+    if (saved) {
+      btn.textContent = "Saved";
+      btn.style.background = "#a5d6a7";
+    }
+  });
+
+  // SAVE / UNSAVE
   btn.addEventListener("click", async () => {
     await handleSaveEvent(event, btn);
   });
