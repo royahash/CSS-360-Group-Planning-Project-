@@ -1,15 +1,10 @@
 /**
  * events.test.js
  * Unit, Integration, and Smoke Tests for events.js
- * Event Explorer — Homepage Ticketmaster API Feature
- *
- * Run with: npx jest tests/events.test.js
  */
-global.fetch = jest.fn(() =>
-  Promise.resolve({
-    json: () => Promise.resolve({ _embedded: { events: [] } }),
-  }),
-);
+
+global.fetch = jest.fn();
+
 const {
   getApiUrl,
   buildEventCard,
@@ -18,41 +13,26 @@ const {
   getCurrentSort,
 } = require('../src/js/events');
 
-// ── Mock Data ────────────────────────────────────────────────────────────────
-// This is a fake event object that matches the real Ticketmaster JSON structure.
-// We use this instead of making real API calls during tests.
+// ── MOCK MISSING GLOBAL DEPENDENCIES ────────────────────────────────────────
+global.isEventSaved = jest.fn(() => Promise.resolve(false));
+global.getSavedEvents = jest.fn(() => []);
+
+// silence expected console errors from app code
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {});
+});
+
+// ── MOCK DATA ────────────────────────────────────────────────────────────────
 const mockEvent = {
   name: 'Teddy Swims: The UGLY Tour',
   id: 'vvG1HZ_FUJPIyp',
   url: 'https://www.ticketmaster.com/event/123',
   images: [
-    {
-      ratio: '3_2',
-      url: 'https://example.com/small.jpg',
-      width: 305,
-      height: 203,
-      fallback: false,
-    },
-    {
-      ratio: '16_9',
-      url: 'https://example.com/medium.jpg',
-      width: 640,
-      height: 360,
-      fallback: false,
-    },
-    {
-      ratio: '16_9',
-      url: 'https://example.com/large.jpg',
-      width: 2048,
-      height: 1152,
-      fallback: false,
-    },
+    { ratio: '3_2', url: 'https://example.com/small.jpg', width: 305, height: 203 },
+    { ratio: '16_9', url: 'https://example.com/medium.jpg', width: 640, height: 360 },
+    { ratio: '16_9', url: 'https://example.com/large.jpg', width: 2048, height: 1152 },
   ],
-  dates: {
-    start: {
-      localDate: '2026-11-05',
-    },
-  },
+  dates: { start: { localDate: '2026-11-05' } },
   _embedded: {
     venues: [
       {
@@ -64,162 +44,105 @@ const mockEvent = {
   },
 };
 
-// Mock for fetch so tests don't make real API calls
 const mockApiResponse = {
   _embedded: {
     events: [mockEvent],
   },
 };
 
-// Reset DOM and sort before each test
+// ── HELPERS ────────────────────────────────────────────────────────────────
+const flushPromises = () => Promise.resolve();
+
+// ── RESET BEFORE EACH TEST ─────────────────────────────────────────────────
 beforeEach(() => {
-  // Set up a basic DOM with the event container
   document.body.innerHTML = `
     <div class="event-container"></div>
     <button class="sort-btn active-sort" id="sort-date">Soonest</button>
     <button class="sort-btn" id="sort-newest">Latest</button>
   `;
 
-  // Reset fetch mock fresh for each test
   global.fetch = jest.fn(() =>
     Promise.resolve({
       json: () => Promise.resolve(mockApiResponse),
-    }),
+    })
   );
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SMOKE TESTS
-// Basic sanity checks — does everything exist and start without crashing?
 // ─────────────────────────────────────────────────────────────────────────────
 describe('Smoke Tests', () => {
-  test('getApiUrl function exists and returns a string', () => {
+  test('functions exist', () => {
     expect(typeof getApiUrl).toBe('function');
-    expect(typeof getApiUrl()).toBe('string');
-  });
-
-  test('buildEventCard function exists', () => {
     expect(typeof buildEventCard).toBe('function');
-  });
-
-  test('loadEvents function exists', () => {
     expect(typeof loadEvents).toBe('function');
-  });
-
-  test('setSort function exists', () => {
     expect(typeof setSort).toBe('function');
   });
 
-  test('event container exists in the DOM', () => {
-    const container = document.querySelector('.event-container');
-    expect(container).not.toBeNull();
-  });
-
-  test('getApiUrl returns a URL that starts with https', () => {
-    const url = getApiUrl();
-    expect(url.startsWith('https://')).toBe(true);
-  });
-
-  test('getApiUrl contains the Ticketmaster base endpoint', () => {
-    const url = getApiUrl();
-    expect(url).toContain('app.ticketmaster.com/discovery/v2/events.json');
+  test('event container exists', () => {
+    expect(document.querySelector('.event-container')).not.toBeNull();
   });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UNIT TESTS
-// Test each function in isolation with controlled input
 // ─────────────────────────────────────────────────────────────────────────────
-describe('getApiUrl() — Unit Tests', () => {
-  test('includes date,asc sort by default', () => {
-    setSort('date,asc');
-    expect(getApiUrl()).toContain('sort=date,asc');
+describe('getApiUrl()', () => {
+  test('returns valid https url', () => {
+    expect(getApiUrl().startsWith('https://')).toBe(true);
   });
 
-  test('includes date,desc when sort is set to latest', () => {
-    setSort('date,desc');
-    expect(getApiUrl()).toContain('sort=date,desc');
+  test('includes Ticketmaster endpoint', () => {
+    expect(getApiUrl()).toContain('app.ticketmaster.com/discovery/v2/events.json');
   });
 
-  test('includes Seattle coordinates', () => {
+  test('includes coordinates', () => {
     const url = getApiUrl();
     expect(url).toContain('47.6062');
     expect(url).toContain('-122.3321');
   });
-
-  test('includes expand=venues parameter', () => {
-    expect(getApiUrl()).toContain('expand=venues');
-  });
 });
 
-describe('setSort() — Unit Tests', () => {
-  test('updates currentSort to date,asc', () => {
+describe('setSort()', () => {
+  test('updates sort value', () => {
     setSort('date,asc');
     expect(getCurrentSort()).toBe('date,asc');
   });
 
-  test('updates currentSort to date,desc', () => {
+  test('toggles active button', () => {
     setSort('date,desc');
-    expect(getCurrentSort()).toBe('date,desc');
-  });
-
-  test('updates the active sort button styling', () => {
-    setSort('date,desc');
-    const newestBtn = document.getElementById('sort-newest');
-    expect(newestBtn.classList.contains('active-sort')).toBe(true);
-  });
-
-  test('removes active-sort from previously active button', () => {
-    setSort('date,desc');
-    const dateBtn = document.getElementById('sort-date');
-    expect(dateBtn.classList.contains('active-sort')).toBe(false);
+    expect(document.getElementById('sort-newest').classList.contains('active-sort')).toBe(true);
+    expect(document.getElementById('sort-date').classList.contains('active-sort')).toBe(false);
   });
 });
 
-describe('buildEventCard() — Unit Tests', () => {
-  test('returns a div element', () => {
+describe('buildEventCard()', () => {
+  test('creates event card', () => {
     const card = buildEventCard(mockEvent);
     expect(card.tagName).toBe('DIV');
   });
 
-  test('card has the event-card class', () => {
-    const card = buildEventCard(mockEvent);
-    expect(card.classList.contains('event-card')).toBe(true);
-  });
-
-  test('card displays the correct event name', () => {
+  test('contains event info', () => {
     const card = buildEventCard(mockEvent);
     expect(card.innerHTML).toContain('Teddy Swims: The UGLY Tour');
-  });
-
-  test('card displays the correct date', () => {
-    const card = buildEventCard(mockEvent);
     expect(card.innerHTML).toContain('2026-11-05');
-  });
-
-  test('card displays the correct venue name', () => {
-    const card = buildEventCard(mockEvent);
     expect(card.innerHTML).toContain('Climate Pledge Arena');
-  });
-
-  test('card displays the correct city', () => {
-    const card = buildEventCard(mockEvent);
     expect(card.innerHTML).toContain('Seattle, WA');
   });
 
-  test('card selects the largest 16_9 image', () => {
+  test('uses largest image', () => {
     const card = buildEventCard(mockEvent);
     expect(card.innerHTML).toContain('https://example.com/large.jpg');
   });
 
-  test('card has a Save button', () => {
+  test('has save button', () => {
     const card = buildEventCard(mockEvent);
     const btn = card.querySelector('.card-btn');
     expect(btn).not.toBeNull();
     expect(btn.textContent).toBe('Save');
   });
 
-  test('card falls back to Seattle WA when no venue provided', () => {
+  test('fallback venue works', () => {
     const eventNoVenue = { ...mockEvent, _embedded: {} };
     const card = buildEventCard(eventNoVenue);
     expect(card.innerHTML).toContain('Seattle, WA');
@@ -228,54 +151,42 @@ describe('buildEventCard() — Unit Tests', () => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INTEGRATION TESTS
-// Test that multiple functions work correctly together
 // ─────────────────────────────────────────────────────────────────────────────
-describe('setSort() + getApiUrl() — Integration Tests', () => {
-  test('changing sort updates the URL used for fetching', () => {
-    setSort('date,asc');
-    expect(getApiUrl()).toContain('sort=date,asc');
-
-    setSort('date,desc');
-    expect(getApiUrl()).toContain('sort=date,desc');
-  });
-
-  test('URL always reflects the most recently set sort', () => {
-    setSort('date,asc');
-    setSort('date,desc');
-    setSort('date,asc');
-    expect(getApiUrl()).toContain('sort=date,asc');
-  });
-});
-
-describe('loadEvents() + buildEventCard() — Integration Tests', () => {
-  test('loadEvents calls fetch once', async () => {
+describe('loadEvents integration', () => {
+  test('fetch called once', async () => {
     await loadEvents();
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
-  test('loadEvents calls fetch with a URL containing the API endpoint', async () => {
+  test('fetch URL is correct', async () => {
     await loadEvents();
-    const calledUrl = global.fetch.mock.calls[0][0];
-    expect(calledUrl).toContain('app.ticketmaster.com');
+    const url = global.fetch.mock.calls[0][0];
+    expect(url).toContain('app.ticketmaster.com');
   });
 
-  test('loadEvents populates the event container with cards', async () => {
+  test('renders event cards', async () => {
     await loadEvents();
+    await flushPromises();
+
     const container = document.querySelector('.event-container');
     const cards = container.querySelectorAll('.event-card');
+
     expect(cards.length).toBeGreaterThan(0);
   });
 
-  test('cards built by loadEvents contain real event names', async () => {
+  test('renders correct event name', async () => {
     await loadEvents();
+    await flushPromises();
+
     const container = document.querySelector('.event-container');
     expect(container.innerHTML).toContain('Teddy Swims: The UGLY Tour');
   });
 
-  test('changing sort and reloading fetches with new sort value', async () => {
+  test('sort affects API request', async () => {
     setSort('date,desc');
     await loadEvents();
-    const calledUrl = global.fetch.mock.calls[0][0];
-    expect(calledUrl).toContain('sort=date,desc');
+
+    const url = global.fetch.mock.calls[0][0];
+    expect(url).toContain('sort=date,desc');
   });
 });

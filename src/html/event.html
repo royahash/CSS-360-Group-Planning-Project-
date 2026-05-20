@@ -3,8 +3,10 @@
 <head>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <title>Event Details</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../css/style.css">
+
   <style>
+
     .event-details-card {
       background-color: pink;
       border-radius: 16px;
@@ -42,7 +44,7 @@
     }
 
     .event-details-info p {
-      margin: 5px 0;
+      margin: 8px 0;
       color: #333;
       font-size: 15px;
     }
@@ -76,11 +78,6 @@
       margin: 4px 0;
     }
 
-    .event-category {
-      margin-top: 14px;
-      font-weight: 600;
-      color: #333;
-    }
   </style>
 </head>
 
@@ -91,7 +88,9 @@
   <!-- LEFT -->
   <div class="sidebar-left">
     <a href="index.html">
-      <button class="side-btn"><i class="fa-solid fa-house"></i></button>
+      <button class="side-btn">
+        <i class="fa-solid fa-house"></i>
+      </button>
     </a>
   </div>
 
@@ -106,33 +105,41 @@
     <div class="event-details-card">
 
       <div class="event-details-top">
+
         <img
-          src="https://picsum.photos/300/200"
-          alt="Music Festival"
+          src=""
+          alt="Event Image"
           class="event-details-img"
         >
 
         <div class="event-details-info">
-          <h2>Music Festival</h2>
-          <p><strong>By:</strong> Sophia Garcia</p>
-          <p><i class="fa-solid fa-location-dot" style="color:red;"></i> 5th Ave, Seattle, WA 98101</p>
-          <p><i class="fa-solid fa-calendar" style="color:red;"></i> Wednesday, April 22, 2026</p>
-          <p><i class="fa-solid fa-clock" style="color:red;"></i> 2:30 PM to 8:00 PM</p>
-          <p><i class="fa-solid fa-users" style="color:red;"></i> Unlimited attendance!</p>
+
+          <h2 id="event-title">
+            Loading...
+          </h2>
+
+          <p id="event-location"></p>
+
+          <p id="event-date"></p>
 
           <div class="event-details-actions">
-            <button class="save-btn" id="save-btn">Save</button>
+            <button
+              class="save-btn"
+              id="save-btn"
+            >
+              Save
+            </button>
           </div>
+
         </div>
+
       </div>
 
-      <div class="event-details-description">
-        <p>Description: A fun outdoor music festival with live performances, food stalls, and activities for everyone. Come enjoy a day filled with great music and good vibes!</p>
-        <p>-Live performances from local and national artists</p>
-        <p>-Food trucks and vendors on site</p>
-        <p>-Family friendly</p>
-        <p>-Free parking nearby</p>
-        <p class="event-category">Category: Music &amp; Entertainment</p>
+      <div
+        class="event-details-description"
+        id="event-description"
+      >
+        Loading event details...
       </div>
 
     </div>
@@ -141,42 +148,37 @@
 
   <!-- RIGHT -->
   <div class="sidebar-right">
+
     <a href="profile.html">
-      <button class="side-btn"><i class="fa-solid fa-user"></i></button>
+      <button class="side-btn">
+        <i class="fa-solid fa-user"></i>
+      </button>
     </a>
+
     <a href="calendar.html">
-      <button class="side-btn"><i class="fa-solid fa-calendar"></i></button>
+      <button class="side-btn">
+        <i class="fa-solid fa-calendar"></i>
+      </button>
     </a>
-    <button class="side-btn"><i class="fa-solid fa-user-group"></i></button>
+
+    <button class="side-btn">
+      <i class="fa-solid fa-user-group"></i>
+    </button>
+
     <a href="event-request.html">
-        <button class="side-btn"><i class="fa-solid fa-plus"></i></button>
+      <button class="side-btn">
+        <i class="fa-solid fa-plus"></i>
+      </button>
     </a>
+
   </div>
 
 </div>
 
-<script src="index.js"></script>
-<script>
-  const saveBtn = document.getElementById("save-btn");
-  const eventTitle = "Music Festival";
-
-  function updateSaveBtn() {
-    if (isEventSaved(eventTitle)) {
-      saveBtn.innerText = "Saved";
-      saveBtn.style.background = "#a5d6a7";
-    } else {
-      saveBtn.innerText = "Save";
-      saveBtn.style.background = "rgb(233, 241, 233)";
-    }
-  }
-
-  saveBtn.addEventListener("click", () => {
-    toggleSave(eventTitle);
-    updateSaveBtn();
-  });
-
-  updateSaveBtn();
-</script>
+<script src="../js/config.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/savedEvents.js"></script>
+<script src="../js/eventDetails.js"></script>
 
 </body>
 </html>

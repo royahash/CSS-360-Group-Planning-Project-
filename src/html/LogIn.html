@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
-    <link rel="stylesheet" href="Registration.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/Registration.css">
 </head>
 <body>
     <div class="container">
@@ -22,7 +23,7 @@
     </div>
 
     <script type="module">
-        import { findUser, checkCredentials } from './auth.js';
+        import { findUser, checkCredentials } from '../js/auth.js';
         const loginButton = document.getElementById("loginButton");
         
         loginButton.onclick = () => {
