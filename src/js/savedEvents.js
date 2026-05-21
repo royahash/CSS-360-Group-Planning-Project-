@@ -42,7 +42,9 @@ async function handleSaveEvent(
   // =========================
   // SAVE
   // =========================
+
   await saveEventToDatabase({
+
     ticketmasterId:
       eventData.id,
 
@@ -55,17 +57,35 @@ async function handleSaveEvent(
     startDate:
       eventData.dates.start.localDate,
 
+    startTime:
+      eventData.dates.start.localTime || '',
+
+    endDate:
+      eventData.dates.end?.localDate || '',
+
     venue:
       eventData._embedded?.venues?.[0]?.name || '',
 
     city:
       eventData._embedded?.venues?.[0]?.city?.name || '',
 
+    address:
+      eventData._embedded?.venues?.[0]?.address?.line1 || '',
+
     owner: 'You',
+
+    users: [
+      {
+        email: 'user@example.com'
+      }
+    ],
+
+    eventURL:
+      eventData.url || '',
 
     description:
       eventData.info ||
-      'No description available.',
+      'No description available.'
   });
 
   buttonEl.textContent =
