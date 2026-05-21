@@ -102,7 +102,7 @@ npx jest tests/index.test.js
 run
 npm run dev
 then open
-(http://localhost:3000/html/index.html)
+(http://localhost:3000/html/FrontPage.html)
 ---
 
 ## Step 7 — Build the Docker Image
