@@ -1,6 +1,6 @@
 ### CSS 360 Group Planning Project
 
-This is a website dedicated to finding local events near the user. Users can browse real events pulled from the Ticketmaster API, save events they're interested in, and view the event details, see events on a shared calendar. Our website also includes a event request system where users can make their own events and use the polling feature to vote on details, we included a reminder system that notifies the user before an event happens.
+This is a website dedicated to finding local events near the user. Users see real events pulled from the Ticketmaster API, save events they're interested in, and view the event details, see events on a shared calendar. Our website also includes a event request system where users can make their own events and use the polling feature to vote on details, we included a reminder system that notifies the user before an event happens.
 
 ## Team Members: Sophia Garcia-Avella, Roya Hashimi, Subhasheni Venkatesh, Salsabila Abu, Iliya Hosseinisianaki.
 ---
