@@ -1,0 +1,166 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+}
+
+.page-layout {
+  display: grid;
+  grid-template-columns: 80px 1fr 80px;
+  min-height: 100vh;
+}
+
+.sidebar-left,
+.sidebar-right {
+  background-color: #e8a8b3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 25px;
+  gap: 20px;
+}
+
+.side-btn {
+  width: 50px;
+  height: 50px;
+  border: none;
+  border-radius: 12px;
+  background-color: #f3f3f3;
+  font-size: 20px;
+  cursor: pointer;
+  color: #333;
+}
+
+.side-btn:hover,
+.side-btn.active {
+  background-color: #ffffff;
+  transform: scale(1.05);
+}
+
+.main-content {
+  padding: 30px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.header h1 {
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.header p {
+  color: #666;
+}
+
+.request-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 25px;
+}
+
+.request-card {
+  background-color: #ffffff;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.request-card h2 {
+  color: #d14f67;
+  text-align: center;
+  margin-top: 0;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  margin-top: 12px;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333;
+}
+
+input {
+  padding: 11px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.submit-btn {
+  margin-top: 20px;
+  padding: 12px;
+  background-color: #1e73d8;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.submit-btn:hover {
+  background-color: #155bb5;
+}
+
+#requestMessage {
+  text-align: center;
+  color: #d14f67;
+  font-weight: bold;
+  margin-top: 15px;
+}
+
+.poll-description {
+  text-align: center;
+  color: #666;
+}
+
+.poll-section {
+  margin-top: 18px;
+  padding: 15px;
+  background-color: #f8edf0;
+  border-radius: 12px;
+}
+
+.poll-section h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.poll-btn {
+  margin: 5px 5px 5px 0;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 8px;
+  background-color: #e8a8b3;
+  color: white;
+  cursor: pointer;
+}
+
+.poll-btn:hover,
+.poll-btn.selected {
+  background-color: #d14f67;
+}
+
+.poll-results {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f3f3f3;
+  border-radius: 12px;
+}
+
+.poll-results h3 {
+  margin-top: 0;
+  color: #d14f67;
+}
+
+@media screen and (max-width: 900px) {
+  .request-container {
+    grid-template-columns: 1fr;
+  }
+}

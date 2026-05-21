@@ -1,0 +1,97 @@
+beforeEach(() => {
+  document.body.innerHTML = `
+    <div class="container">
+      <h1>Request an Event</h1>
+
+      <form id="eventForm">
+        <input type="text" id="eventName" required>
+        <input type="date" id="eventDate" required>
+        <input type="time" id="eventTime" required>
+        <input type="text" id="eventLocation" required>
+        <button type="submit">Send Event Request</button>
+      </form>
+
+      <div id="eventCard" class="hidden">
+        <h2 id="displayName"></h2>
+        <p><strong>Date:</strong> <span id="displayDate"></span></p>
+        <p><strong>Time:</strong> <span id="displayTime"></span></p>
+        <p><strong>Location:</strong> <span id="displayLocation"></span></p>
+
+        <button id="acceptBtn">Accept</button>
+        <button id="denyBtn">Deny</button>
+
+        <p id="responseMessage"></p>
+      </div>
+    </div>
+  `;
+
+  jest.resetModules();
+  require("../script.js");
+});
+
+test("Submitting the event form displays the event card", () => {
+  document.getElementById("eventName").value = "Study Session";
+  document.getElementById("eventDate").value = "2026-05-01";
+  document.getElementById("eventTime").value = "15:00";
+  document.getElementById("eventLocation").value = "Library";
+
+  document.getElementById("eventForm").dispatchEvent(
+    new Event("submit", { bubbles: true, cancelable: true })
+  );
+
+  expect(document.getElementById("eventCard").classList.contains("hidden")).toBe(false);
+});
+
+/*
+Description:
+This test checks that when a user fills out and submits the event request form,
+the event card becomes visible on the page.
+*/
+
+test("Submitted event details are displayed correctly", () => {
+  document.getElementById("eventName").value = "Movie Night";
+  document.getElementById("eventDate").value = "2026-06-10";
+  document.getElementById("eventTime").value = "18:30";
+  document.getElementById("eventLocation").value = "Downtown Theater";
+
+  document.getElementById("eventForm").dispatchEvent(
+    new Event("submit", { bubbles: true, cancelable: true })
+  );
+
+  expect(document.getElementById("displayName").textContent).toBe("Movie Night");
+  expect(document.getElementById("displayDate").textContent).toBe("2026-06-10");
+  expect(document.getElementById("displayTime").textContent).toBe("18:30");
+  expect(document.getElementById("displayLocation").textContent).toBe("Downtown Theater");
+});
+
+/*
+Description:
+This test makes sure the event name, date, time, and location entered by the user
+are displayed correctly after the form is submitted.
+*/
+
+test("Clicking accept displays accepted message", () => {
+  document.getElementById("acceptBtn").click();
+
+  expect(document.getElementById("responseMessage").textContent).toBe("You accepted this event!");
+  expect(document.getElementById("responseMessage").style.color).toBe("green");
+});
+
+/*
+Description:
+This test checks that when a friend clicks the Accept button,
+the page displays a message confirming that the event was accepted.
+*/
+
+test("Clicking deny displays denied message", () => {
+  document.getElementById("denyBtn").click();
+
+  expect(document.getElementById("responseMessage").textContent).toBe("You denied this event.");
+  expect(document.getElementById("responseMessage").style.color).toBe("red");
+});
+
+/*
+Description:
+This test checks that when a friend clicks the Deny button,
+the page displays a message showing that the event was denied.
+*/
