@@ -1,33 +1,80 @@
 const mongoose = require('mongoose');
 
 const EventSchema = new mongoose.Schema({
-  ticketmasterId: String,
 
-  title: String,
+  ticketmasterId: {
+    type: String,
+    required: true
+  },
 
-  description: String,
+  title: {
+    type: String,
+    required: true
+  },
 
-  image: String,
+  description: {
+    type: String,
+    default: ''
+  },
 
-  venue: String,
+  image: {
+    type: String,
+    default: ''
+  },
 
-  city: String,
+  venue: {
+    type: String,
+    default: ''
+  },
 
-  address: String,
+  city: {
+    type: String,
+    default: ''
+  },
 
-  startDate: String,
+  address: {
+    type: String,
+    default: ''
+  },
 
-  endDate: String,
+  startDate: {
+    type: String,
+    required: true
+  },
+
+  startTime: {
+    type: String,
+    required: true
+  },
+
+  endDate: {
+    type: String,
+    default: ''
+  },
 
   owner: {
     type: String,
-    default: 'You',
+    default: 'You'
   },
 
   saved: {
     type: Boolean,
-    default: true,
+    default: true
   },
+
+  users: [
+    {
+      email: {
+        type: String,
+        required: true
+      }
+    }
+  ],
+
+  eventURL: {
+    type: String,
+    default: ''
+  }
 });
 
 module.exports = mongoose.model('Event', EventSchema);
