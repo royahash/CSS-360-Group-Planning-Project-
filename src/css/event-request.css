@@ -1,4 +1,7 @@
 .request-container {
+  background-color: #e8a8b3;
+  border-radius: 12px;
+  padding: 35px;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 25px;
@@ -8,11 +11,13 @@
   background-color: #f3f3f3;
   border-radius: 15px;
   padding: 25px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .request-card h2 {
   color: red;
   text-align: center;
+  margin-top: 0;
 }
 
 form {
@@ -42,11 +47,29 @@ input {
   cursor: pointer;
 }
 
+.submit-btn:hover {
+  background-color: #155bb5;
+}
+
+#requestMessage {
+  text-align: center;
+  color: red;
+  font-weight: bold;
+}
+
+.poll-description {
+  text-align: center;
+}
+
 .poll-section {
   margin-top: 18px;
   padding: 15px;
   background-color: #f8edf0;
   border-radius: 12px;
+}
+
+.poll-section h3 {
+  margin-top: 0;
 }
 
 .poll-btn {
@@ -67,8 +90,13 @@ input {
 .poll-results {
   margin-top: 20px;
   padding: 15px;
-  background-color: #f3f3f3;
+  background-color: #ffffff;
   border-radius: 12px;
+}
+
+.poll-results h3 {
+  margin-top: 0;
+  color: red;
 }
 
 @media screen and (max-width: 900px) {
