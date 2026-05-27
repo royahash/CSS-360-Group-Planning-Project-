@@ -1,11 +1,16 @@
 {
-  "rewrites": [
-    { "source": "/", "destination": "/src/html/index.html" },
-    { "source": "/event", "destination": "/src/html/event.html" },
-    { "source": "/calendar", "destination": "/src/html/calendar.html" },
-    { "source": "/profile", "destination": "/src/html/profile.html" },
-    { "source": "/onboarding", "destination": "/src/html/onboarding.html" },
-    { "source": "/login", "destination": "/src/html/LogIn.html" },
-    { "source": "/signup", "destination": "/src/html/SignUp.html" }
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    { "src": "/auth/(.*)", "dest": "/server.js" },
+    { "src": "/api/(.*)", "dest": "/server.js" },
+    { "src": "/src/(.*)", "dest": "/src/$1" },
+    { "src": "/", "dest": "/server.js" },
+    { "src": "/(.*)", "dest": "/server.js" }
   ]
 }
