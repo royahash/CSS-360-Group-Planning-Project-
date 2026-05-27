@@ -48,5 +48,5 @@ function isEventSaved(title) {
 
 // ── Exports (for Jest tests) ───────────────────────────────────────────────
 if (typeof module !== 'undefined') {
-  module.exports = { saveEvent, unsaveEvent, toggleSave, isEventSaved};
+  module.exports = { saveEvent, unsaveEvent, toggleSave, isEventSaved };
 }

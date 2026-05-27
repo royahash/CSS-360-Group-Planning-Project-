@@ -14,7 +14,7 @@ jest.mock('mongoose', () => {
     connect: jest.fn().mockResolvedValue(true),
     connection: { readyState: 1 },
     Schema: actualMongoose.Schema,
-    model: jest.fn().mockImplementation((name) => {
+    model: jest.fn().mockImplementation(() => {
       const MockModel = {
         find: jest.fn(),
         findOne: jest.fn(),
@@ -163,17 +163,13 @@ describe('Integration Tests — auth flow', () => {
   });
 
   test('POST /auth/register returns 400 with missing fields', async () => {
-    const res = await request(app)
-      .post('/auth/register')
-      .send({});
+    const res = await request(app).post('/auth/register').send({});
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('All fields are required');
   });
 
   test('POST /auth/login returns 400 with missing fields', async () => {
-    const res = await request(app)
-      .post('/auth/login')
-      .send({});
+    const res = await request(app).post('/auth/login').send({});
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('All fields are required');
   });

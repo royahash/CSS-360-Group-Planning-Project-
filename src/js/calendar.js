@@ -13,8 +13,7 @@ const checkboxes = {
   Jordan: document.getElementById('check-jordan'),
 };
 
-const selectAllCheckbox =
-  document.getElementById('check-all');
+const selectAllCheckbox = document.getElementById('check-all');
 
 // EVENTS
 let events = [];
@@ -25,13 +24,10 @@ async function loadCalendarEvents() {
     // DATABASE EVENTS
     const savedEvents = await getSavedEvents();
 
-    const savedEventsArray = Array.isArray(savedEvents)
-      ? savedEvents
-      : [];
+    const savedEventsArray = Array.isArray(savedEvents) ? savedEvents : [];
 
     // MOCK FRIEND EVENTS
-    const response =
-      await fetch('/data/mockFriends.json');
+    const response = await fetch('/data/mockFriends.json');
 
     const friendEvents = await response.json();
 
@@ -41,8 +37,7 @@ async function loadCalendarEvents() {
         title: event.title,
         date: event.startDate,
         owner: event.owner,
-        ticketmasterId:
-          event.ticketmasterId || '',
+        ticketmasterId: event.ticketmasterId || '',
       })),
 
       ...friendEvents,
@@ -50,10 +45,7 @@ async function loadCalendarEvents() {
 
     renderCalendar();
   } catch (error) {
-    console.error(
-      'Failed to load calendar events:',
-      error
-    );
+    console.error('Failed to load calendar events:', error);
 
     calendarEl.innerHTML = `
       <p style="padding:20px;">
@@ -68,9 +60,7 @@ loadCalendarEvents();
 
 // COLOR HELPER
 function getColor(variable) {
-  return getComputedStyle(
-    document.documentElement
-  )
+  return getComputedStyle(document.documentElement)
     .getPropertyValue(variable)
     .trim();
 }
@@ -83,37 +73,29 @@ const ownerColors = {
 
 // SELECT ALL
 function toggleSelectAll() {
-  const isChecked =
-    selectAllCheckbox.checked;
+  const isChecked = selectAllCheckbox.checked;
 
-  Object.values(checkboxes).forEach(
-    (cb) => {
-      cb.checked = isChecked;
-    }
-  );
+  Object.values(checkboxes).forEach((cb) => {
+    cb.checked = isChecked;
+  });
 
   updateActiveCalendars();
 }
 
 // INDIVIDUAL TOGGLE
 function togglePerson() {
-  const allChecked =
-    Object.values(checkboxes).every(
-      (cb) => cb.checked
-    );
+  const allChecked = Object.values(checkboxes).every((cb) => cb.checked);
 
-  selectAllCheckbox.checked =
-    allChecked;
+  selectAllCheckbox.checked = allChecked;
 
   updateActiveCalendars();
 }
 
 // UPDATE ACTIVE LIST
 function updateActiveCalendars() {
-  activeCalendars =
-    Object.keys(checkboxes).filter(
-      (name) => checkboxes[name].checked
-    );
+  activeCalendars = Object.keys(checkboxes).filter(
+    (name) => checkboxes[name].checked,
+  );
 
   renderCalendar();
 }
@@ -127,9 +109,7 @@ function setView(view) {
 
 // FILTER
 function shouldShowEvent(event) {
-  return activeCalendars.includes(
-    event.owner
-  );
+  return activeCalendars.includes(event.owner);
 }
 
 // MAIN RENDER
@@ -145,68 +125,47 @@ function renderCalendar() {
 
 // MONTH VIEW
 function renderMonth() {
-  calendarEl.className =
-    'calendar-container month-view';
+  calendarEl.className = 'calendar-container month-view';
 
   const today = new Date();
 
-  const currentMonth =
-    today.getMonth();
+  const currentMonth = today.getMonth();
 
-  const currentYear =
-    today.getFullYear();
+  const currentYear = today.getFullYear();
 
-  const daysInMonth = new Date(
-    currentYear,
-    currentMonth + 1,
-    0
-  ).getDate();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-  for (
-    let i = 1;
-    i <= daysInMonth;
-    i++
-  ) {
-    const day =
-      document.createElement('div');
+  for (let i = 1; i <= daysInMonth; i++) {
+    const day = document.createElement('div');
 
     day.className = 'calendar-day';
 
-    const date =
-      `${currentYear}-${String(
-        currentMonth + 1
-      ).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+    const date = `${currentYear}-${String(currentMonth + 1).padStart(
+      2,
+      '0',
+    )}-${String(i).padStart(2, '0')}`;
 
     day.innerHTML = `<strong>${i}</strong>`;
 
     events.forEach((event) => {
-      if (
-        event.date === date &&
-        shouldShowEvent(event)
-      ) {
-        const eventEl =
-          document.createElement('div');
+      if (event.date === date && shouldShowEvent(event)) {
+        const eventEl = document.createElement('div');
 
-        eventEl.className =
-          'calendar-event';
+        eventEl.className = 'calendar-event';
 
-        eventEl.innerText =
-          event.title;
+        eventEl.innerText = event.title;
 
-        eventEl.style.backgroundColor =
-          ownerColors[event.owner]
-            ? ownerColors[event.owner]()
-            : '#cccccc';
+        eventEl.style.backgroundColor = ownerColors[event.owner]
+          ? ownerColors[event.owner]()
+          : '#cccccc';
 
         eventEl.onclick = () => {
           if (event.ticketmasterId) {
-            window.location.href =
-              `event.html?id=${event.ticketmasterId}`;
+            window.location.href = `event.html?id=${event.ticketmasterId}`;
           } else {
-            window.location.href =
-              `event.html?title=${encodeURIComponent(
-                event.title
-              )}`;
+            window.location.href = `event.html?title=${encodeURIComponent(
+              event.title,
+            )}`;
           }
         };
 
@@ -220,69 +179,50 @@ function renderMonth() {
 
 // WEEK VIEW
 function renderWeek() {
-  calendarEl.className =
-    'calendar-container week-view';
+  calendarEl.className = 'calendar-container week-view';
 
   const today = new Date();
 
   for (let i = 0; i < 7; i++) {
     const currentDay = new Date();
 
-    currentDay.setDate(
-      today.getDate() + i
-    );
+    currentDay.setDate(today.getDate() + i);
 
-    const formattedDate =
-      currentDay
-        .toISOString()
-        .split('T')[0];
+    const formattedDate = currentDay.toISOString().split('T')[0];
 
-    const day =
-      document.createElement('div');
+    const day = document.createElement('div');
 
     day.className = 'calendar-day';
 
     day.innerHTML = `
       <strong>
-        ${currentDay.toLocaleDateString(
-          'en-US',
-          {
-            weekday: 'short',
-            month: 'numeric',
-            day: 'numeric',
-          }
-        )}
+        ${currentDay.toLocaleDateString('en-US', {
+          weekday: 'short',
+          month: 'numeric',
+          day: 'numeric',
+        })}
       </strong>
     `;
 
     events.forEach((event) => {
-      if (
-        event.date === formattedDate &&
-        shouldShowEvent(event)
-      ) {
-        const eventEl =
-          document.createElement('div');
+      if (event.date === formattedDate && shouldShowEvent(event)) {
+        const eventEl = document.createElement('div');
 
-        eventEl.className =
-          'calendar-event';
+        eventEl.className = 'calendar-event';
 
-        eventEl.innerText =
-          event.title;
+        eventEl.innerText = event.title;
 
-        eventEl.style.backgroundColor =
-          ownerColors[event.owner]
-            ? ownerColors[event.owner]()
-            : '#cccccc';
+        eventEl.style.backgroundColor = ownerColors[event.owner]
+          ? ownerColors[event.owner]()
+          : '#cccccc';
 
         eventEl.onclick = () => {
           if (event.ticketmasterId) {
-            window.location.href =
-              `event.html?id=${event.ticketmasterId}`;
+            window.location.href = `event.html?id=${event.ticketmasterId}`;
           } else {
-            window.location.href =
-              `event.html?title=${encodeURIComponent(
-                event.title
-              )}`;
+            window.location.href = `event.html?title=${encodeURIComponent(
+              event.title,
+            )}`;
           }
         };
 
@@ -295,10 +235,7 @@ function renderWeek() {
 }
 
 // EXPORTS FOR TESTS
-if (
-  typeof module !== 'undefined' &&
-  module.exports
-) {
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     checkboxes,
     selectAllCheckbox,

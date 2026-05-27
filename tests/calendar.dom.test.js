@@ -18,27 +18,28 @@ document.body.innerHTML = `
 // ─────────────────────────────────────────────
 global.fetch = jest.fn(() =>
   Promise.resolve({
-    json: () => Promise.resolve([
-      {
-        title: "Friend Event",
-        date: "2026-11-05",
-        owner: "Alex",
-        ticketmasterId: ""
-      }
-    ])
-  })
+    json: () =>
+      Promise.resolve([
+        {
+          title: 'Friend Event',
+          date: '2026-11-05',
+          owner: 'Alex',
+          ticketmasterId: '',
+        },
+      ]),
+  }),
 );
 
 // REQUIRED because api.js is imported indirectly
 global.getSavedEvents = jest.fn(() =>
   Promise.resolve([
     {
-      title: "My Event",
-      startDate: "2026-11-05",
-      owner: "You",
-      ticketmasterId: "123"
-    }
-  ])
+      title: 'My Event',
+      startDate: '2026-11-05',
+      owner: 'You',
+      ticketmasterId: '123',
+    },
+  ]),
 );
 
 // prevent noisy console errors from failing tests
@@ -68,7 +69,6 @@ beforeEach(() => {
 // TESTS
 // ─────────────────────────────────────────────
 describe('Calendar UI Behavior Tests', () => {
-
   test('Select All toggles all users OFF', () => {
     calendar.selectAllCheckbox.checked = false;
     calendar.toggleSelectAll();
@@ -86,7 +86,7 @@ describe('Calendar UI Behavior Tests', () => {
   });
 
   test('shouldShowEvent filters by active calendars', () => {
-    const event = { owner: "Alex" };
+    const event = { owner: 'Alex' };
 
     calendar.checkboxes['Alex'].checked = true;
     calendar.updateActiveCalendars();
@@ -95,7 +95,7 @@ describe('Calendar UI Behavior Tests', () => {
   });
 
   test('should hide event when owner is unchecked', () => {
-    const event = { owner: "Jordan" };
+    const event = { owner: 'Jordan' };
 
     calendar.checkboxes['Jordan'].checked = false;
     calendar.updateActiveCalendars();

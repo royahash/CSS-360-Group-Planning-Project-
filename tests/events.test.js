@@ -32,9 +32,24 @@ const mockEvent = {
   id: 'vvG1HZ_FUJPIyp',
   url: 'https://www.ticketmaster.com/event/123',
   images: [
-    { ratio: '3_2', url: 'https://example.com/small.jpg', width: 305, height: 203 },
-    { ratio: '16_9', url: 'https://example.com/medium.jpg', width: 640, height: 360 },
-    { ratio: '16_9', url: 'https://example.com/large.jpg', width: 2048, height: 1152 },
+    {
+      ratio: '3_2',
+      url: 'https://example.com/small.jpg',
+      width: 305,
+      height: 203,
+    },
+    {
+      ratio: '16_9',
+      url: 'https://example.com/medium.jpg',
+      width: 640,
+      height: 360,
+    },
+    {
+      ratio: '16_9',
+      url: 'https://example.com/large.jpg',
+      width: 2048,
+      height: 1152,
+    },
   ],
   dates: { start: { localDate: '2026-11-05' } },
   _embedded: {
@@ -68,7 +83,7 @@ beforeEach(() => {
   global.fetch = jest.fn(() =>
     Promise.resolve({
       json: () => Promise.resolve(mockApiResponse),
-    })
+    }),
   );
 });
 
@@ -97,7 +112,9 @@ describe('getApiUrl()', () => {
   });
 
   test('includes Ticketmaster endpoint', () => {
-    expect(getApiUrl()).toContain('app.ticketmaster.com/discovery/v2/events.json');
+    expect(getApiUrl()).toContain(
+      'app.ticketmaster.com/discovery/v2/events.json',
+    );
   });
 
   test('includes coordinates', () => {
@@ -115,8 +132,12 @@ describe('setSort()', () => {
 
   test('toggles active button', () => {
     setSort('date,desc');
-    expect(document.getElementById('sort-newest').classList.contains('active-sort')).toBe(true);
-    expect(document.getElementById('sort-date').classList.contains('active-sort')).toBe(false);
+    expect(
+      document.getElementById('sort-newest').classList.contains('active-sort'),
+    ).toBe(true);
+    expect(
+      document.getElementById('sort-date').classList.contains('active-sort'),
+    ).toBe(false);
   });
 });
 

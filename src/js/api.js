@@ -1,6 +1,6 @@
 async function getSavedEvents() {
   const response = await fetch('/api/events', {
-    credentials: 'include'
+    credentials: 'include',
   });
   if (!response.ok) return [];
   return response.json();
