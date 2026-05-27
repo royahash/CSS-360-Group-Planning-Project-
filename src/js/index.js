@@ -42,14 +42,11 @@ function toggleSave(title) {
     return 'saved';
   }
 }
-/**
- * Returns true if the event is currently saved.
- */
 function isEventSaved(title) {
   return savedEvents.includes(title);
 }
 
 // ── Exports (for Jest tests) ───────────────────────────────────────────────
 if (typeof module !== 'undefined') {
-  module.exports = { saveEvent, unsaveEvent, toggleSave, isEventSaved };
+  module.exports = { saveEvent, unsaveEvent, toggleSave, isEventSaved};
 }

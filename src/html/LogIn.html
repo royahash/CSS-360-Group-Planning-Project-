@@ -1,48 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/Registration.css">
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/Registration.css">
 </head>
 <body>
-    <div class="container">
-        <h2>Login</h2>
-        
-        <div class="error" id="userError"></div>
-        <input id="usernameOrEmail" placeholder="Username or Email">
-        
-        <div class="error" id="passError"></div>
-        <input id="password" type="password" placeholder="Password">
-        
-        <button id="loginButton" disabled>Login</button>
-        <button id="togglePassword" type="button">Show/Hide Password</button>
-        
-        <span class="link" onclick="window.location.href = 'SignUp.html'">Create account</span>
-    </div>
+<div class="container">
+  <h2>Login</h2>
 
-    <script type="module">
-        import { findUser, checkCredentials } from '../js/auth.js';
-        const loginButton = document.getElementById("loginButton");
-        
-        loginButton.onclick = () => {
-            const userError = document.getElementById("userError");
-            const passError = document.getElementById("passError");
-            userError.textContent = "";
-            passError.textContent = "";
+  <button id="googleLoginBtn" onclick="window.location.href='/auth/google'">
+    Sign in with Google
+  </button>
 
-            const id = document.getElementById('usernameOrEmail').value.trim();
-            const pass = document.getElementById('password').value;
+  <p style="text-align:center; color: #888; margin: 12px 0;">— or —</p>
 
-            if (!findUser(id)) {
-                userError.textContent = "Username/email not found";
-            } else if (!checkCredentials(id, pass)) {
-                passError.textContent = "Incorrect password";
-            } else {
-                window.location.href = 'onboarding.html';
-            }
-        };
-    </script>
+  <div class="error" id="userError"></div>
+  <input id="usernameOrEmail" placeholder="Username or Email">
+  <div class="error" id="passError"></div>
+  <input id="password" type="password" placeholder="Password">
+  <button id="loginButton" disabled>Login</button>
+  <button id="togglePassword" type="button">Show/Hide Password</button>
+  <span class="link" onclick="window.location.href = 'SignUp.html'">Create account</span>
+</div>
+
+<script type="module">
+  import { getCurrentUser } from '../js/auth.js';
+
+  getCurrentUser().then(user => {
+    if (user) window.location.href = '/html/index.html';
+  });
+
+  const loginButton = document.getElementById('loginButton');
+  const userError = document.getElementById('userError');
+  const passError = document.getElementById('passError');
+
+  loginButton.onclick = async () => {
+    userError.textContent = '';
+    passError.textContent = '';
+
+    const identifier = document.getElementById('usernameOrEmail').value.trim();
+    const password = document.getElementById('password').value;
+
+    try {
+      const response = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ identifier, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.error.includes('not found')) {
+          userError.textContent = data.error;
+        } else {
+          passError.textContent = data.error;
+        }
+        return;
+      }
+
+      window.location.href = '/html/index.html';
+    } catch (err) {
+      userError.textContent = 'Something went wrong. Please try again.';
+    }
+  };
+</script>
 </body>
 </html>

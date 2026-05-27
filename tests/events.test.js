@@ -1,4 +1,8 @@
 /**
+ * @jest-environment jsdom
+ */
+
+/**
  * events.test.js
  * Unit, Integration, and Smoke Tests for events.js
  */
