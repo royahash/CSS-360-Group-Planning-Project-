@@ -4,57 +4,183 @@
  * on the homepage dynamically.
  */
 /* global CONFIG, handleSaveEvent, isEventSaved */
+
 // ── Config ─────────────────────────────────────────────────────────────────
-// TODO: Move API_KEY to backend server before production deployment
-// Do not commit this file with a real key - move to .env
-const API_KEY = (typeof CONFIG !== "undefined") ? CONFIG.TICKETMASTER_API_KEY : "test_key";
-//if CONFIG exists use the real key, otherwise use the placeholder string test_key. During testing Jest will use test_key. 
-//const CITY = "Seattle";
-let currentSort = "date,asc";
+const API_KEY =
+  typeof CONFIG !== 'undefined' ? CONFIG.TICKETMASTER_API_KEY : 'test_key';
+
+let currentSort = 'date,asc';
 let currentPage = 0;
 let allEvents = [];
-function getCurrentSort() { return currentSort; }
-//const API_URL = `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${API_KEY}&latlong=47.6062,-122.3321&radius=30&unit=miles&size=100&expand=venues`;
-function getApiUrl() {  //builds the URL fresh each time using whatever sort is current
-  return `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${API_KEY}&latlong=47.6062,-122.3321&radius=30&unit=miles&size=100&expand=venues&sort=${currentSort}`; // tracks which sort is active
-}
-/*Ticketmaster handles the actual sorting on their end — date,asc means soonest events first, onSaleStartDate,desc means most recently listed events first*/
+let currentSearch = '';
 
-function setSort(sortValue) { //updates the sort, highlights the active button in green, and reloads the events
+function getCurrentSort() {
+  return currentSort;
+}
+
+function getCurrentSearch() {
+  return currentSearch;
+}
+
+function setSort(sortValue) {
   currentSort = sortValue;
 
   // Update active button styling
-  document.querySelectorAll(".sort-btn").forEach(btn => {
-    btn.classList.remove("active-sort");
+  document.querySelectorAll('.sort-btn').forEach((btn) => {
+    btn.classList.remove('active-sort');
   });
-  document.getElementById(
-    sortValue === "date,asc" ? "sort-date" : "sort-newest"
-  ).classList.add("active-sort");
+  document
+    .getElementById(sortValue === 'date,asc' ? 'sort-date' : 'sort-newest')
+    .classList.add('active-sort');
 
   // Reload events with new sort
   loadEvents();
+}
 
+// ── URL Builders ───────────────────────────────────────────────────────────
+function getApiUrl() {
+  return `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${API_KEY}&latlong=47.6062,-122.3321&radius=30&unit=miles&size=100&expand=venues&sort=${currentSort}`;
+}
+
+function getSearchUrl(query) {
+  const base = `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${API_KEY}&size=100&expand=venues&sort=${currentSort}`;
+
+  // US state codes — if query matches, search by state
+  const stateCodes = [
+    'AL',
+    'AK',
+    'AZ',
+    'AR',
+    'CA',
+    'CO',
+    'CT',
+    'DE',
+    'FL',
+    'GA',
+    'HI',
+    'ID',
+    'IL',
+    'IN',
+    'IA',
+    'KS',
+    'KY',
+    'LA',
+    'ME',
+    'MD',
+    'MA',
+    'MI',
+    'MN',
+    'MS',
+    'MO',
+    'MT',
+    'NE',
+    'NV',
+    'NH',
+    'NJ',
+    'NM',
+    'NY',
+    'NC',
+    'ND',
+    'OH',
+    'OK',
+    'OR',
+    'PA',
+    'RI',
+    'SC',
+    'SD',
+    'TN',
+    'TX',
+    'UT',
+    'VT',
+    'VA',
+    'WA',
+    'WV',
+    'WI',
+    'WY',
+  ];
+
+  // Known Ticketmaster categories
+  const categories = [
+    'music',
+    'sports',
+    'arts',
+    'theatre',
+    'family',
+    'comedy',
+    'film',
+    'miscellaneous',
+    'concerts',
+    'festivals',
+  ];
+
+  const lower = query.toLowerCase().trim();
+  const upper = query.toUpperCase().trim();
+
+  if (stateCodes.includes(upper)) {
+    return `${base}&stateCode=${upper}&countryCode=US`;
+  }
+
+  if (categories.some((cat) => lower.includes(cat))) {
+    return `${base}&classificationName=${encodeURIComponent(query)}&countryCode=US`;
+  }
+
+  // Default — search by keyword (covers event names, cities, venues)
+  return `${base}&keyword=${encodeURIComponent(query)}&countryCode=US`;
+}
+
+// ── Search Handlers ────────────────────────────────────────────────────────
+function handleSearch() {
+  const input = document.getElementById('search-input');
+  const query = input.value.trim();
+
+  if (!query) {
+    clearSearch();
+    return;
+  }
+
+  currentSearch = query;
+  document.getElementById('clear-search-btn').style.display = 'inline-block';
+  loadEvents();
+}
+
+function clearSearch() {
+  currentSearch = '';
+  document.getElementById('search-input').value = '';
+  document.getElementById('clear-search-btn').style.display = 'none';
+  loadEvents();
+}
+
+// ── Allow pressing Enter to trigger search ─────────────────────────────────
+if (typeof window !== 'undefined') {
+  window.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('search-input');
+    if (input) {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleSearch();
+      });
+    }
+  });
 }
 
 // ── Build one event card from Ticketmaster data ────────────────────────────
 function buildEventCard(event) {
-  // Find a 16:9 image or fall back to the first available
-  const image = event.images
-  .filter(img => img.ratio === "16_9") //collects ALL the 16_9 images into a list
-  .sort((a, b) => b.width - a.width)[0] || event.images[0]; // sorts them from widest to narrowest and piks the first one
+  const image =
+    event.images
+      .filter((img) => img.ratio === '16_9')
+      .sort((a, b) => b.width - a.width)[0] || event.images[0];
 
-  // Get date
   const date = event.dates.start.localDate;
 
-  // Get venue - lives inside _embedded.venues[0]
-  const venue = event._embedded && event._embedded.venues && event._embedded.venues[0];
-  const city = venue ? venue.city.name + ", " + venue.state.stateCode : "Seattle, WA";
-  const venueName = venue ? venue.name : "";
+  const venue =
+    event._embedded && event._embedded.venues && event._embedded.venues[0];
+  const city = venue
+    ? venue.city.name + ', ' + venue.state.stateCode
+    : 'Seattle, WA';
+  const venueName = venue ? venue.name : '';
 
-  // Build the card element
-  const card = document.createElement("div");
-  card.className = "event-card";
-  card.style.cursor = "pointer";
+  const card = document.createElement('div');
+  card.className = 'event-card';
+  card.style.cursor = 'pointer';
 
   card.innerHTML = `
     <img src="${image.url}" alt="${event.name}">
@@ -62,27 +188,25 @@ function buildEventCard(event) {
       <h3>${event.name}</h3>
       <button class="card-btn" onclick="event.stopPropagation()">Save</button>
     </div>
-    <p>${venueName}</p> 
+    <p>${venueName}</p>
     <p>${city}</p>
     <p>${date}</p>
   `;
 
-  card.addEventListener("click", () => {
+  card.addEventListener('click', () => {
     window.location.href = `event.html?id=${event.id}`;
   });
 
-  const btn = card.querySelector(".card-btn");
+  const btn = card.querySelector('.card-btn');
 
-  // LOAD INITIAL BUTTON STATE
-  isEventSaved(event.id).then(saved => {
+  isEventSaved(event.id).then((saved) => {
     if (saved) {
-      btn.textContent = "Saved";
-      btn.style.background = "#a5d6a7";
+      btn.textContent = 'Saved';
+      btn.style.background = '#a5d6a7';
     }
   });
 
-  // SAVE / UNSAVE
-  btn.addEventListener("click", async () => {
+  btn.addEventListener('click', async () => {
     await handleSaveEvent(event, btn);
   });
 
@@ -91,36 +215,56 @@ function buildEventCard(event) {
 
 // ── Fetch events and display them ──────────────────────────────────────────
 function loadEvents() {
-  const container = document.querySelector(".event-container");
-  container.innerHTML = "<p>Loading events...</p>";
+  const container = document.querySelector('.event-container');
+  container.innerHTML = '<p>Loading events...</p>';
 
-  return fetch(getApiUrl())
-    .then(response => response.json())
-    .then(data => {
+  const url = currentSearch ? getSearchUrl(currentSearch) : getApiUrl();
+
+  return fetch(url)
+    .then((response) => response.json())
+    .then((data) => {
+      if (!data._embedded || !data._embedded.events) {
+        allEvents = [];
+        currentPage = 0;
+        renderPage();
+        return;
+      }
+
       const events = data._embedded.events;
-      const uniqueEvents = events.filter((event, index, self) =>
-        index === self.findIndex(e => e.name === event.name)
+      const uniqueEvents = events.filter(
+        (event, index, self) =>
+          index === self.findIndex((e) => e.name === event.name),
       );
-      // Store shuffled events once — reused across all page navigation
-      allEvents = uniqueEvents.sort(() => Math.random() - 0.5);
+
+      allEvents = currentSearch
+        ? uniqueEvents
+        : uniqueEvents.sort(() => Math.random() - 0.5);
+
       currentPage = 0;
       renderPage();
     })
-    .catch(error => {
-      container.innerHTML = "<p>Failed to load events. Please try again later.</p>";
-      console.error("Error fetching events:", error);
+    .catch((error) => {
+      container.innerHTML =
+        '<p>Failed to load events. Please try again later.</p>';
+      console.error('Error fetching events:', error);
     });
 }
 
 function renderPage() {
-  const container = document.querySelector(".event-container");
-  container.innerHTML = "";
+  const container = document.querySelector('.event-container');
+  container.innerHTML = '';
+
+  if (allEvents.length === 0) {
+    container.innerHTML =
+      '<p>No events found. Try a different search term.</p>';
+    return;
+  }
 
   const start = currentPage * 12;
   const end = start + 12;
   const pageEvents = allEvents.slice(start, end);
 
-  pageEvents.forEach(event => {
+  pageEvents.forEach((event) => {
     const card = buildEventCard(event);
     container.appendChild(card);
   });
@@ -129,34 +273,31 @@ function renderPage() {
 }
 
 function renderPagination() {
-  // Remove existing pagination if any
-  const existing = document.querySelector(".pagination");
+  const existing = document.querySelector('.pagination');
   if (existing) existing.remove();
 
   const totalPages = Math.ceil(allEvents.length / 12);
   if (totalPages <= 1) return;
 
-  const pagination = document.createElement("div");
-  pagination.className = "pagination";
+  const pagination = document.createElement('div');
+  pagination.className = 'pagination';
 
-  // Previous button
-  const prevBtn = document.createElement("button");
-  prevBtn.className = "page-btn";
-  prevBtn.innerText = "Previous";
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'page-btn';
+  prevBtn.innerText = 'Previous';
   prevBtn.disabled = currentPage === 0;
-  prevBtn.addEventListener("click", () => {
+  prevBtn.addEventListener('click', () => {
     currentPage--;
     renderPage();
     window.scrollTo(0, 0);
   });
   pagination.appendChild(prevBtn);
 
-  // Page number buttons
   for (let i = 0; i < totalPages; i++) {
-    const pageBtn = document.createElement("button");
-    pageBtn.className = "page-btn" + (i === currentPage ? " active-page" : "");
+    const pageBtn = document.createElement('button');
+    pageBtn.className = 'page-btn' + (i === currentPage ? ' active-page' : '');
     pageBtn.innerText = i + 1;
-    pageBtn.addEventListener("click", () => {
+    pageBtn.addEventListener('click', () => {
       currentPage = i;
       renderPage();
       window.scrollTo(0, 0);
@@ -164,29 +305,46 @@ function renderPagination() {
     pagination.appendChild(pageBtn);
   }
 
-  // Next button
-  const nextBtn = document.createElement("button");
-  nextBtn.className = "page-btn";
-  nextBtn.innerText = "Next";
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'page-btn';
+  nextBtn.innerText = 'Next';
   nextBtn.disabled = currentPage === totalPages - 1;
-  nextBtn.addEventListener("click", () => {
+  nextBtn.addEventListener('click', () => {
     currentPage++;
     renderPage();
     window.scrollTo(0, 0);
   });
   pagination.appendChild(nextBtn);
 
-  // Insert after the event container
-  const container = document.querySelector(".event-container");
-  container.insertAdjacentElement("afterend", pagination);
+  const container = document.querySelector('.event-container');
+  container.insertAdjacentElement('afterend', pagination);
 }
 
 // ── Run when page loads ────────────────────────────────────────────────────
-if (typeof window !== "undefined" && typeof module === "undefined") {
+if (typeof window !== 'undefined' && typeof module === 'undefined') {
   loadEvents();
 }
 
+// ── Expose functions to global scope for HTML onclick handlers ────────────
+if (typeof window !== 'undefined') {
+  window.setSort = setSort;
+  window.handleSearch = handleSearch;
+  window.clearSearch = clearSearch;
+}
+
 // ── Exports (for Jest tests) ──────────────────────────────────────────────
-if (typeof module !== "undefined") {
-  module.exports = { getApiUrl, buildEventCard, loadEvents, setSort, getCurrentSort, renderPage, renderPagination };
+if (typeof module !== 'undefined') {
+  module.exports = {
+    getApiUrl,
+    getSearchUrl,
+    buildEventCard,
+    loadEvents,
+    setSort,
+    getCurrentSort,
+    getCurrentSearch,
+    handleSearch,
+    clearSearch,
+    renderPage,
+    renderPagination,
+  };
 }

@@ -121,7 +121,8 @@ body {
 .sort-btn {
   background: white;
   border: 1.5px solid #333;
-  border-radius: 8px;
+  margin: 1px 0 2px 0;
+  border-radius: 80px;
   padding: 6px 18px;
   font-size: 14px;
   cursor: pointer;
@@ -132,8 +133,8 @@ body {
 }
 
 .active-sort {
-  background: #a5d6a7;
-  border-color: #4caf50;
+  background: #95d3f0;
+  border-color: #5ea8ca;
   font-weight: 600;
 }
 
@@ -351,4 +352,56 @@ body {
   background: #a5d6a7;
   border-color: #4caf50;
   font-weight: 600;
+}
+/* ── Search Bar ────────────────────────────────────────────────────── */
+.search-bar {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 8px 0;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.search-bar input {
+  width: 320px;
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 80px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-bar input:focus {
+  border-color: #a5d6a7;
+}
+
+#search-btn {
+  padding: 10px 18px;
+  background: #a5d6a7;
+  border: none;
+  border-radius: 80px;
+  font-size: 15px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+#search-btn:hover {
+  background: #81c784;
+}
+
+#clear-search-btn {
+  padding: 10px 14px;
+  background: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#clear-search-btn:hover {
+  background: #e0e0e0;
 }

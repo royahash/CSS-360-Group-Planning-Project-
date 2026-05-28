@@ -1,36 +1,47 @@
-// DATA LOGIC
-export function getUsers() {
-  return JSON.parse(localStorage.getItem('users')) || [];
+// ── Auth API ──────────────────────────────────────────────────────────────
+export async function getCurrentUser() {
+  try {
+    const response = await fetch('/auth/me', { credentials: 'include' });
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    return null;
+  }
 }
 
-export function findUser(identifier) {
-  const users = getUsers();
-  return (
-    users.find((u) => u.username === identifier || u.email === identifier) ||
-    null
-  );
+export function loginWithGoogle() {
+  window.location.href = '/auth/google';
 }
 
-export function addUser(userData) {
-  const users = getUsers();
-  const exists = users.some(
-    (u) => u.username === userData.username || u.email === userData.email,
-  );
-  if (exists) throw new Error('Username or email already exists');
-  users.push(userData);
-  localStorage.setItem('users', JSON.stringify(users));
+export function logout() {
+  window.location.href = '/auth/logout';
 }
 
-export function checkPasswordMatch(p1, p2) {
-  return p1 === p2;
+export async function savePreferences(preferences) {
+  try {
+    const response = await fetch('/api/user/preferences', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ preferences }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
-export function checkCredentials(id, pass) {
-  const user = findUser(id);
-  return user ? user.password === pass : false;
+// ── Page Protection ───────────────────────────────────────────────────────
+// Call this on any page that requires login
+export async function requireLogin() {
+  const user = await getCurrentUser();
+  if (!user) {
+    window.location.href = '/html/LogIn.html';
+  }
+  return user;
 }
 
-// UI LOGIC (Automatically enables green buttons and handles toggle)
+// ── UI LOGIC ──────────────────────────────────────────────────────────────
 const updateUI = () => {
   // Signup Page
   const signupBtn = document.getElementById('signupButton');
@@ -51,9 +62,7 @@ const updateUI = () => {
   }
 };
 
-// Capture phase ensures events reach these listeners in JSDOM tests
 document.addEventListener('input', updateUI, true);
-
 document.addEventListener(
   'click',
   (e) => {

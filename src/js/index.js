@@ -42,9 +42,6 @@ function toggleSave(title) {
     return 'saved';
   }
 }
-/**
- * Returns true if the event is currently saved.
- */
 function isEventSaved(title) {
   return savedEvents.includes(title);
 }
