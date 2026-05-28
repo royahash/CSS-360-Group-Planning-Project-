@@ -47,16 +47,70 @@ function getSearchUrl(query) {
 
   // US state codes — if query matches, search by state
   const stateCodes = [
-    'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN',
-    'IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV',
-    'NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN',
-    'TX','UT','VT','VA','WA','WV','WI','WY'
+    'AL',
+    'AK',
+    'AZ',
+    'AR',
+    'CA',
+    'CO',
+    'CT',
+    'DE',
+    'FL',
+    'GA',
+    'HI',
+    'ID',
+    'IL',
+    'IN',
+    'IA',
+    'KS',
+    'KY',
+    'LA',
+    'ME',
+    'MD',
+    'MA',
+    'MI',
+    'MN',
+    'MS',
+    'MO',
+    'MT',
+    'NE',
+    'NV',
+    'NH',
+    'NJ',
+    'NM',
+    'NY',
+    'NC',
+    'ND',
+    'OH',
+    'OK',
+    'OR',
+    'PA',
+    'RI',
+    'SC',
+    'SD',
+    'TN',
+    'TX',
+    'UT',
+    'VT',
+    'VA',
+    'WA',
+    'WV',
+    'WI',
+    'WY',
   ];
 
   // Known Ticketmaster categories
   const categories = [
-    'music', 'sports', 'arts', 'theatre', 'family', 'comedy',
-    'film', 'miscellaneous', 'concerts', 'festivals'
+    'music',
+    'sports',
+    'arts',
+    'theatre',
+    'family',
+    'comedy',
+    'film',
+    'miscellaneous',
+    'concerts',
+    'festivals',
   ];
 
   const lower = query.toLowerCase().trim();
@@ -66,7 +120,7 @@ function getSearchUrl(query) {
     return `${base}&stateCode=${upper}&countryCode=US`;
   }
 
-  if (categories.some(cat => lower.includes(cat))) {
+  if (categories.some((cat) => lower.includes(cat))) {
     return `${base}&classificationName=${encodeURIComponent(query)}&countryCode=US`;
   }
 
