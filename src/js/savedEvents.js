@@ -8,6 +8,13 @@ async function isEventSaved(ticketmasterId) {
 
 // eslint-disable-next-line no-unused-vars
 async function handleSaveEvent(eventData, buttonEl) {
+  // If not logged in, send to login page
+  const response = await fetch('/auth/me', { credentials: 'include' });
+  if (!response.ok) {
+    window.location.href = '/html/LogIn.html';
+    return;
+  }
+
   const alreadySaved = await isEventSaved(eventData.id);
 
   // =========================

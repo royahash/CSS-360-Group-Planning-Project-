@@ -15,35 +15,43 @@
       </a>
     </div>
 
-    <div class="main-content">
-      <div class="header">
-        <h1>My Profile</h1>
-        <p>Your event preferences and onboarding choices</p>
+  <div class="main-content">
+    <div class="header">
+      <h1>My Profile</h1>
+      <p>Your event preferences and onboarding choices</p>
+    </div>
+
+    <div class="profile-card">
+      <div class="profile-header">
+        <div class="profile-avatar">
+          <img id="profile-photo" src="" alt="Profile photo"
+               style="width:100%; height:100%; border-radius:50%; display:none; object-fit:cover;">
+          <i id="profile-icon" class="fa-solid fa-user"></i>
+        </div>
+        <div>
+          <h2 id="profile-name">Welcome back</h2>
+          <p id="profile-email">Loading your profile...</p>
+        </div>
       </div>
 
-      <div class="profile-card">
-        <div class="profile-header">
-          <div class="profile-avatar"><i class="fa-solid fa-user"></i></div>
-          <div>
-            <h2>Welcome back</h2>
-            <p>Here are the categories you selected during onboarding.</p>
-          </div>
+      <div class="profile-info-card">
+        <h3>Preferred interests</h3>
+        <div id="interestList" class="interest-list"></div>
+        <div id="emptyState" class="empty-state" style="display:none;">
+          You have not chosen any interests yet. Visit onboarding to save your favorite event categories.
         </div>
+      </div>
 
-        <div class="profile-info-card">
-          <h3>Preferred interests</h3>
-          <div id="interestList" class="interest-list"></div>
-          <div id="emptyState" class="empty-state" style="display: none;">
-            You have not chosen any interests yet. Visit onboarding to save your favorite event categories.
-          </div>
-        </div>
-
-        <div class="profile-actions">
-          <a href="/html/onboarding.html"><button class="card-btn">Update interests</button></a>
-          <a href="/html/index.html"><button class="card-btn">Back to events</button></a>
-        </div>
+      <div class="profile-actions">
+        <a href="/html/onboarding.html"><button class="card-btn">Update interests</button></a>
+        <a href="/html/index.html"><button class="card-btn">Back to events</button></a>
+        <button class="card-btn" id="signOutBtn" 
+                style="color: #e74c3c; border-color: #e74c3c;">
+          Sign out
+        </button>
       </div>
     </div>
+  </div>
 
     <div class="sidebar-right">
       <button class="side-btn active"><i class="fa-solid fa-user"></i></button>
@@ -58,26 +66,44 @@
 
   </div>
 
-  <script>
-    function loadProfileInterests() {
-      const saved = JSON.parse(localStorage.getItem('selectedInterests') || '[]');
-      const interestList = document.getElementById('interestList');
-      const emptyState = document.getElementById('emptyState');
+<script type="module">
+  import { getCurrentUser, logout } from '/js/auth.js';
 
-      if (!saved.length) {
-        interestList.innerHTML = '';
-        emptyState.style.display = 'block';
-        return;
-      }
+  const user = await getCurrentUser();
 
-      emptyState.style.display = 'none';
-      interestList.innerHTML = saved.map(interest => `
-        <span class="interest-chip">${interest}</span>
-      `).join('');
+  if (!user) {
+    window.location.href = '/html/LogIn.html';
+  } else {
+    // Show name and email
+    document.getElementById('profile-name').textContent = user.displayName;
+    document.getElementById('profile-email').textContent = user.email;
+
+    // Show Google profile photo if available
+    if (user.photo) {
+      const img = document.getElementById('profile-photo');
+      const icon = document.getElementById('profile-icon');
+      img.src = user.photo;
+      img.style.display = 'block';
+      icon.style.display = 'none';
     }
 
-    document.addEventListener('DOMContentLoaded', loadProfileInterests);
-  </script>
+    // Load preferences from database
+    const interestList = document.getElementById('interestList');
+    const emptyState = document.getElementById('emptyState');
 
+    if (!user.preferences || user.preferences.length === 0) {
+      interestList.innerHTML = '';
+      emptyState.style.display = 'block';
+    } else {
+      emptyState.style.display = 'none';
+      interestList.innerHTML = user.preferences
+        .map(interest => `<span class="interest-chip">${interest}</span>`)
+        .join('');
+    }
+
+    // Sign out button
+    document.getElementById('signOutBtn').onclick = logout;
+  }
+</script>
 </body>
 </html>

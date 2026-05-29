@@ -4,6 +4,7 @@
  * on the homepage dynamically.
  */
 /* global CONFIG, handleSaveEvent, isEventSaved */
+
 // ── Config ─────────────────────────────────────────────────────────────────
 // TODO: Move API_KEY to backend server before production deployment
 // Do not commit this file with a real key - move to .env
@@ -14,18 +15,17 @@ const API_KEY =
 let currentSort = 'date,asc';
 let currentPage = 0;
 let allEvents = [];
+let currentSearch = '';
+
 function getCurrentSort() {
   return currentSort;
 }
-//const API_URL = `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${API_KEY}&latlong=47.6062,-122.3321&radius=30&unit=miles&size=100&expand=venues`;
-function getApiUrl() {
-  //builds the URL fresh each time using whatever sort is current
-  return `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${API_KEY}&latlong=47.6062,-122.3321&radius=30&unit=miles&size=100&expand=venues&sort=${currentSort}`; // tracks which sort is active
+
+function getCurrentSearch() {
+  return currentSearch;
 }
-/*Ticketmaster handles the actual sorting on their end — date,asc means soonest events first, onSaleStartDate,desc means most recently listed events first*/
 
 function setSort(sortValue) {
-  //updates the sort, highlights the active button in green, and reloads the events
   currentSort = sortValue;
 
   // Update active button styling
@@ -38,6 +38,131 @@ function setSort(sortValue) {
 
   // Reload events with new sort
   loadEvents();
+}
+
+// ── URL Builders ───────────────────────────────────────────────────────────
+function getApiUrl() {
+  return `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${API_KEY}&latlong=47.6062,-122.3321&radius=30&unit=miles&size=100&expand=venues&sort=${currentSort}`;
+}
+
+function getSearchUrl(query) {
+  const base = `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${API_KEY}&size=100&expand=venues&sort=${currentSort}`;
+
+  // US state codes — if query matches, search by state
+  const stateCodes = [
+    'AL',
+    'AK',
+    'AZ',
+    'AR',
+    'CA',
+    'CO',
+    'CT',
+    'DE',
+    'FL',
+    'GA',
+    'HI',
+    'ID',
+    'IL',
+    'IN',
+    'IA',
+    'KS',
+    'KY',
+    'LA',
+    'ME',
+    'MD',
+    'MA',
+    'MI',
+    'MN',
+    'MS',
+    'MO',
+    'MT',
+    'NE',
+    'NV',
+    'NH',
+    'NJ',
+    'NM',
+    'NY',
+    'NC',
+    'ND',
+    'OH',
+    'OK',
+    'OR',
+    'PA',
+    'RI',
+    'SC',
+    'SD',
+    'TN',
+    'TX',
+    'UT',
+    'VT',
+    'VA',
+    'WA',
+    'WV',
+    'WI',
+    'WY',
+  ];
+
+  // Known Ticketmaster categories
+  const categories = [
+    'music',
+    'sports',
+    'arts',
+    'theatre',
+    'family',
+    'comedy',
+    'film',
+    'miscellaneous',
+    'concerts',
+    'festivals',
+  ];
+
+  const lower = query.toLowerCase().trim();
+  const upper = query.toUpperCase().trim();
+
+  if (stateCodes.includes(upper)) {
+    return `${base}&stateCode=${upper}&countryCode=US`;
+  }
+
+  if (categories.some((cat) => lower.includes(cat))) {
+    return `${base}&classificationName=${encodeURIComponent(query)}&countryCode=US`;
+  }
+
+  // Default — search by keyword (covers event names, cities, venues)
+  return `${base}&keyword=${encodeURIComponent(query)}&countryCode=US`;
+}
+
+// ── Search Handlers ────────────────────────────────────────────────────────
+function handleSearch() {
+  const input = document.getElementById('search-input');
+  const query = input.value.trim();
+
+  if (!query) {
+    clearSearch();
+    return;
+  }
+
+  currentSearch = query;
+  document.getElementById('clear-search-btn').style.display = 'inline-block';
+  loadEvents();
+}
+
+function clearSearch() {
+  currentSearch = '';
+  document.getElementById('search-input').value = '';
+  document.getElementById('clear-search-btn').style.display = 'none';
+  loadEvents();
+}
+
+// ── Allow pressing Enter to trigger search ─────────────────────────────────
+if (typeof window !== 'undefined') {
+  window.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('search-input');
+    if (input) {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleSearch();
+      });
+    }
+  });
 }
 
 // ── Build one event card from Ticketmaster data ────────────────────────────
@@ -70,13 +195,13 @@ function buildEventCard(event) {
       <h3>${event.name}</h3>
       <button class="card-btn" onclick="event.stopPropagation()">Save</button>
     </div>
-    <p>${venueName}</p> 
+    <p>${venueName}</p>
     <p>${city}</p>
     <p>${date}</p>
   `;
 
   card.addEventListener('click', () => {
-    window.location.href = `event.html?id=${event.id}`;
+    window.location.href = `/html/event.html?id=${event.id}`;
   });
 
   const btn = card.querySelector('.card-btn');
@@ -102,16 +227,28 @@ function loadEvents() {
   const container = document.querySelector('.event-container');
   container.innerHTML = '<p>Loading events...</p>';
 
-  return fetch(getApiUrl())
+  const url = currentSearch ? getSearchUrl(currentSearch) : getApiUrl();
+
+  return fetch(url)
     .then((response) => response.json())
     .then((data) => {
+      if (!data._embedded || !data._embedded.events) {
+        allEvents = [];
+        currentPage = 0;
+        renderPage();
+        return;
+      }
+
       const events = data._embedded.events;
       const uniqueEvents = events.filter(
         (event, index, self) =>
           index === self.findIndex((e) => e.name === event.name),
       );
-      // Store shuffled events once — reused across all page navigation
-      allEvents = uniqueEvents.sort(() => Math.random() - 0.5);
+
+      allEvents = currentSearch
+        ? uniqueEvents
+        : uniqueEvents.sort(() => Math.random() - 0.5);
+
       currentPage = 0;
       renderPage();
     })
@@ -125,6 +262,12 @@ function loadEvents() {
 function renderPage() {
   const container = document.querySelector('.event-container');
   container.innerHTML = '';
+
+  if (allEvents.length === 0) {
+    container.innerHTML =
+      '<p>No events found. Try a different search term.</p>';
+    return;
+  }
 
   const start = currentPage * 12;
   const end = start + 12;
@@ -161,7 +304,6 @@ function renderPagination() {
   });
   pagination.appendChild(prevBtn);
 
-  // Page number buttons
   for (let i = 0; i < totalPages; i++) {
     const pageBtn = document.createElement('button');
     pageBtn.className = 'page-btn' + (i === currentPage ? ' active-page' : '');
@@ -196,14 +338,25 @@ if (typeof window !== 'undefined' && typeof module === 'undefined') {
   loadEvents();
 }
 
+// ── Expose functions to global scope for HTML onclick handlers ────────────
+if (typeof window !== 'undefined') {
+  window.setSort = setSort;
+  window.handleSearch = handleSearch;
+  window.clearSearch = clearSearch;
+}
+
 // ── Exports (for Jest tests) ──────────────────────────────────────────────
 if (typeof module !== 'undefined') {
   module.exports = {
     getApiUrl,
+    getSearchUrl,
     buildEventCard,
     loadEvents,
     setSort,
     getCurrentSort,
+    getCurrentSearch,
+    handleSearch,
+    clearSearch,
     renderPage,
     renderPagination,
   };

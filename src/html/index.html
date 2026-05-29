@@ -19,22 +19,28 @@
         </a>
     </div>
 
-    <!-- Center Column -->  
-    <div class="main-content">
-
-        <div class="header">
-          <h1>Event Explorer</h1>
-          <p>Find local events near you</p>
-            <div class="sort-controls">
-            <button class="sort-btn active-sort" id="sort-date" onclick="setSort('date,asc')">Soonest</button>
-            <button class="sort-btn" id="sort-newest" onclick="setSort('date,desc')">Latest</button>
-            </div>
-        </div>
-
-        <div class="event-container">
-
-        </div>
+  <!-- Center Column -->  
+  <div class="main-content">
+    <div class="header">
+      <h1>Event Explorer</h1>
+      <p>Find local events near you</p>
+      <div class="search-bar">
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Search by event name, category, or city..."
+        />
+        <button id="search-btn" onclick="handleSearch()">Search</button>
+        <button id="clear-search-btn" onclick="clearSearch()" style="display:none;">Clear</button>
+        <button class="sort-btn active-sort" id="sort-date" onclick="setSort('date,asc')">Soonest</button>
+        <button class="sort-btn" id="sort-newest" onclick="setSort('date,desc')">Latest</button>
+        <button class="sort-btn" id="filter-btn" style="opacity: 0.4; cursor: not-allowed;" disabled>
+          <i class="fa-solid fa-sliders"></i> Filter
+        </button>
+      </div>
     </div>
+    <div class="event-container"></div>
+  </div>
 
     <!-- Right Column -->
     <div class="sidebar-right">
@@ -44,8 +50,9 @@
       <a href="/html/calendar.html">
         <button class="side-btn"><i class="fa-solid fa-calendar"></i></button>
       </a>
+      <!-- <a href="/html/friends.html">  -->
       <button class="side-btn"><i class="fa-solid fa-user-group"></i></button>
-      </a>
+      <!-- </a> -->
       <a href="/html/event-request.html">
         <button class="side-btn"><i class="fa-solid fa-plus"></i></button>
       </a>
@@ -57,5 +64,12 @@
 <script src="/js/api.js"></script>
 <script src="/js/savedEvents.js"></script>
 <script src="/js/events.js"></script>
+<script type="module">
+  import { getCurrentUser } from '/js/auth.js';
+  const user = await getCurrentUser();
+  if (user) {
+    window.currentUser = user;
+  }
+</script>
 </body>
 </html>

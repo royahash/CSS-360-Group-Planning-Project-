@@ -105,20 +105,30 @@
 
 </div>
 
-<script>
+<script type="module">
+  import { getCurrentUser, savePreferences } from '/js/auth.js';
+
   let selectedInterests = [];
 
-  function loadOnboardingSelection() {
-    selectedInterests = JSON.parse(localStorage.getItem('selectedInterests') || '[]');
+  async function loadOnboardingSelection() {
+    const user = await getCurrentUser();
+
+    if (user && user.preferences && user.preferences.length > 0) {
+      // Load from database if logged in
+      selectedInterests = user.preferences;
+    } else {
+      // Fall back to localStorage for guests
+      selectedInterests = JSON.parse(localStorage.getItem('selectedInterests') || '[]');
+    }
+
     document.querySelectorAll('.interest-tile').forEach(tile => {
-      const interest = tile.dataset.interest;
-      if (selectedInterests.includes(interest)) {
+      if (selectedInterests.includes(tile.dataset.interest)) {
         tile.classList.add('selected');
       }
     });
   }
 
-  function selectInterest(tile, interest) {
+  window.selectInterest = function(tile, interest) {
     if (selectedInterests.includes(interest)) {
       selectedInterests = selectedInterests.filter(i => i !== interest);
       tile.classList.remove('selected');
@@ -126,17 +136,29 @@
       selectedInterests.push(interest);
       tile.classList.add('selected');
     }
-  }
+  };
 
-  function saveOnboarding() {
-    localStorage.setItem('selectedInterests', JSON.stringify(selectedInterests));
-    window.location.href = '/html/profile.html';
-  }
+  window.saveOnboarding = async function() {
+    const user = await getCurrentUser();
+    if (user) {
+      // Save to database
+      await savePreferences(selectedInterests);
+    } else {
+      // Save to localStorage for guests
+      localStorage.setItem('selectedInterests', JSON.stringify(selectedInterests));
+    }
+    window.location.href = user ? '/html/profile.html' : '/html/index.html';
+  };
 
-  function skipOnboarding() {
-    localStorage.setItem('selectedInterests', JSON.stringify([]));
+  window.skipOnboarding = async function() {
+    const user = await getCurrentUser();
+    if (user) {
+      await savePreferences([]);
+    } else {
+      localStorage.setItem('selectedInterests', JSON.stringify([]));
+    }
     window.location.href = '/html/index.html';
-  }
+  };
 
   document.addEventListener('DOMContentLoaded', loadOnboardingSelection);
 </script>
