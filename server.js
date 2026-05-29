@@ -152,18 +152,37 @@ app.get('/api/events/:ticketmasterId', async (req, res) => {
   }
 });
 
-// ── Fallback Route ────────────────────────────────────────────────────────
+// ── Page Routes ───────────────────────────────────────────────────────────
+const pages = {
+  '/': 'index.html',
+  '/index.html': 'index.html',
+  '/calendar': 'calendar.html',
+  '/calendar.html': 'calendar.html',
+  '/profile': 'profile.html',
+  '/profile.html': 'profile.html',
+  '/onboarding': 'onboarding.html',
+  '/onboarding.html': 'onboarding.html',
+  '/login': 'LogIn.html',
+  '/login.html': 'LogIn.html',
+  '/signup': 'SignUp.html',
+  '/signup.html': 'SignUp.html',
+  '/event': 'event.html',
+  '/event.html': 'event.html',
+  '/event-request': 'event-request.html',
+  '/event-request.html': 'event-request.html',
+};
 
-app.get('/', (req, res) => {
-  res.sendFile(
-    path.join(__dirname, 'src/html/index.html')
-  );
+Object.entries(pages).forEach(([route, file]) => {
+  app.get(route, (_req, res) => {
+    res.sendFile(path.join(__dirname, 'src', 'html', file));
+  });
 });
 
 // ── Start Server ──────────────────────────────────────────────────────────
 
 const PORT = process.env.PORT || 3000;
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+module.exports = app;

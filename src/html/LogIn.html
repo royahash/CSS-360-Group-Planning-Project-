@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/Registration.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/Registration.css">
 </head>
 <body>
     <div class="container">
@@ -19,11 +19,11 @@
         <button id="loginButton" disabled>Login</button>
         <button id="togglePassword" type="button">Show/Hide Password</button>
         
-        <span class="link" onclick="window.location.href = 'SignUp.html'">Create account</span>
+        <span class="link" onclick="window.location.href = '/html/SignUp.html'">Create account</span>
     </div>
 
     <script type="module">
-        import { findUser, checkCredentials } from '../js/auth.js';
+        import { findUser, checkCredentials } from '/js/auth.js';
         const loginButton = document.getElementById("loginButton");
         
         loginButton.onclick = () => {
@@ -40,7 +40,7 @@
             } else if (!checkCredentials(id, pass)) {
                 passError.textContent = "Incorrect password";
             } else {
-                window.location.href = 'onboarding.html';
+                window.location.href = '/html/onboarding.html';
             }
         };
     </script>

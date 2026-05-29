@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Sign Up</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/Registration.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/Registration.css">
 </head>
 <body>  
     <div class="container">
@@ -20,11 +20,11 @@
         <button id="signupButton" disabled>Sign Up</button>
         <button id="togglePassword" type="button">Show/Hide Password</button>
         
-        <span class="link" onclick="window.location.href = 'LogIn.html'">Already have an account?</span>
+        <span class="link" onclick="window.location.href = '/html/LogIn.html'">Already have an account?</span>
     </div>
 
     <script type="module">
-        import { addUser } from '../js/auth.js';
+        import { addUser } from '/js/auth.js';
         const signupButton = document.getElementById("signupButton");
         const errorDiv = document.getElementById("error");
         const confirmError = document.getElementById("confirmError");
@@ -44,7 +44,7 @@
                 };
                 try {
                     addUser(userData);
-                    window.location.href = 'LogIn.html';
+                    window.location.href = '/html/LogIn.html';
                 } catch (err) {
                     errorDiv.textContent = err.message;
                 }
@@ -57,7 +57,7 @@
             };
             try {
                 addUser(userData);
-                window.location.href = 'LogIn.html';
+                window.location.href = '/html/LogIn.html';
             } catch (err) {
                 errorDiv.textContent = err.message;
             }

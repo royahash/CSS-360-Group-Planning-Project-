@@ -1,40 +1,24 @@
 /* global saveEventToDatabase, deleteSavedEvent, getSavedEvents */
 
 async function isEventSaved(ticketmasterId) {
+  const savedEvents = await getSavedEvents();
 
-  const savedEvents =
-    await getSavedEvents();
-
-  return savedEvents.some(
-    (event) =>
-      event.ticketmasterId ===
-      ticketmasterId
-  );
+  return savedEvents.some((event) => event.ticketmasterId === ticketmasterId);
 }
 
 // eslint-disable-next-line no-unused-vars
-async function handleSaveEvent(
-  eventData,
-  buttonEl
-) {
-
-  const alreadySaved =
-    await isEventSaved(eventData.id);
+async function handleSaveEvent(eventData, buttonEl) {
+  const alreadySaved = await isEventSaved(eventData.id);
 
   // =========================
   // UNSAVE
   // =========================
   if (alreadySaved) {
+    await deleteSavedEvent(eventData.id);
 
-    await deleteSavedEvent(
-      eventData.id
-    );
+    buttonEl.textContent = 'Save';
 
-    buttonEl.textContent =
-      'Save';
-
-    buttonEl.style.background =
-      '';
+    buttonEl.style.background = '';
 
     return 'removed';
   }
@@ -43,36 +27,26 @@ async function handleSaveEvent(
   // SAVE
   // =========================
   await saveEventToDatabase({
-    ticketmasterId:
-      eventData.id,
+    ticketmasterId: eventData.id,
 
-    title:
-      eventData.name,
+    title: eventData.name,
 
-    image:
-      eventData.images?.[0]?.url || '',
+    image: eventData.images?.[0]?.url || '',
 
-    startDate:
-      eventData.dates.start.localDate,
+    startDate: eventData.dates.start.localDate,
 
-    venue:
-      eventData._embedded?.venues?.[0]?.name || '',
+    venue: eventData._embedded?.venues?.[0]?.name || '',
 
-    city:
-      eventData._embedded?.venues?.[0]?.city?.name || '',
+    city: eventData._embedded?.venues?.[0]?.city?.name || '',
 
     owner: 'You',
 
-    description:
-      eventData.info ||
-      'No description available.',
+    description: eventData.info || 'No description available.',
   });
 
-  buttonEl.textContent =
-    'Saved';
+  buttonEl.textContent = 'Saved';
 
-  buttonEl.style.background =
-    '#a5d6a7';
+  buttonEl.style.background = '#a5d6a7';
 
   return 'saved';
 }
