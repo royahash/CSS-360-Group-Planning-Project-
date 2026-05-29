@@ -235,13 +235,11 @@ app.delete('/api/events/:ticketmasterId', async (req, res) => {
 // ── Ticketmaster Proxy ────────────────────────────────────────────────────
 app.get('/api/ticketmaster/events', async (req, res) => {
   try {
-    const base = `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${process.env.TICKETMASTER_API_KEY}&size=100&expand=venues`;
+    let url = `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${process.env.TICKETMASTER_API_KEY}&size=100&expand=venues`;
     const allowed = ['sort', 'latlong', 'radius', 'unit', 'stateCode', 'classificationName', 'keyword', 'countryCode'];
-    const params = new URLSearchParams();
     allowed.forEach(param => {
-      if (req.query[param]) params.append(param, req.query[param]);
+      if (req.query[param]) url += `&${param}=${req.query[param]}`;
     });
-    const url = `${base}&${params.toString()}`;
     const response = await fetch(url);
     const data = await response.json();
     res.json(data);
