@@ -3,14 +3,8 @@
  * Fetches real events from Ticketmaster API and builds event cards
  * on the homepage dynamically.
  */
-/* global CONFIG, handleSaveEvent, isEventSaved */
+/* global handleSaveEvent, isEventSaved */
 
-// ── Config ─────────────────────────────────────────────────────────────────
-// TODO: Move API_KEY to backend server before production deployment
-// Do not commit this file with a real key - move to .env
-const API_KEY =
-  typeof CONFIG !== 'undefined' ? CONFIG.TICKETMASTER_API_KEY : 'test_key';
-//if CONFIG exists use the real key, otherwise use the placeholder string test_key. During testing Jest will use test_key.
 //const CITY = "Seattle";
 let currentSort = 'date,asc';
 let currentPage = 0;
@@ -42,13 +36,12 @@ function setSort(sortValue) {
 
 // ── URL Builders ───────────────────────────────────────────────────────────
 function getApiUrl() {
-  return `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${API_KEY}&latlong=47.6062,-122.3321&radius=30&unit=miles&size=100&expand=venues&sort=${currentSort}`;
+  return `/api/ticketmaster/events?latlong=47.6062,-122.3321&radius=30&unit=miles&sort=${currentSort}`;
 }
 
 function getSearchUrl(query) {
-  const base = `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${API_KEY}&size=100&expand=venues&sort=${currentSort}`;
+  const base = `/api/ticketmaster/events?sort=${currentSort}`;
 
-  // US state codes — if query matches, search by state
   const stateCodes = [
     'AL',
     'AK',
@@ -102,7 +95,6 @@ function getSearchUrl(query) {
     'WY',
   ];
 
-  // Known Ticketmaster categories
   const categories = [
     'music',
     'sports',
@@ -127,10 +119,8 @@ function getSearchUrl(query) {
     return `${base}&classificationName=${encodeURIComponent(query)}&countryCode=US`;
   }
 
-  // Default — search by keyword (covers event names, cities, venues)
   return `${base}&keyword=${encodeURIComponent(query)}&countryCode=US`;
 }
-
 // ── Search Handlers ────────────────────────────────────────────────────────
 function handleSearch() {
   const input = document.getElementById('search-input');

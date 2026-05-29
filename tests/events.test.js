@@ -91,7 +91,6 @@ beforeEach(() => {
     }),
   );
 
-  // Reset search state between tests
   clearSearch();
 });
 
@@ -130,14 +129,8 @@ describe('Smoke Tests', () => {
 // UNIT TESTS — getApiUrl
 // ─────────────────────────────────────────────────────────────────────────────
 describe('getApiUrl()', () => {
-  test('returns valid https url', () => {
-    expect(getApiUrl().startsWith('https://')).toBe(true);
-  });
-
-  test('includes Ticketmaster endpoint', () => {
-    expect(getApiUrl()).toContain(
-      'app.ticketmaster.com/discovery/v2/events.json',
-    );
+  test('returns our backend proxy URL', () => {
+    expect(getApiUrl()).toContain('/api/ticketmaster/events');
   });
 
   test('includes Seattle coordinates', () => {
@@ -155,14 +148,8 @@ describe('getApiUrl()', () => {
 // UNIT TESTS — getSearchUrl
 // ─────────────────────────────────────────────────────────────────────────────
 describe('getSearchUrl()', () => {
-  test('returns valid https url', () => {
-    expect(getSearchUrl('concert').startsWith('https://')).toBe(true);
-  });
-
-  test('includes Ticketmaster endpoint', () => {
-    expect(getSearchUrl('concert')).toContain(
-      'app.ticketmaster.com/discovery/v2/events.json',
-    );
+  test('returns our backend proxy URL', () => {
+    expect(getSearchUrl('concert')).toContain('/api/ticketmaster/events');
   });
 
   test('uses stateCode for US state abbreviations', () => {
@@ -400,16 +387,16 @@ describe('renderPage() — no results', () => {
 // INTEGRATION TESTS
 // ─────────────────────────────────────────────────────────────────────────────
 describe('loadEvents() integration', () => {
-  test('fetch is called once', async () => {
+  test('fetch is called', async () => {
     global.fetch.mockClear();
     await loadEvents();
     expect(global.fetch).toHaveBeenCalled();
   });
 
-  test('fetch URL contains Ticketmaster domain', async () => {
+  test('fetch URL contains our backend proxy', async () => {
     await loadEvents();
     const url = global.fetch.mock.calls[0][0];
-    expect(url).toContain('app.ticketmaster.com');
+    expect(url).toContain('/api/ticketmaster/events');
   });
 
   test('renders event cards after fetch', async () => {
