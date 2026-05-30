@@ -240,6 +240,7 @@ app.delete('/api/events/:ticketmasterId', async (req, res) => {
 });
 // ── Ticketmaster Proxy ────────────────────────────────────────────────────
 app.get('/api/ticketmaster/events', async (req, res) => {
+  console.log('API KEY:', process.env.TICKETMASTER_API_KEY ? 'EXISTS' : 'MISSING');
   try {
     let url = `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${process.env.TICKETMASTER_API_KEY}&size=100&expand=venues`;
     const allowed = ['sort', 'latlong', 'radius', 'unit', 'stateCode', 'classificationName', 'keyword', 'countryCode'];
