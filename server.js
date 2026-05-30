@@ -105,7 +105,12 @@ app.get('/auth/google',
 
 app.get('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/html/LogIn.html' }),
-  (req, res) => res.redirect('/html/index.html')
+  (req, res) => {
+    req.session.save((err) => {
+      if (err) console.error('Session save error:', err);
+      res.redirect('/html/index.html');
+    });
+  }
 );
 
 app.get('/auth/logout', (req, res) => {
