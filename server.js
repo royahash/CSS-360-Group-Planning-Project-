@@ -10,6 +10,7 @@ const MongoStore = require('connect-mongo').default;
 const bcrypt = require('bcrypt');
 
 const app = express();
+app.set('trust proxy', 1);
 
 // ── Middleware ────────────────────────────────────────────────────────────
 app.use(cors({ origin: true, credentials: true }));
