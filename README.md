@@ -1,21 +1,37 @@
-### CSS 360 Group Planning Project
+# CSS 360 Group Planning Project — Event Loop
 
-This is a website dedicated to finding local events near the user. Users see real events pulled from the Ticketmaster API, save events they're interested in, and view the event details, see events on a shared calendar. Our website also includes a event request system where users can make their own event.
+Web application for finding and saving local events near you. Users browse real events pulled from the Ticketmaster API, save events to their personal calendar, view event details, and submit event requests with group polling. User accounts are backed by MongoDB with Google OAuth and email/password authentication.
 
-## Notes one of the buttons on the right hand side doesn't lead to any page
+The project is deployed to Vercel at: https://css-360-group-planning-project.vercel.app
 
-## Team Members: Sophia Garcia-Avella, Roya Hashimi, Subhasheni Venkatesh, Salsabila Abu, Iliya Hosseinisianaki.
+> **Note:** Google sign-in is currently configured for UW Bothell (`@uw.edu`) accounts only.
+
+**Team:** Sophia Garcia-Avella, Roya Hashimi, Subhasheni Venkatesh, Salsabila Abu, Iliya Hosseinisianaki
+
 ---
-## Step 1 — Pull the Project from GitHub
 
-Open a terminal and run:
+## Features
+
+- Browse real events from the Ticketmaster API
+- Search events by name, category, or US state
+- Sort events by soonest or latest
+- Save and unsave events to your personal calendar
+- View detailed event information
+- Select interest categories during onboarding (saved to your account)
+- Profile page showing your saved preferences
+- Submit event requests with group polling
+- Google OAuth login or email/password registration
+- Data persists across sessions — saved events and preferences tied to your account
+
+---
+
+## Step 1 — Pull the Project from GitHub
 
 ```bash
 git clone https://github.com/royahash/CSS-360-Group-Planning-Project-.git
 cd CSS-360-Group-Planning-Project-
 git checkout main
 ```
-
 ---
 
 ## Step 2 — Install Dependencies
@@ -23,30 +39,23 @@ git checkout main
 ```bash
 npm install
 ```
-
-This installs all required packages including Jest, ESLint, and Prettier.
+This installs all required packages including Express, Passport, Mongoose, Jest, ESLint, and Prettier.
 
 ---
 
-## Step 2.5 — Set Up Environment Variables
-Create a .env file in the project root with:
-MONGODB_URI=your_mongodb_connection_string
+## Step 3 — Set Up Environment Variables
 
-## Step 3 — Set Up API Key
+Create a `.env` file in the project root with the following variables:
 
-The homepage loads real events from the Ticketmaster API. To run the project locally you need an API key.
-
-1. Get a free API key at https://developer.ticketmaster.com
-2. Create a file called `config.js` and put in under the js folder of the project:
-
-```javascript
-// config.js - DO NOT COMMIT THIS FILE
-const CONFIG = {
-  TICKETMASTER_API_KEY: "your_actual_key_here"
-};
 ```
-
-This file is listed in `.gitignore` and will never be pushed to GitHub.
+MONGODB_URI=your_mongodb_connection_string
+TICKETMASTER_API_KEY=your_ticketmaster_api_key
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+SESSION_SECRET=any_long_random_string
+```
+> These values are shared among team members privately. It is listed in `.gitignore`.
 
 ---
 
@@ -54,12 +63,12 @@ This file is listed in `.gitignore` and will never be pushed to GitHub.
 
 ### Check formatting (Prettier):
 ```bash
-npx prettier --check src/js/events.js src/js/index.js tests/events.test.js tests/index.test.js
+npm run format
 ```
 
 ### Check for code errors (ESLint):
 ```bash
-npx eslint src/js/events.js src/js/index.js tests/events.test.js tests/index.test.js
+npm run lint
 ```
 
 ### Run security audit:
@@ -74,10 +83,10 @@ All three should pass with no errors before submitting a pull request.
 ## Step 5 — Run the Test Suite
 
 ```bash
-npx jest
+npm test
 ```
 
-This runs all unit, integration, and smoke tests. You should see:
+This runs all unit, integration, and smoke tests across 6 test suites. You should see all tests passing:
 
 ```
 PASS tests/index.test.js
@@ -85,24 +94,25 @@ PASS tests/calendar.test.js
 PASS tests/poll.test.js
 PASS tests/events.test.js
 PASS tests/calendar.dom.test.js
+PASS tests/server.test.js
 
-Test Suites: 5 passed, 5 total
-Tests:       53 passed,  53 total
+Test Suites: 6 passed, 6 total
 ```
 
 To run a specific test file:
 ```bash
 npx jest tests/events.test.js
-npx jest tests/index.test.js
+npx jest tests/server.test.js
 ```
-
 ---
 
 ## Step 6 — Run the Project Locally
-run
+
+```bash
 npm run dev
-then open
-(http://localhost:3000/html/FrontPage.html)
+```
+Then open: http://localhost:3000
+
 ---
 
 ## Step 7 — Build the Docker Image
@@ -120,42 +130,31 @@ docker image inspect css-360-group-planning-project
 
 To run the Docker container locally:
 ```bash
-docker run -p 8080:80 css-360-group-planning-project
+docker run -p 8080:3000 css-360-group-planning-project
 ```
 
-Then open `http://localhost:8080/html/index.html` in your browser.
+Then open `http://localhost:8080` in your browser.
 
 ---
 
 ## CI/CD Pipeline
 
-The project uses **GitHub Actions** as its CI/CD pipeline. The pipeline is defined in `.github/workflows/ci.yml` and runs automatically on every push and pull request.
-
-### What the pipeline does:
+The project uses **GitHub Actions** for CI/CD, defined in `.github/workflows/ci.yml`. It runs automatically on every push and pull request.
 
 | Step | Description |
 |------|-------------|
-| Pull code | GitHub Actions checks out the latest code from the repository |
+| Pull code | Checks out the latest code |
 | Install dependencies | Runs `npm install` |
-| Check formatting | Runs Prettier to verify code style |
-| Lint code | Runs ESLint to catch code errors |
-| Run tests | Runs the full Jest test suite (unit, integration, smoke) |
-| Security audit | Runs `npm audit` to check for vulnerabilities |
-| Build Docker image | Builds the Docker image using the Dockerfile |
-| Verify Docker image | Confirms the image was built successfully |
-| Deploy to Vercel | Deploys to the production environment |
+| Check formatting | Runs Prettier |
+| Lint code | Runs ESLint |
+| Run tests | Runs the full Jest test suite |
+| Security audit | Runs `npm audit --audit-level=high` |
+| Build Docker image | Builds the Docker image |
+| Verify Docker image | Confirms the image was built |
+| Deploy to Vercel | Deploys to production |
 | Verify deployment | Confirms the live site is accessible |
 
-### To trigger the pipeline manually:
-
-1. Go to the repository on GitHub
-2. Click the **Actions** tab
-3. Select the **CI** workflow
-4. Click **Run workflow**
-
-### To view pipeline results:
-
-Go to the **Actions** tab on GitHub. Each run shows which steps passed or failed with detailed logs.
+To trigger the pipeline manually: GitHub → Actions tab → CI workflow → Run workflow.
 
 ---
 
@@ -163,38 +162,37 @@ Go to the **Actions** tab on GitHub. Each run shows which steps passed or failed
 
 | Tool | Purpose | Config File |
 |------|---------|-------------|
-| **Prettier** | Code formatter — ensures consistent style | `.prettierrc` |
-| **ESLint** | Linter — catches errors and bad practices | `eslint.config.mjs` |
-| **npm audit** | Security scanner — checks for vulnerabilities | Built into npm |
+| **Prettier** | Code formatter | `.prettierrc` |
+| **ESLint** | Linter — catches errors | `eslint.config.mjs` |
+| **npm audit** | Security scanner | Built into npm |
 
-All pull requests must pass all three tools before being merged.
+All pull requests must pass all three before merging.
+
+---
+
+## GitHub Repository Secrets
+
+The following secrets are under **Settings → Secrets and variables → Actions** for the CI/CD pipeline to work:
+
+| Secret | Description |
+|--------|-------------|
+| `MONGODB_URI` | MongoDB Atlas connection string |
+| `TICKETMASTER_API_KEY` | Ticketmaster API key |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
+| `GOOGLE_CALLBACK_URL` | Production callback URL |
+| `SESSION_SECRET` | Session encryption secret |
+| `VERCEL_TOKEN` | Vercel authentication token |
+| `VERCEL_ORG_ID` | Vercel organization ID |
+| `VERCEL_PROJECT_ID` | Vercel project ID |
 
 ---
 
 ## Production Environment
 
-The project is deployed to **Vercel** for frontend hosting.
+The project is deployed to **Vercel** at:
+**https://css-360-group-planning-project.vercel.app**
 
-The project is live at: https://css-360-group-planning-project.vercel.app/src/html/index.html
----
-
-## API Keys and Secrets
-
-API keys are never stored in the repository. For local development use `config.js` (gitignored). For the CI pipeline, secrets are stored in GitHub repository secrets under **Settings → Secrets and variables → Actions**.
-
-Required secrets for full pipeline operation:
-- `VERCEL_TOKEN` — Vercel authentication token
-- `VERCEL_ORG_ID` — Vercel organization ID
-- `VERCEL_PROJECT_ID` — Vercel project ID
+Environment variables for production are configured in the Vercel dashboard under Settings → Environment Variables. `NODE_ENV` is set to `production` in Vercel directly.
 
 ---
-
-## Pull Request Process
-
-1. Create a new branch from main
-2. Make your changes
-3. Run static analysis and tests locally to confirm everything passes
-4. Push your branch and open a pull request on GitHub
-5. Wait for the CI pipeline to pass
-6. Get at least one teammate to review your PR
-7. Merge after approval
