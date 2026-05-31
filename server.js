@@ -254,6 +254,17 @@ app.get('/api/ticketmaster/events', async (req, res) => {
   }
 });
 
+app.get('/api/ticketmaster/event/:id', async (req, res) => {
+  try {
+    const url = `https://app.ticketmaster.com/discovery/v2/events/${req.params.id}.json?apikey=${process.env.TICKETMASTER_API_KEY}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch event details' });
+  }
+});
+
 // ── Page Routes ───────────────────────────────────────────────────────────
 const pages = {
   '/': 'index.html',

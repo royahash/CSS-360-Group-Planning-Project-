@@ -1,12 +1,10 @@
-/* global CONFIG, handleSaveEvent, isEventSaved */
+/* global handleSaveEvent, isEventSaved */
 
 const params = new URLSearchParams(window.location.search);
 
 const eventId = params.get('id');
 
 const eventTitle = params.get('title');
-
-const API_KEY = CONFIG.TICKETMASTER_API_KEY;
 
 const saveBtn = document.getElementById('save-btn');
 
@@ -15,9 +13,7 @@ async function loadEventDetails() {
   // TICKETMASTER EVENTS
   // =========================
   if (eventId) {
-    const response = await fetch(
-      `https://app.ticketmaster.com/discovery/v2/events/${eventId}.json?apikey=${API_KEY}`,
-    );
+    const response = await fetch(`/api/ticketmaster/event/${eventId}`);
 
     const event = await response.json();
 
