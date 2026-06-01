@@ -3,6 +3,7 @@
 const params = new URLSearchParams(window.location.search);
 
 const eventId = params.get('id');
+
 const eventTitle = params.get('title');
 
 const saveBtn = document.getElementById('save-btn');
@@ -16,11 +17,9 @@ async function loadEventDetails() {
 
     const event = await response.json();
 
-    document.querySelector('.event-details-img').src =
-      event.images?.[0]?.url || '';
+    document.querySelector('.event-details-img').src = event.images[0].url;
 
-    document.getElementById('event-title').textContent =
-      event.name || 'Untitled Event';
+    document.getElementById('event-title').textContent = event.name;
 
     const venue = event._embedded?.venues?.[0];
 
@@ -31,74 +30,33 @@ async function loadEventDetails() {
 
     document.getElementById('event-date').innerHTML = `
       <i class="fa-solid fa-calendar" style="color:red;"></i>
-      ${event.dates?.start?.localDate || 'Date unavailable'}
+      ${event.dates.start.localDate}
     `;
+    // Category segment
+    const segment = event.classifications?.[0]?.segment?.name;
+    if (segment) {
+      const categoryEl = document.createElement('p');
+      categoryEl.id = 'event-category';
+      categoryEl.innerHTML = `
+        <i class="fa-solid fa-tag" style="color:red;"></i>
+        ${segment}
+      `;
+      document
+        .getElementById('event-date')
+        .insertAdjacentElement('afterend', categoryEl);
+    }
 
-    // =========================
-    // CATEGORY PILLS
-    // =========================
-    const classification = event.classifications?.[0];
-
-    const categoryParts = [
-      classification?.segment?.name,
-      classification?.genre?.name,
-      classification?.subGenre?.name,
-    ]
-      .filter(Boolean)
-      .filter((value, index, array) =>
-        array.indexOf(value) === index
-      );
-
-    document.getElementById('event-category').innerHTML = `
-      <i class="fa-solid fa-tag" style="color:red;"></i>
-
-      <div class="category-container">
-        ${
-          categoryParts.length
-            ? categoryParts
-                .map(
-                  (category) =>
-                    `<span class="category-pill">${category}</span>`
-                )
-                .join('')
-            : '<span class="category-pill">Unknown Category</span>'
-        }
-      </div>
-    `;
-
-    // =========================
-    // TICKETMASTER LINK
-    // =========================
-    document.getElementById('ticketmaster-link').innerHTML = `
-      <i class="fa-solid fa-ticket" style="color:red;"></i>
-      <a
-        href="${event.url}"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        View on Ticketmaster
-      </a>
-    `;
-
-    // =========================
-    // DESCRIPTION
-    // =========================
     document.getElementById('event-description').innerHTML = `
       <p>
         ${event.info || 'No description available.'}
       </p>
 
-      ${
-        event.pleaseNote
-          ? `
-            <br>
-            <p>
-              <strong>Important Information:</strong><br>
-              ${event.pleaseNote}
-            </p>
-          `
-          : ''
-      }
+      <br>
+
+      <p>
+        Enjoy a live experience with music,
+        entertainment, food, and activities.
+      </p>
     `;
 
     // =========================
@@ -108,6 +66,7 @@ async function loadEventDetails() {
 
     if (alreadySaved) {
       saveBtn.textContent = 'Saved';
+
       saveBtn.style.background = '#a5d6a7';
     }
 
@@ -147,20 +106,11 @@ async function loadEventDetails() {
       ${event.date}
     `;
 
-    document.getElementById('event-category').innerHTML = `
-      <i class="fa-solid fa-tag" style="color:red;"></i>
-
-      <div class="category-container">
-        <span class="category-pill">Friend Event</span>
-      </div>
-    `;
-
-    document.getElementById('ticketmaster-link').innerHTML = '';
-
     document.getElementById('event-description').innerHTML = `
       <p>${event.description}</p>
     `;
 
+    // Friend events should not be saved
     saveBtn.style.display = 'none';
   }
 }
