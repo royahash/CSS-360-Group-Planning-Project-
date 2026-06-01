@@ -80,36 +80,6 @@ async function loadEventDetails() {
     return;
   }
 
-  // =========================
-  // MOCK FRIEND EVENTS
-  // =========================
-  if (eventTitle) {
-    const response = await fetch('/data/mockFriends.json');
-
-    const friendEvents = await response.json();
-
-    const event = friendEvents.find((e) => e.title === eventTitle);
-
-    if (!event) return;
-
-    document.querySelector('.event-details-img').src = event.image;
-
-    document.getElementById('event-title').textContent = event.title;
-
-    document.getElementById('event-location').innerHTML = `
-      <i class="fa-solid fa-location-dot" style="color:red;"></i>
-      ${event.location}
-    `;
-
-    document.getElementById('event-date').innerHTML = `
-      <i class="fa-solid fa-calendar" style="color:red;"></i>
-      ${event.date}
-    `;
-
-    document.getElementById('event-description').innerHTML = `
-      <p>${event.description}</p>
-    `;
-
     // Friend events should not be saved
     saveBtn.style.display = 'none';
   }

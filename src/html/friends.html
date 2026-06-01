@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <title>Friends</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .friends-container {
+      display: flex;
+      gap: 20px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .friends-section {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.08);
+      padding: 28px;
+      flex: 1;
+      min-width: 300px;
+      max-width: 500px;
+    }
+
+    .friends-section h2 {
+      color: red;
+      margin-bottom: 20px;
+      font-size: 28px;
+    }
+
+    .add-friend-form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .add-friend-form input {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .add-friend-form button {
+      padding: 12px 24px;
+      background: #90caf9;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      color: white;
+    }
+
+    .add-friend-form button:hover {
+      background: #5ea8ca;
+    }
+
+    .friend-item {
+      background: #f7c8d8;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .friend-info {
+      flex: 1;
+      text-align: left;
+    }
+
+    .friend-info strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #333;
+    }
+
+    .friend-info small {
+      color: #666;
+    }
+
+    .friend-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .friend-btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .friend-btn.accept {
+      background: #a5d6a7;
+      color: white;
+    }
+
+    .friend-btn.accept:hover {
+      background: #66bb6a;
+    }
+
+    .friend-btn.decline {
+      background: #ef9a9a;
+      color: white;
+    }
+
+    .friend-btn.decline:hover {
+      background: #e57373;
+    }
+
+    .friend-btn.delete {
+      background: #ffcc80;
+      color: #333;
+    }
+
+    .friend-btn.delete:hover {
+      background: #ffb74d;
+    }
+
+    .friend-btn.view-events {
+      background: #90caf9;
+      color: white;
+    }
+
+    .friend-btn.view-events:hover {
+      background: #5ea8ca;
+    }
+
+    .empty-message {
+      text-align: center;
+      color: #999;
+      padding: 20px;
+      font-style: italic;
+    }
+
+    .loading {
+      text-align: center;
+      color: #666;
+      padding: 20px;
+    }
+
+    .error-message {
+      background: #ffcdd2;
+      color: #c62828;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .success-message {
+      background: #c8e6c9;
+      color: #2e7d32;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    /* Full width friends list section */
+    .friends-list-full {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.08);
+      padding: 28px;
+      margin-top: 20px;
+    }
+
+    .friends-list-full h2 {
+      color: red;
+      margin-bottom: 20px;
+      font-size: 28px;
+    }
+
+    .friends-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .friend-card {
+      background: linear-gradient(135deg, #d6eaf8 0%, #f7c8d8 100%);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .friend-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: white;
+      display: grid;
+      place-items: center;
+      font-size: 36px;
+      color: red;
+      margin: 0 auto 12px;
+    }
+
+    .friend-card strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 18px;
+      color: #333;
+    }
+
+    .friend-card small {
+      display: block;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .friend-card-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h2 {
+      color: red;
+      margin: 0;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: #666;
+    }
+
+    .event-item-modal {
+      background: #f7c8d8;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      text-align: left;
+    }
+
+    .event-item-modal h4 {
+      margin: 0 0 8px 0;
+      color: #333;
+    }
+
+    .event-item-modal p {
+      margin: 4px 0;
+      color: #666;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-layout">
+
+    <div class="sidebar-left">
+      <a href="/html/index.html">
+        <button class="side-btn"><i class="fa-solid fa-house"></i></button>
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="header">
+        <h1>Friends</h1>
+        <p>Manage your friendships and view your friends' events</p>
+      </div>
+
+      <div id="messageContainer"></div>
+
+      <div class="friends-container">
+        <!-- Add Friend Section -->
+        <div class="friends-section">
+          <h2><i class="fa-solid fa-user-plus"></i> Add Friend</h2>
+          <form class="add-friend-form" id="addFriendForm">
+            <input 
+              type="text" 
+              id="friendUsername" 
+              placeholder="Enter username"
+              autocomplete="off"
+            >
+            <button type="submit">Add</button>
+          </form>
+          <div id="addFriendStatus"></div>
+        </div>
+
+        <!-- Pending Requests Section -->
+        <div class="friends-section">
+          <h2><i class="fa-solid fa-clock"></i> Pending Requests</h2>
+          <div id="pendingRequestsContainer" class="loading">Loading requests...</div>
+        </div>
+      </div>
+
+      <!-- Full Width Friends List -->
+      <div class="friends-list-full">
+        <h2><i class="fa-solid fa-user-group"></i> My Friends</h2>
+        <div id="friendsListContainer" class="loading">Loading friends...</div>
+      </div>
+    </div>
+
+    <div class="sidebar-right">
+      <a href="/html/profile.html">
+        <button class="side-btn"><i class="fa-solid fa-user"></i></button>
+      </a>
+      <a href="/html/calendar.html">
+        <button class="side-btn"><i class="fa-solid fa-calendar"></i></button>
+      </a>
+      <button class="side-btn active"><i class="fa-solid fa-user-group"></i></button>
+      <a href="/html/event-request.html">
+        <button class="side-btn"><i class="fa-solid fa-plus"></i></button>
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Modal for viewing friend's events -->
+  <div id="eventsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalFriendName">Friend's Events</h2>
+        <button class="close-btn" onclick="closeEventsModal()">&times;</button>
+      </div>
+      <div id="friendEventsContainer"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { 
+      getCurrentUser, 
+      requireLogin 
+    } from '/js/auth.js';
+    import {
+      sendFriendRequest,
+      getPendingRequests,
+      acceptFriendRequest,
+      declineFriendRequest,
+      getFriendsList,
+      removeFriend,
+      getFriendEvents
+    } from '/js/friends.js';
+
+    let currentUser = null;
+
+    // Initialize
+    async function init() {
+      currentUser = await requireLogin();
+      await loadPendingRequests();
+      await loadFriendsList();
+
+      // Set up form submission
+      document.getElementById('addFriendForm').addEventListener('submit', handleAddFriend);
+    }
+
+    // Handle adding friend
+    async function handleAddFriend(e) {
+      e.preventDefault();
+      const username = document.getElementById('friendUsername').value.trim();
+      const statusDiv = document.getElementById('addFriendStatus');
+
+      if (!username) {
+        statusDiv.innerHTML = '<div class="error-message">Please enter a username</div>';
+        return;
+      }
+
+      try {
+        statusDiv.innerHTML = '<div class="loading">Sending request...</div>';
+        await sendFriendRequest(username);
+        statusDiv.innerHTML = '<div class="success-message">Friend request sent!</div>';
+        document.getElementById('friendUsername').value = '';
+        
+        // Reload both sections
+        setTimeout(() => {
+          loadPendingRequests();
+          loadFriendsList();
+        }, 1500);
+      } catch (err) {
+        statusDiv.innerHTML = `<div class="error-message">${err.message}</div>`;
+      }
+    }
+
+    // Load pending requests
+    async function loadPendingRequests() {
+      const container = document.getElementById('pendingRequestsContainer');
+      try {
+        const requests = await getPendingRequests();
+        
+        if (requests.length === 0) {
+          container.innerHTML = '<div class="empty-message">No pending requests</div>';
+          return;
+        }
+
+        container.innerHTML = requests.map(request => `
+          <div class="friend-item">
+            <div class="friend-info">
+              <strong>${request.senderId.displayName}</strong>
+              <small>@${request.senderId.username}</small>
+            </div>
+            <div class="friend-actions">
+              <button class="friend-btn accept" onclick="acceptRequest('${request.senderId._id}')">
+                <i class="fa-solid fa-check"></i>
+              </button>
+              <button class="friend-btn decline" onclick="declineRequest('${request.senderId._id}')">
+                <i class="fa-solid fa-times"></i>
+              </button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = `<div class="error-message">${err.message}</div>`;
+      }
+    }
+
+    // Load friends list
+    async function loadFriendsList() {
+      const container = document.getElementById('friendsListContainer');
+      try {
+        const friends = await getFriendsList();
+
+        if (friends.length === 0) {
+          container.innerHTML = '<div class="empty-message">No friends yet. Add one to get started!</div>';
+          return;
+        }
+
+        container.innerHTML = `
+          <div class="friends-grid">
+            ${friends.map(friend => `
+              <div class="friend-card">
+                <div class="friend-avatar">
+                  <i class="fa-solid fa-user"></i>
+                </div>
+                <strong>${friend.displayName}</strong>
+                <small>@${friend.username}</small>
+                <div class="friend-card-actions">
+                  <button class="friend-btn view-events" onclick="viewFriendEvents('${friend._id}', '${friend.displayName}')">
+                    <i class="fa-solid fa-calendar"></i> Events
+                  </button>
+                  <button class="friend-btn delete" onclick="deleteFriend('${friend._id}')">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } catch (err) {
+        container.innerHTML = `<div class="error-message">${err.message}</div>`;
+      }
+    }
+
+    // Global functions (need to be on window for onclick handlers)
+    window.acceptRequest = async function(senderId) {
+      try {
+        await acceptFriendRequest(senderId);
+        showMessage('Friend request accepted!', 'success');
+        await loadPendingRequests();
+        await loadFriendsList();
+      } catch (err) {
+        showMessage(err.message, 'error');
+      }
+    };
+
+    window.declineRequest = async function(senderId) {
+      try {
+        await declineFriendRequest(senderId);
+        showMessage('Friend request declined', 'success');
+        await loadPendingRequests();
+      } catch (err) {
+        showMessage(err.message, 'error');
+      }
+    };
+
+    window.deleteFriend = async function(friendId) {
+      if (!confirm('Are you sure you want to remove this friend?')) return;
+
+      try {
+        await removeFriend(friendId);
+        showMessage('Friend removed', 'success');
+        await loadFriendsList();
+      } catch (err) {
+        showMessage(err.message, 'error');
+      }
+    };
+
+    window.viewFriendEvents = async function(userId, displayName) {
+      try {
+        const modal = document.getElementById('eventsModal');
+        const container = document.getElementById('friendEventsContainer');
+        document.getElementById('modalFriendName').textContent = `${displayName}'s Events`;
+        
+        container.innerHTML = '<div class="loading">Loading events...</div>';
+        modal.classList.add('show');
+
+        const events = await getFriendEvents(userId);
+
+        if (events.length === 0) {
+          container.innerHTML = '<div class="empty-message">No saved events</div>';
+          return;
+        }
+
+        container.innerHTML = events.map(event => `
+          <div class="event-item-modal">
+            <h4>${event.title}</h4>
+            <p><strong>Date:</strong> ${event.startDate}</p>
+            <p><strong>Venue:</strong> ${event.venue}</p>
+            <p><strong>City:</strong> ${event.city}</p>
+            <p>${event.description}</p>
+          </div>
+        `).join('');
+      } catch (err) {
+        document.getElementById('friendEventsContainer').innerHTML = `<div class="error-message">${err.message}</div>`;
+      }
+    };
+
+    window.closeEventsModal = function() {
+      document.getElementById('eventsModal').classList.remove('show');
+    };
+
+    window.showMessage = function(message, type) {
+      const container = document.getElementById('messageContainer');
+      const className = type === 'error' ? 'error-message' : 'success-message';
+      container.innerHTML = `<div class="${className}">${message}</div>`;
+      setTimeout(() => {
+        container.innerHTML = '';
+      }, 3000);
+    };
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById('eventsModal');
+      if (event.target === modal) {
+        modal.classList.remove('show');
+      }
+    };
+
+    // Initialize the page
+    init();
+  </script>
+
+</body>
+</html>
