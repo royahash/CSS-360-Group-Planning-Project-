@@ -1,47 +1,48 @@
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   text-align: center;
-  
   background-color: #fff8f8;
 }
 
 .header h1 {
-    width: 100%;   
-    color: red;
+  width: 100%;   
+  color: red;
 }
+
 .header p {
-    color: black;
+  color: black;
 }
 
 .page-layout {
-    display: flex;
-    flex-direction: row;
-    min-height: 100vh;
+  display: flex;
+  flex-direction: row;
+  min-height: 100vh;
 }
 
-.sidebar-left, .sidebar-right { 
-    width: 150px;
-    background-color: #d6eaf8;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 0px;
-    padding-top: 20px; 
-    gap: 40px;    
+.sidebar-left, 
+.sidebar-right { 
+  width: 150px;
+  background-color: #d6eaf8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 0px;
+  padding-top: 20px; 
+  gap: 40px;    
 }
 
 .main-content {
-    flex: 1;
-    padding: 10px;
+  flex: 1;
+  padding: 10px;
 }
 
 .side-btn {
-    margin-top: 20px;
-    background: none;
-    border: none;
-    font-size: 40px;
-    cursor: pointer;
-    color: red
+  margin-top: 20px;
+  background: none;
+  border: none;
+  font-size: 40px;
+  cursor: pointer;
+  color: red;
 }
 
 .side-btn:hover {
@@ -75,8 +76,9 @@ body {
 
 .event-card h3 {
   margin-bottom: 20px;
-  color: black
+  color: black;
 }
+
 .event-card p {
   margin: 2px 0;
   text-align: left;
@@ -97,11 +99,11 @@ body {
 }
 
 .card-btn {
-    background: rgb(233, 241, 233);
-    border: black solid 0.5px;
-    font-size: 16px;
-    border-radius: 8px;
-    cursor: pointer;    
+  background: rgb(233, 241, 233);
+  border: black solid 0.5px;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;    
 }
 
 .profile-card {
@@ -231,10 +233,21 @@ body {
 }
 
 /* SIDEBAR COLORS */
-.calendar-you { background: var(--color-you); }
-.calendar-alex { background: var(--color-alex); }
-.calendar-jordan { background: var(--color-jordan); }
-.calendar-group { background: var(--color-group); }
+.calendar-you { 
+  background: var(--color-you); 
+}
+
+.calendar-alex { 
+  background: var(--color-alex); 
+}
+
+.calendar-jordan { 
+  background: var(--color-jordan); 
+}
+
+.calendar-group { 
+  background: var(--color-group); 
+}
 
 /* MAIN */
 .calendar-main {
@@ -267,12 +280,13 @@ body {
 /* EVENT */
 .calendar-event {
   margin-top: 5px;
-  padding: 5px;
+  padding: 6px;
   border-radius: 6px;
   font-size: 12px;
   cursor: pointer;
   color: #333;
   font-weight: 500;
+  text-align: left;
 }
 
 .calendar-select-all {
@@ -284,4 +298,59 @@ body {
   margin: 10px 0;
   border: none;
   border-top: 1px solid #ccc;
+}
+
+/* EVENT REQUEST CALENDAR CARDS */
+.calendar-event-card {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 12px 0;
+  text-align: left;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Pending event request */
+.pending-event {
+  border-left: 6px solid #ffb347;
+  background-color: #fff8ed;
+}
+
+/* Confirmed/accepted event */
+.confirmed-event {
+  border-left: 6px solid #a5d6a7;
+  background-color: #f1fff2;
+}
+
+/* Declined event, if displayed */
+.declined-event {
+  border-left: 6px solid #ff8a8a;
+  background-color: #fff0f0;
+  opacity: 0.8;
+}
+
+.calendar-event-card h3 {
+  margin: 0 0 8px 0;
+  color: red;
+}
+
+.calendar-event-card p {
+  margin: 4px 0;
+  color: #555;
+}
+
+.event-status {
+  text-transform: capitalize;
+  font-weight: bold;
+}
+
+.no-events-message,
+.calendar-error {
+  background: #fff0f0;
+  color: #983737;
+  padding: 14px;
+  border-radius: 12px;
+  margin-top: 16px;
+  font-weight: 600;
 }
