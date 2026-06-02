@@ -1,268 +1,366 @@
-require('dotenv').config();
+require("dotenv").config();
 
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const path = require('path');
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors({ origin: true, credentials: true }));
+// Middleware
+app.use(cors());
 app.use(express.json());
 
-// This serves the static frontend files in your event-request branch.
-// Since that branch keeps HTML/CSS/JS files in the repo root, this works if server.js is also in the root.
+// This allows Express to serve your HTML, CSS, and JS files from the project root
 app.use(express.static(__dirname));
 
+// MongoDB connection
 mongoose
   .connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
+  .then(() => {
+    console.log("Connected to MongoDB");
+  })
   .catch((error) => {
-    console.error('MongoDB connection error:', error.message);
-    console.error('Make sure MONGODB_URI is set in your .env file.');
+    console.error("MongoDB connection error:", error.message);
+    console.error("Make sure MONGODB_URI is set in your .env file.");
   });
 
+// Event Request Schema
 const eventRequestSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true, trim: true },
-    date: { type: String, required: true },
-    time: { type: String, default: '' },
-    location: { type: String, default: '' },
-    description: { type: String, default: '' },
-    creator: { type: String, default: 'You' },
-    invitedUsers: { type: [String], default: [] },
-    invitedGroups: { type: [String], default: [] },
+    title: {
+      type: String,
+      required: true
+    },
+    startDate: {
+      type: String,
+      required: true
+    },
+    startTime: {
+      type: String,
+      default: ""
+    },
+    location: {
+      type: String,
+      default: ""
+    },
+    description: {
+      type: String,
+      default: ""
+    },
     visibility: {
       type: String,
-      enum: ['friends-only', 'selected-users'],
-      default: 'friends-only',
+      enum: ["friends-only", "selected-users"],
+      default: "friends-only"
+    },
+    invitedUsers: {
+      type: [String],
+      default: []
+    },
+    invitedGroups: {
+      type: [String],
+      default: []
+    },
+    reminderEnabled: {
+      type: Boolean,
+      default: false
+    },
+    reminderMinutesBefore: {
+      type: Number,
+      default: 30
+    },
+    notificationSystem: {
+      type: String,
+      default: "iliya-reminders"
     },
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'declined'],
-      default: 'pending',
+      enum: ["pending", "confirmed", "declined"],
+      default: "pending"
     },
-    reminderEnabled: { type: Boolean, default: false },
-    reminderMinutesBefore: { type: Number, default: 30 },
-    notificationSystem: { type: String, default: 'iliya-reminders' },
-    votes: [
-      {
-        voter: { type: String, required: true },
-        response: {
-          type: String,
-          enum: ['accepted', 'declined', 'voted'],
-          required: true,
-        },
-        selectedDate: { type: String, default: '' },
-        selectedTime: { type: String, default: '' },
-        selectedLocation: { type: String, default: '' },
-        selectedActivity: { type: String, default: '' },
-        createdAt: { type: Date, default: Date.now },
+    pollOptions: {
+      dates: {
+        type: [String],
+        default: []
       },
-    ],
+      times: {
+        type: [String],
+        default: []
+      },
+      locations: {
+        type: [String],
+        default: []
+      },
+      activities: {
+        type: [String],
+        default: []
+      }
+    },
+    responses: [
+      {
+        user: {
+          type: String,
+          default: ""
+        },
+        responseStatus: {
+          type: String,
+          enum: ["accepted", "declined", "voted"],
+          required: true
+        },
+        votes: {
+          date: {
+            type: String,
+            default: ""
+          },
+          time: {
+            type: String,
+            default: ""
+          },
+          location: {
+            type: String,
+            default: ""
+          },
+          activity: {
+            type: String,
+            default: ""
+          }
+        },
+        respondedAt: {
+          type: Date,
+          default: Date.now
+        }
+      }
+    ]
   },
-  { timestamps: true }
-);
-
-const calendarEventSchema = new mongoose.Schema(
   {
-    eventRequestId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'EventRequest',
-      required: true,
-    },
-    title: { type: String, required: true },
-    date: { type: String, required: true },
-    time: { type: String, default: '' },
-    location: { type: String, default: '' },
-    description: { type: String, default: '' },
-    owner: { type: String, required: true },
-    status: {
-      type: String,
-      enum: ['pending', 'confirmed', 'declined'],
-      default: 'pending',
-    },
-    source: { type: String, default: 'event-request' },
-  },
-  { timestamps: true }
+    timestamps: true
+  }
 );
 
-calendarEventSchema.index({ eventRequestId: 1, owner: 1 }, { unique: true });
+const EventRequest = mongoose.model("EventRequest", eventRequestSchema);
 
-const EventRequest = mongoose.model('EventRequest', eventRequestSchema);
-const CalendarEvent = mongoose.model('CalendarEvent', calendarEventSchema);
-
-function buildCalendarEvent(eventRequest, owner, status) {
-  return {
-    eventRequestId: eventRequest._id,
-    title: eventRequest.title,
-    date: eventRequest.date,
-    time: eventRequest.time,
-    location: eventRequest.location,
-    description: eventRequest.description,
-    owner,
-    status,
-    source: 'event-request',
-  };
-}
-
-async function upsertCalendarEvent(eventRequest, owner, status) {
-  return CalendarEvent.findOneAndUpdate(
-    { eventRequestId: eventRequest._id, owner },
-    buildCalendarEvent(eventRequest, owner, status),
-    { upsert: true, new: true, setDefaultsOnInsert: true }
-  );
-}
-
-app.get('/api/health', (_req, res) => {
-  res.json({ message: 'Event request backend is running' });
+// Page routes
+app.get("/", function (req, res) {
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// Temporary friend list for the event-request branch UI.
-// Later, this can connect to real user accounts.
-app.get('/api/friends', (_req, res) => {
-  res.json({ friends: ['Alex', 'Jordan', 'Taylor', 'Sam'] });
+app.get("/index.html", function (req, res) {
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// Create an event request and add it to the creator calendar as Pending.
-app.post('/api/event-requests', async (req, res) => {
+app.get("/event-request.html", function (req, res) {
+  res.sendFile(path.join(__dirname, "event-request.html"));
+});
+
+app.get("/calendar.html", function (req, res) {
+  res.sendFile(path.join(__dirname, "calendar.html"));
+});
+
+app.get("/profile.html", function (req, res) {
+  res.sendFile(path.join(__dirname, "profile.html"));
+});
+
+app.get("/onboarding.html", function (req, res) {
+  res.sendFile(path.join(__dirname, "onboarding.html"));
+});
+
+app.get("/Event-details.html", function (req, res) {
+  res.sendFile(path.join(__dirname, "Event-details.html"));
+});
+
+// Create a new event request
+app.post("/api/event-requests", async function (req, res) {
   try {
     const {
       title,
-      date,
-      time,
+      startDate,
+      startTime,
       location,
       description,
-      creator,
+      visibility,
       invitedUsers,
       invitedGroups,
-      visibility,
       reminderEnabled,
       reminderMinutesBefore,
+      pollOptions
     } = req.body;
 
-    if (!title || !date) {
-      return res.status(400).json({ error: 'Title and date are required.' });
+    if (!title || !startDate) {
+      return res.status(400).json({
+        error: "Event title and date are required."
+      });
     }
 
-    if (visibility === 'selected-users' && (!invitedUsers || invitedUsers.length === 0)) {
-      return res.status(400).json({ error: 'Selected-user visibility requires at least one invited user.' });
-    }
-
-    const eventRequest = await EventRequest.create({
+    const newEventRequest = new EventRequest({
       title,
-      date,
-      time: time || '',
-      location: location || '',
-      description: description || '',
-      creator: creator || 'You',
+      startDate,
+      startTime,
+      location,
+      description,
+      visibility: visibility || "friends-only",
       invitedUsers: Array.isArray(invitedUsers) ? invitedUsers : [],
       invitedGroups: Array.isArray(invitedGroups) ? invitedGroups : [],
-      visibility: visibility || 'friends-only',
       reminderEnabled: Boolean(reminderEnabled),
-      reminderMinutesBefore: Number(reminderMinutesBefore) || 30,
-      status: 'pending',
+      reminderMinutesBefore: reminderMinutesBefore || 30,
+      notificationSystem: "iliya-reminders",
+      status: "pending",
+      pollOptions: pollOptions || {
+        dates: [],
+        times: [],
+        locations: [],
+        activities: []
+      }
     });
 
-    await upsertCalendarEvent(eventRequest, eventRequest.creator, 'pending');
+    await newEventRequest.save();
 
     res.status(201).json({
-      message: 'Event request created and added to creator calendar as pending.',
-      eventRequest,
+      message: "Event request created successfully.",
+      eventRequest: newEventRequest
     });
   } catch (error) {
-    console.error('Create event request error:', error.message);
-    res.status(500).json({ error: 'Failed to create event request.' });
+    console.error("Error creating event request:", error);
+    res.status(500).json({
+      error: "Failed to create event request."
+    });
   }
 });
 
-// Get all event requests.
-app.get('/api/event-requests', async (_req, res) => {
+// Get all event requests
+app.get("/api/event-requests", async function (req, res) {
   try {
     const eventRequests = await EventRequest.find().sort({ createdAt: -1 });
+
     res.json(eventRequests);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch event requests.' });
+    console.error("Error fetching event requests:", error);
+    res.status(500).json({
+      error: "Failed to fetch event requests."
+    });
   }
 });
 
-// Save accept/decline/vote response.
-// Accepting automatically adds confirmed event to that participant's calendar.
-// Declining removes that participant's calendar copy.
-app.patch('/api/event-requests/:id/respond', async (req, res) => {
+// Get calendar events from event requests
+app.get("/api/calendar-events", async function (req, res) {
   try {
-    const { voter, response, selectedDate, selectedTime, selectedLocation, selectedActivity } = req.body;
+    const eventRequests = await EventRequest.find().sort({ createdAt: -1 });
 
-    if (!voter || !['accepted', 'declined', 'voted'].includes(response)) {
-      return res.status(400).json({ error: 'Voter and valid response are required.' });
+    const calendarEvents = eventRequests.map(function (eventRequest) {
+      return {
+        id: eventRequest._id,
+        title: eventRequest.title,
+        startDate: eventRequest.startDate,
+        startTime: eventRequest.startTime,
+        location: eventRequest.location,
+        description: eventRequest.description,
+        visibility: eventRequest.visibility,
+        invitedUsers: eventRequest.invitedUsers,
+        invitedGroups: eventRequest.invitedGroups,
+        reminderEnabled: eventRequest.reminderEnabled,
+        reminderMinutesBefore: eventRequest.reminderMinutesBefore,
+        notificationSystem: eventRequest.notificationSystem,
+        status: eventRequest.status || "pending",
+        pollOptions: eventRequest.pollOptions,
+        responses: eventRequest.responses,
+        source: "event-request"
+      };
+    });
+
+    res.json(calendarEvents);
+  } catch (error) {
+    console.error("Error fetching calendar events:", error);
+    res.status(500).json({
+      error: "Failed to fetch calendar events."
+    });
+  }
+});
+
+// Respond to an event request
+app.patch("/api/event-requests/:id/respond", async function (req, res) {
+  try {
+    const { responseStatus, votes, user } = req.body;
+
+    if (!["accepted", "declined", "voted"].includes(responseStatus)) {
+      return res.status(400).json({
+        error: "Response must be accepted, declined, or voted."
+      });
     }
 
     const eventRequest = await EventRequest.findById(req.params.id);
+
     if (!eventRequest) {
-      return res.status(404).json({ error: 'Event request not found.' });
+      return res.status(404).json({
+        error: "Event request not found."
+      });
     }
 
-    const existingVoteIndex = eventRequest.votes.findIndex((vote) => vote.voter === voter);
-    const voteData = {
-      voter,
-      response,
-      selectedDate: selectedDate || '',
-      selectedTime: selectedTime || '',
-      selectedLocation: selectedLocation || '',
-      selectedActivity: selectedActivity || '',
-      createdAt: new Date(),
-    };
+    eventRequest.responses.push({
+      user: user || "Guest User",
+      responseStatus,
+      votes: votes || {},
+      respondedAt: new Date()
+    });
 
-    if (existingVoteIndex >= 0) {
-      eventRequest.votes[existingVoteIndex] = voteData;
-    } else {
-      eventRequest.votes.push(voteData);
+    if (responseStatus === "accepted") {
+      eventRequest.status = "confirmed";
+    }
+
+    if (responseStatus === "declined") {
+      eventRequest.status = "declined";
     }
 
     await eventRequest.save();
 
-    if (response === 'accepted') {
-      await upsertCalendarEvent(eventRequest, voter, 'confirmed');
-    }
-
-    if (response === 'declined') {
-      await CalendarEvent.findOneAndDelete({ eventRequestId: eventRequest._id, owner: voter });
-    }
-
-    res.json({ message: 'Response saved.', eventRequest });
+    res.json({
+      message: "Response saved successfully.",
+      eventRequest
+    });
   } catch (error) {
-    console.error('Respond to event request error:', error.message);
-    res.status(500).json({ error: 'Failed to save response.' });
+    console.error("Error saving response:", error);
+    res.status(500).json({
+      error: "Failed to save response."
+    });
   }
 });
 
-// Creator can update event status.
-app.patch('/api/event-requests/:id/status', async (req, res) => {
+// Update event request status
+app.patch("/api/event-requests/:id/status", async function (req, res) {
   try {
     const { status } = req.body;
 
-    if (!['pending', 'confirmed', 'declined'].includes(status)) {
-      return res.status(400).json({ error: 'Status must be pending, confirmed, or declined.' });
+    if (!["pending", "confirmed", "declined"].includes(status)) {
+      return res.status(400).json({
+        error: "Status must be pending, confirmed, or declined."
+      });
     }
 
-    const eventRequest = await EventRequest.findById(req.params.id);
+    const eventRequest = await EventRequest.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+
     if (!eventRequest) {
-      return res.status(404).json({ error: 'Event request not found.' });
+      return res.status(404).json({
+        error: "Event request not found."
+      });
     }
 
-    eventRequest.status = status;
-    await eventRequest.save();
-    await upsertCalendarEvent(eventRequest, eventRequest.creator, status);
-
-    res.json({ message: 'Status updated.', eventRequest });
+    res.json({
+      message: "Event request status updated successfully.",
+      eventRequest
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update status.' });
+    console.error("Error updating event request status:", error);
+    res.status(500).json({
+      error: "Failed to update event request status."
+    });
   }
 });
 
-// Update reminder settings and mark them for Iliya's notification/reminder system.
-app.patch('/api/event-requests/:id/reminders', async (req, res) => {
+// Update reminder settings
+app.patch("/api/event-requests/:id/reminders", async function (req, res) {
   try {
     const { reminderEnabled, reminderMinutesBefore } = req.body;
 
@@ -270,52 +368,60 @@ app.patch('/api/event-requests/:id/reminders', async (req, res) => {
       req.params.id,
       {
         reminderEnabled: Boolean(reminderEnabled),
-        reminderMinutesBefore: Number(reminderMinutesBefore) || 30,
-        notificationSystem: 'iliya-reminders',
+        reminderMinutesBefore: reminderMinutesBefore || 30,
+        notificationSystem: "iliya-reminders"
       },
       { new: true }
     );
 
     if (!eventRequest) {
-      return res.status(404).json({ error: 'Event request not found.' });
+      return res.status(404).json({
+        error: "Event request not found."
+      });
     }
 
-    res.json({ message: 'Reminder settings saved.', eventRequest });
+    res.json({
+      message: "Reminder settings updated successfully.",
+      eventRequest
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to save reminders.' });
+    console.error("Error updating reminders:", error);
+    res.status(500).json({
+      error: "Failed to update reminder settings."
+    });
   }
 });
 
-// Calendar endpoint used by calendar.js.
-// It returns pending and confirmed request-based calendar events.
-app.get('/api/calendar-events', async (_req, res) => {
+// Delete an event request
+app.delete("/api/event-requests/:id", async function (req, res) {
   try {
-    const events = await CalendarEvent.find().sort({ date: 1, time: 1 });
-    res.json(events);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch calendar events.' });
-  }
-});
+    const eventRequest = await EventRequest.findByIdAndDelete(req.params.id);
 
-app.delete('/api/event-requests/:id', async (req, res) => {
-  try {
-    const deleted = await EventRequest.findByIdAndDelete(req.params.id);
-
-    if (!deleted) {
-      return res.status(404).json({ error: 'Event request not found.' });
+    if (!eventRequest) {
+      return res.status(404).json({
+        error: "Event request not found."
+      });
     }
 
-    await CalendarEvent.deleteMany({ eventRequestId: req.params.id });
-    res.json({ message: 'Event request and related calendar events deleted.' });
+    res.json({
+      message: "Event request deleted successfully."
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete event request.' });
+    console.error("Error deleting event request:", error);
+    res.status(500).json({
+      error: "Failed to delete event request."
+    });
   }
 });
 
-app.get('/', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+// Example friends route for friend dropdown
+app.get("/api/friends", function (req, res) {
+  res.json({
+    friends: ["Alex", "Jordan", "Group"]
+  });
 });
 
-app.listen(PORT, () => {
+// Start server
+app.listen(PORT, function () {
   console.log(`Server running on http://localhost:${PORT}`);
 });
