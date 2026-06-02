@@ -1,157 +1,90 @@
-const calendarEl = document.getElementById("calendar");
+document.addEventListener("DOMContentLoaded", function () {
+  loadCalendarEvents();
+});
 
-let currentView = "month";
+async function loadCalendarEvents() {
+  try {
+    const response = await fetch("/api/calendar-events");
+    const events = await response.json();
 
-let activeCalendars = ["You", "Alex", "Jordan"];
+    if (!response.ok) {
+      throw new Error(events.error || "Failed to load calendar events.");
+    }
 
-// CHECKBOXES
-const checkboxes = {
-  "You": document.getElementById("check-you"),
-  "Alex": document.getElementById("check-alex"),
-  "Jordan": document.getElementById("check-jordan")
-};
+    renderCalendarEvents(events);
+  } catch (error) {
+    console.error("Calendar loading error:", error);
 
-const selectAllCheckbox = document.getElementById("check-all");
-
-// MOCK EVENTS
-const events = [
-  { title: "Music Festival", date: "2026-04-22", owner: "You" },
-  { title: "Art Show", date: "2026-04-25", owner: "Alex" },
-  { title: "Study Group", date: "2026-04-24", owner: "Jordan" }
-];
-
-// COLOR HELPER
-function getColor(variable) {
-  return getComputedStyle(document.documentElement)
-    .getPropertyValue(variable)
-    .trim();
-}
-
-const ownerColors = {
-  "You": () => getColor("--color-you"),
-  "Alex": () => getColor("--color-alex"),
-  "Jordan": () => getColor("--color-jordan")
-};
-
-// SELECT ALL
-function toggleSelectAll() {
-  const isChecked = selectAllCheckbox.checked;
-
-  Object.values(checkboxes).forEach(cb => {
-    cb.checked = isChecked;
-  });
-
-  updateActiveCalendars();
-}
-
-// INDIVIDUAL TOGGLE
-function togglePerson() {
-  const allChecked = Object.values(checkboxes).every(cb => cb.checked);
-  selectAllCheckbox.checked = allChecked;
-
-  updateActiveCalendars();
-}
-
-// UPDATE ACTIVE LIST
-function updateActiveCalendars() {
-  activeCalendars = Object.keys(checkboxes).filter(name => {
-    return checkboxes[name].checked;
-  });
-
-  renderCalendar();
-}
-
-// VIEW SWITCH
-function setView(view) {
-  currentView = view;
-  renderCalendar();
-}
-
-// FILTER
-function shouldShowEvent(event) {
-  return activeCalendars.includes(event.owner);
-}
-
-// RENDER
-function renderCalendar() {
-  calendarEl.innerHTML = "";
-
-  if (currentView === "month") {
-    renderMonth();
-  } else {
-    renderWeek();
+    const calendarContainer = getCalendarContainer();
+    if (calendarContainer) {
+      calendarContainer.innerHTML = `
+        <p class="calendar-error">
+          Could not load calendar events. Please make sure the backend server is running.
+        </p>
+      `;
+    }
   }
 }
 
-// MONTH
-function renderMonth() {
-  calendarEl.className = "calendar-container month-view";
-
-  for (let i = 1; i <= 30; i++) {
-    const day = document.createElement("div");
-    day.className = "calendar-day";
-
-    const date = `2026-04-${String(i).padStart(2, "0")}`;
-    day.innerHTML = `<strong>${i}</strong>`;
-
-    events.forEach(event => {
-      if (event.date === date && shouldShowEvent(event)) {
-        const eventEl = document.createElement("div");
-        eventEl.className = "calendar-event";
-        eventEl.innerText = event.title;
-
-        eventEl.style.backgroundColor = ownerColors[event.owner]();
-
-        eventEl.onclick = () => {
-          window.location.href = "event.html";
-        };
-
-        day.appendChild(eventEl);
-      }
-    });
-
-    calendarEl.appendChild(day);
-  }
+function getCalendarContainer() {
+  return (
+    document.getElementById("calendarEvents") ||
+    document.getElementById("calendar-events") ||
+    document.getElementById("calendar") ||
+    document.querySelector(".calendar") ||
+    document.querySelector(".calendar-container")
+  );
 }
 
-// WEEK
-function renderWeek() {
-  calendarEl.className = "calendar-container week-view";
+function renderCalendarEvents(events) {
+  const calendarContainer = getCalendarContainer();
 
-  const weekDates = [
-    "2026-04-22",
-    "2026-04-23",
-    "2026-04-24",
-    "2026-04-25",
-    "2026-04-26",
-    "2026-04-27",
-    "2026-04-28"
-  ];
+  if (!calendarContainer) {
+    console.error("Calendar container not found.");
+    return;
+  }
 
-  weekDates.forEach((date, index) => {
-    const day = document.createElement("div");
-    day.className = "calendar-day";
+  calendarContainer.innerHTML = "";
 
-    day.innerHTML = `<strong>Day ${index + 1}</strong>`;
+  if (!events || events.length === 0) {
+    calendarContainer.innerHTML = `
+      <p class="no-events-message">No events on your calendar yet.</p>
+    `;
+    return;
+  }
 
-    events.forEach(event => {
-      if (event.date === date && shouldShowEvent(event)) {
-        const eventEl = document.createElement("div");
-        eventEl.className = "calendar-event";
-        eventEl.innerText = event.title;
+  events.forEach(function (event) {
+    const eventCard = document.createElement("div");
+    eventCard.classList.add("calendar-event-card");
 
-        eventEl.style.backgroundColor = ownerColors[event.owner]();
+    if (event.status === "pending") {
+      eventCard.classList.add("pending-event");
+    } else if (event.status === "confirmed") {
+      eventCard.classList.add("confirmed-event");
+    } else if (event.status === "declined") {
+      eventCard.classList.add("declined-event");
+    }
 
-        eventEl.onclick = () => {
-          window.location.href = "event.html";
-        };
+    const title = event.title || "Untitled Event";
+    const date = event.startDate || event.date || "No date listed";
+    const time = event.startTime || event.time || "No time listed";
+    const location = event.location || event.venue || "No location listed";
+    const description = event.description || "";
+    const status = event.status || "pending";
 
-        day.appendChild(eventEl);
+    eventCard.innerHTML = `
+      <h3>${title}</h3>
+      <p><strong>Date:</strong> ${date}</p>
+      <p><strong>Time:</strong> ${time}</p>
+      <p><strong>Location:</strong> ${location}</p>
+      <p><strong>Status:</strong> <span class="event-status">${status}</span></p>
+      ${
+        description
+          ? `<p><strong>Description:</strong> ${description}</p>`
+          : ""
       }
-    });
+    `;
 
-    calendarEl.appendChild(day);
+    calendarContainer.appendChild(eventCard);
   });
 }
-
-renderCalendar();
