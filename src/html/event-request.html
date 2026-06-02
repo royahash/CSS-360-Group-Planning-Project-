@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>Event Request</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../css/style.css">
 
   <link
     rel="stylesheet"
@@ -13,7 +13,6 @@
 <body>
   <div class="page-layout">
 
-    <!-- Left Sidebar -->
     <aside class="sidebar-left">
       <button class="side-btn" onclick="window.location.href='index.html'" title="Home">
         <i class="fa-solid fa-house"></i>
@@ -28,10 +27,10 @@
       </button>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-content">
-      <div class="container">
+      <div class="container event-request-container">
         <h1>Request an Event</h1>
+        <p>Create an event request and send it to friends from your friend list.</p>
 
         <form id="eventRequestForm">
           <input type="text" id="eventTitle" placeholder="Event title" required>
@@ -56,12 +55,14 @@
 
           <label for="friendSelect">Invite Friends</label>
           <select id="friendSelect" multiple>
-            <option value="alex">Alex</option>
-            <option value="jordan">Jordan</option>
-            <option value="group">Group</option>
+            <option value="">Loading friends...</option>
           </select>
 
-          <label>
+          <p class="helper-text">
+            Hold Command on Mac or Control on Windows to select multiple friends.
+          </p>
+
+          <label class="checkbox-label">
             <input type="checkbox" id="reminderEnabled">
             Enable event reminder
           </label>
@@ -102,26 +103,13 @@
             </div>
           </section>
 
-          <button type="submit">Send Event Request</button>
+          <button type="submit" class="card-btn">Send Event Request</button>
         </form>
 
         <p id="requestMessage"></p>
-
-        <div id="eventCard" class="hidden">
-          <h2 id="displayName"></h2>
-          <p><strong>Date:</strong> <span id="displayDate"></span></p>
-          <p><strong>Time:</strong> <span id="displayTime"></span></p>
-          <p><strong>Location:</strong> <span id="displayLocation"></span></p>
-
-          <button id="acceptBtn">Accept</button>
-          <button id="denyBtn">Deny</button>
-
-          <p id="responseMessage"></p>
-        </div>
       </div>
     </main>
 
-    <!-- Right Sidebar -->
     <aside class="sidebar-right">
       <button class="side-btn" onclick="window.location.href='profile.html'" title="Profile">
         <i class="fa-solid fa-user"></i>
@@ -131,13 +119,13 @@
         <i class="fa-solid fa-plus"></i>
       </button>
 
-      <button class="side-btn" onclick="window.location.href='LogIn.html'" title="Login">
-        <i class="fa-solid fa-right-to-bracket"></i>
+      <button class="side-btn" onclick="window.location.href='friends.html'" title="Friends">
+        <i class="fa-solid fa-user-group"></i>
       </button>
     </aside>
 
   </div>
 
-  <script src="event-request.js"></script>
+  <script src="../js/event-request.js"></script>
 </body>
 </html>
