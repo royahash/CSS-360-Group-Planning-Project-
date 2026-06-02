@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Event Request</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1>Request an Event</h1>
+
+    <form id="eventRequestForm">
+      <input type="text" id="eventTitle" placeholder="Event title" required>
+
+      <input type="date" id="eventDate" required>
+
+      <input type="time" id="eventTime" required>
+
+      <input type="text" id="eventLocation" placeholder="Location" required>
+
+      <textarea 
+        id="eventDescription" 
+        placeholder="Event description"
+        rows="4">
+      </textarea>
+
+      <label for="visibility">Event Visibility</label>
+      <select id="visibility">
+        <option value="friends-only">Friends Only</option>
+        <option value="selected-users">Selected Users</option>
+      </select>
+
+      <label for="friendSelect">Invite Friends</label>
+      <select id="friendSelect" multiple>
+        <option value="alex">Alex</option>
+        <option value="jordan">Jordan</option>
+        <option value="group">Group</option>
+      </select>
+
+      <label>
+        <input type="checkbox" id="reminderEnabled">
+        Enable event reminder
+      </label>
+
+      <section class="poll-section">
+        <h2>Vote on Event Options</h2>
+
+        <div class="poll-category">
+          <h3>Date Options</h3>
+          <button type="button" class="poll-btn" data-category="date" data-option="Selected Event Date">
+            Selected Event Date
+          </button>
+          <p>Your date vote: <span id="dateVote">None</span></p>
+        </div>
+
+        <div class="poll-category">
+          <h3>Time Options</h3>
+          <button type="button" class="poll-btn" data-category="time" data-option="Selected Event Time">
+            Selected Event Time
+          </button>
+          <p>Your time vote: <span id="timeVote">None</span></p>
+        </div>
+
+        <div class="poll-category">
+          <h3>Location Options</h3>
+          <button type="button" class="poll-btn" data-category="location" data-option="Selected Event Location">
+            Selected Event Location
+          </button>
+          <p>Your location vote: <span id="locationVote">None</span></p>
+        </div>
+
+        <div class="poll-category">
+          <h3>Activity Options</h3>
+          <button type="button" class="poll-btn" data-category="activity" data-option="Main Event Activity">
+            Main Event Activity
+          </button>
+          <p>Your activity vote: <span id="activityVote">None</span></p>
+        </div>
+      </section>
+
+      <button type="submit">Send Event Request</button>
+    </form>
+
+    <p id="requestMessage"></p>
+
+    <div id="eventCard" class="hidden">
+      <h2 id="displayName"></h2>
+      <p><strong>Date:</strong> <span id="displayDate"></span></p>
+      <p><strong>Time:</strong> <span id="displayTime"></span></p>
+      <p><strong>Location:</strong> <span id="displayLocation"></span></p>
+
+      <button id="acceptBtn">Accept</button>
+      <button id="denyBtn">Deny</button>
+
+      <p id="responseMessage"></p>
+    </div>
+  </div>
+
+  <script src="event-request.js"></script>
+</body>
+</html>
