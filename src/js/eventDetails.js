@@ -46,13 +46,12 @@ async function loadEventDetails() {
     ].filter(Boolean);
 
     let categoryParts = rawCategories.filter(
-      (value, index, array) =>
-        array.indexOf(value) === index
+      (value, index, array) => array.indexOf(value) === index,
     );
 
     if (categoryParts.length > 1) {
       categoryParts = categoryParts.filter(
-        (category) => category.toLowerCase() !== 'undefined'
+        (category) => category.toLowerCase() !== 'undefined',
       );
     }
 
@@ -65,7 +64,7 @@ async function loadEventDetails() {
             ? categoryParts
                 .map(
                   (category) =>
-                    `<span class="category-pill">${category}</span>`
+                    `<span class="category-pill">${category}</span>`,
                 )
                 .join('')
             : '<span class="category-pill">Unknown Category</span>'

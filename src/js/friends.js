@@ -11,7 +11,7 @@ export async function sendFriendRequest(username) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ username })
+      body: JSON.stringify({ username }),
     });
 
     if (!response.ok) {
@@ -33,7 +33,7 @@ export async function sendFriendRequest(username) {
 export async function getPendingRequests() {
   try {
     const response = await fetch('/api/friends/requests', {
-      credentials: 'include'
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -56,7 +56,7 @@ export async function acceptFriendRequest(senderId) {
   try {
     const response = await fetch(`/api/friends/accept/${senderId}`, {
       method: 'POST',
-      credentials: 'include'
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -80,7 +80,7 @@ export async function declineFriendRequest(senderId) {
   try {
     const response = await fetch(`/api/friends/decline/${senderId}`, {
       method: 'POST',
-      credentials: 'include'
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -102,7 +102,7 @@ export async function declineFriendRequest(senderId) {
 export async function getFriendsList() {
   try {
     const response = await fetch('/api/friends', {
-      credentials: 'include'
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -125,7 +125,7 @@ export async function removeFriend(friendId) {
   try {
     const response = await fetch(`/api/friends/${friendId}`, {
       method: 'DELETE',
-      credentials: 'include'
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -148,7 +148,7 @@ export async function removeFriend(friendId) {
 export async function getFriendEvents(userId) {
   try {
     const response = await fetch(`/api/friends/${userId}/events`, {
-      credentials: 'include'
+      credentials: 'include',
     });
 
     if (!response.ok) {

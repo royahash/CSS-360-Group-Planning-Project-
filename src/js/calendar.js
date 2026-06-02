@@ -35,9 +35,12 @@ async function loadCalendarEvents() {
         // Fetch events for each friend
         for (const friend of friends) {
           try {
-            const friendEventsResponse = await fetch(`/api/friends/${friend._id}/events`, { 
-              credentials: 'include' 
-            });
+            const friendEventsResponse = await fetch(
+              `/api/friends/${friend._id}/events`,
+              {
+                credentials: 'include',
+              },
+            );
             if (friendEventsResponse.ok) {
               const friendEventsList = await friendEventsResponse.json();
               friendEvents = [
@@ -51,7 +54,10 @@ async function loadCalendarEvents() {
               ];
             }
           } catch (err) {
-            console.error(`Failed to load events for friend ${friend.displayName}:`, err);
+            console.error(
+              `Failed to load events for friend ${friend.displayName}:`,
+              err,
+            );
           }
         }
       }
