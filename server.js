@@ -66,6 +66,17 @@ const eventSchema = new mongoose.Schema({
 eventSchema.index({ ticketmasterId: 1, userId: 1 }, { unique: true });
 const Event = mongoose.model('Event', eventSchema);
 
+// ── Friend Request Schema ─────────────────────────────────────────────────
+const friendRequestSchema = new mongoose.Schema({
+  senderId:   { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
+  receiverId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
+  status:     { type: String, enum: ['pending', 'accepted', 'declined'], default: 'pending' },
+  createdAt:  { type: Date, default: Date.now }
+});
+// Ensure unique pending requests (can't send duplicate requests)
+friendRequestSchema.index({ senderId: 1, receiverId: 1 }, { unique: true });
+const FriendRequest = mongoose.model('FriendRequest', friendRequestSchema);
+
 // ── Passport / Google OAuth ───────────────────────────────────────────────
 passport.use(new GoogleStrategy({
   clientID:     process.env.GOOGLE_CLIENT_ID,
@@ -265,6 +276,160 @@ app.get('/api/ticketmaster/event/:id', async (req, res) => {
   }
 });
 
+// ── Friend Routes ─────────────────────────────────────────────────────────
+// SEND friend request by username
+app.post('/api/friends/request', async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+  const { username } = req.body;
+
+  try {
+    // Find user by username
+    const targetUser = await User.findOne({ username });
+    if (!targetUser) return res.status(404).json({ error: 'User not found' });
+    if (targetUser._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ error: 'Cannot add yourself' });
+    }
+
+    // Check if already friends
+    if (req.user.friends.includes(targetUser._id.toString())) {
+      return res.status(400).json({ error: 'Already friends' });
+    }
+
+    // Check for existing request
+    const existingRequest = await FriendRequest.findOne({
+      $or: [
+        { senderId: req.user._id, receiverId: targetUser._id },
+        { senderId: targetUser._id, receiverId: req.user._id }
+      ]
+    });
+    if (existingRequest) {
+      return res.status(400).json({ error: 'Friend request already exists' });
+    }
+
+    // Create friend request
+    const friendRequest = await FriendRequest.create({
+      senderId: req.user._id,
+      receiverId: targetUser._id
+    });
+
+    res.status(201).json({ message: 'Friend request sent', request: friendRequest });
+  } catch (err) {
+    console.error('Error sending friend request:', err);
+    res.status(500).json({ error: 'Failed to send friend request' });
+  }
+});
+
+// GET pending friend requests for current user
+app.get('/api/friends/requests', async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+
+  try {
+    const requests = await FriendRequest.find({
+      receiverId: req.user._id,
+      status: 'pending'
+    }).populate('senderId', 'username displayName email photo');
+
+    res.json(requests);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch friend requests' });
+  }
+});
+
+// ACCEPT friend request
+app.post('/api/friends/accept/:senderId', async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+
+  try {
+    const friendRequest = await FriendRequest.findOne({
+      senderId: req.params.senderId,
+      receiverId: req.user._id,
+      status: 'pending'
+    });
+
+    if (!friendRequest) return res.status(404).json({ error: 'Friend request not found' });
+
+    // Update friend request status
+    friendRequest.status = 'accepted';
+    await friendRequest.save();
+
+    // Add to each other's friend lists
+    await User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { friends: req.params.senderId }
+    });
+    await User.findByIdAndUpdate(req.params.senderId, {
+      $addToSet: { friends: req.user._id }
+    });
+
+    res.json({ message: 'Friend request accepted' });
+  } catch (err) {
+    console.error('Error accepting friend request:', err);
+    res.status(500).json({ error: 'Failed to accept friend request' });
+  }
+});
+
+// DECLINE friend request
+app.post('/api/friends/decline/:senderId', async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+
+  try {
+    const friendRequest = await FriendRequest.findOne({
+      senderId: req.params.senderId,
+      receiverId: req.user._id,
+      status: 'pending'
+    });
+
+    if (!friendRequest) return res.status(404).json({ error: 'Friend request not found' });
+
+    friendRequest.status = 'declined';
+    await friendRequest.save();
+
+    res.json({ message: 'Friend request declined' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to decline friend request' });
+  }
+});
+
+// GET list of friends for current user
+app.get('/api/friends', async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+
+  try {
+    const user = await User.findById(req.user._id).populate('friends', 'username displayName email photo');
+    res.json(user.friends || []);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch friends' });
+  }
+});
+
+// DELETE friend
+app.delete('/api/friends/:friendId', async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+
+  try {
+    // Remove from both user's friend lists
+    await User.findByIdAndUpdate(req.user._id, {
+      $pull: { friends: req.params.friendId }
+    });
+    await User.findByIdAndUpdate(req.params.friendId, {
+      $pull: { friends: req.user._id }
+    });
+
+    res.json({ message: 'Friend removed' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to remove friend' });
+  }
+});
+
+// GET a specific user's saved events (for viewing friend's events)
+app.get('/api/friends/:userId/events', async (req, res) => {
+  try {
+    const events = await Event.find({ userId: req.params.userId });
+    res.json(events);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch user events' });
+  }
+});
+
 // ── Page Routes ───────────────────────────────────────────────────────────
 const pages = {
   '/': 'index.html',
@@ -276,6 +441,9 @@ const pages = {
   '/profile': 'profile.html',
   '/profile.html': 'profile.html',
   '/html/profile.html': 'profile.html',
+  '/friends': 'friends.html',
+  '/friends.html': 'friends.html',
+  '/html/friends.html': 'friends.html',
   '/onboarding': 'onboarding.html',
   '/onboarding.html': 'onboarding.html',
   '/html/onboarding.html': 'onboarding.html',

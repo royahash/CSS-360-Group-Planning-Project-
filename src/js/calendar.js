@@ -26,10 +26,44 @@ async function loadCalendarEvents() {
 
     const savedEventsArray = Array.isArray(savedEvents) ? savedEvents : [];
 
-    // MOCK FRIEND EVENTS
-    const response = await fetch('/data/mockFriends.json');
-
-    const friendEvents = await response.json();
+    // FRIEND EVENTS
+    let friendEvents = [];
+    try {
+      const response = await fetch('/api/friends', { credentials: 'include' });
+      if (response.ok) {
+        const friends = await response.json();
+        // Fetch events for each friend
+        for (const friend of friends) {
+          try {
+            const friendEventsResponse = await fetch(
+              `/api/friends/${friend._id}/events`,
+              {
+                credentials: 'include',
+              },
+            );
+            if (friendEventsResponse.ok) {
+              const friendEventsList = await friendEventsResponse.json();
+              friendEvents = [
+                ...friendEvents,
+                ...friendEventsList.map((event) => ({
+                  title: event.title,
+                  date: event.startDate,
+                  owner: friend.displayName,
+                  ticketmasterId: event.ticketmasterId || '',
+                })),
+              ];
+            }
+          } catch (err) {
+            console.error(
+              `Failed to load events for friend ${friend.displayName}:`,
+              err,
+            );
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load friends events:', err);
+    }
 
     // COMBINE
     events = [

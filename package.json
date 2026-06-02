@@ -28,12 +28,16 @@
   },
   "homepage": "https://github.com/royahash/CSS-360-Group-Planning-Project-#readme",
   "jest": {
-  "testEnvironment": "node",
-  "testEnvironmentOptions": {
-    "customExportConditions": ["node"]
+    "testEnvironment": "node",
+    "testEnvironmentOptions": {
+      "customExportConditions": [
+        "node"
+      ]
+    },
+    "setupFiles": [
+      "./tests/setup.js"
+    ]
   },
-  "setupFiles": ["./tests/setup.js"]
-},
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@testing-library/dom": "^10.4.1",
