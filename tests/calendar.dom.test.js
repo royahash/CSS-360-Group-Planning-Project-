@@ -44,6 +44,8 @@ beforeEach(() => {
 describe('Calendar UI Behavior Tests', () => {
   test('toggleSelectAll does not throw when selectAllCheckbox is null', () => {
     expect(() => calendar.toggleSelectAll()).not.toThrow();
+  test('toggleSelectAll does not throw when selectAllCheckbox is null', () => {
+    expect(() => calendar.toggleSelectAll()).not.toThrow();
   });
 
   test('Unchecking one user removes them from active calendars', () => {
