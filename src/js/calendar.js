@@ -12,8 +12,6 @@ const checkboxes = {
 let selectAllCheckbox = null;
 let activeCalendars = ['You', 'Alex', 'Jordan'];
 
-let activeCalendars = ['You', 'Alex', 'Jordan'];
-
 document.addEventListener('DOMContentLoaded', function () {
   initializeViewButtons();
   initializeCheckboxListeners();
