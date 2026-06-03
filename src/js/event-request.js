@@ -9,7 +9,7 @@ const votes = {
   activity: "None"
 };
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
   loadFriendsIntoDropdown();
 });
 
@@ -54,7 +54,7 @@ async function loadFriendsIntoDropdown() {
       return;
     }
 
-    friends.forEach(function(friend) {
+    friends.forEach(function (friend) {
       const option = document.createElement("option");
       option.value = friend._id;
       option.textContent =
@@ -75,8 +75,8 @@ async function loadFriendsIntoDropdown() {
   }
 }
 
-pollButtons.forEach(function(button) {
-  button.addEventListener("click", function() {
+pollButtons.forEach(function (button) {
+  button.addEventListener("click", function () {
     const category = button.dataset.category;
     const option = button.dataset.option;
 
@@ -92,7 +92,7 @@ pollButtons.forEach(function(button) {
       '.poll-btn[data-category="' + category + '"]'
     );
 
-    categoryButtons.forEach(function(btn) {
+    categoryButtons.forEach(function (btn) {
       btn.classList.remove("selected");
     });
 
@@ -101,7 +101,7 @@ pollButtons.forEach(function(button) {
 });
 
 if (eventRequestForm) {
-  eventRequestForm.addEventListener("submit", async function(event) {
+  eventRequestForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
     const title = document.getElementById("eventTitle")?.value.trim() || "";
@@ -117,7 +117,7 @@ if (eventRequestForm) {
 
     if (friendSelect) {
       invitedUsers = Array.from(friendSelect.selectedOptions)
-        .map(function(option) {
+        .map(function (option) {
           return option.value;
         })
         .filter(Boolean);
@@ -129,7 +129,10 @@ if (eventRequestForm) {
     }
 
     if (visibility === "selected-users" && invitedUsers.length === 0) {
-      showRequestMessage("Please choose at least one friend for selected-user visibility.", "red");
+      showRequestMessage(
+        "Please choose at least one friend for selected-user visibility.",
+        "red"
+      );
       return;
     }
 
@@ -181,12 +184,15 @@ if (eventRequestForm) {
       eventRequestForm.reset();
       resetVotes();
 
-      setTimeout(function() {
+      setTimeout(function () {
         window.location.href = "calendar.html";
       }, 1000);
     } catch (error) {
       console.error("Event request submission error:", error);
-      showRequestMessage("There was an error submitting your event request. Please try again.", "red");
+      showRequestMessage(
+        "There was an error submitting your event request. Please try again.",
+        "red"
+      );
     }
   });
 }
@@ -197,7 +203,7 @@ function resetVotes() {
   votes.location = "None";
   votes.activity = "None";
 
-  ["date", "time", "location", "activity"].forEach(function(category) {
+  ["date", "time", "location", "activity"].forEach(function (category) {
     const voteDisplay = document.getElementById(category + "Vote");
 
     if (voteDisplay) {
@@ -205,7 +211,7 @@ function resetVotes() {
     }
   });
 
-  pollButtons.forEach(function(button) {
+  pollButtons.forEach(function (button) {
     button.classList.remove("selected");
   });
 }

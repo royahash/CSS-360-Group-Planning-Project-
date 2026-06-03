@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <title>Profile</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <div class="page-layout">
+
+    <div class="sidebar-left">
+      <a href="/html/index.html">
+        <button class="side-btn"><i class="fa-solid fa-house"></i></button>
+      </a>
+    </div>
+
+  <div class="main-content">
+    <div class="header">
+      <h1>My Profile</h1>
+      <p>Your event preferences and onboarding choices</p>
+    </div>
+
+    <div class="profile-card">
+      <div class="profile-header">
+        <div class="profile-avatar">
+          <img id="profile-photo" src="" alt="Profile photo"
+               style="width:100%; height:100%; border-radius:50%; display:none; object-fit:cover;">
+          <i id="profile-icon" class="fa-solid fa-user"></i>
+        </div>
+        <div>
+          <h2 id="profile-name">Welcome back</h2>
+          <p id="profile-email">Loading your profile...</p>
+        </div>
+      </div>
+
+      <div class="profile-info-card">
+        <h3>Preferred interests</h3>
+        <div id="interestList" class="interest-list"></div>
+        <div id="emptyState" class="empty-state" style="display:none;">
+          You have not chosen any interests yet. Visit onboarding to save your favorite event categories.
+        </div>
+      </div>
+
+      <div class="profile-actions">
+        <a href="/html/friends.html"><button class="card-btn">Manage friends</button></a>
+        <a href="/html/onboarding.html"><button class="card-btn">Update interests</button></a>
+        <a href="/html/index.html"><button class="card-btn">Back to events</button></a>
+        <button class="card-btn" id="signOutBtn" 
+                style="color: #e74c3c; border-color: #e74c3c;">
+          Sign out
+        </button>
+      </div>
+    </div>
+  </div>
+
+    <div class="sidebar-right">
+      <button class="side-btn active"><i class="fa-solid fa-user"></i></button>
+      <a href="/html/calendar.html">
+        <button class="side-btn"><i class="fa-solid fa-calendar"></i></button>
+      </a>
+      <a href="/html/friends.html">
+        <button class="side-btn"><i class="fa-solid fa-user-group"></i></button>
+      </a>
+      <a href="/html/event-request.html">
+        <button class="side-btn"><i class="fa-solid fa-plus"></i></button>
+      </a>
+    </div>
+
+  </div>
+
+<script type="module">
+  import { getCurrentUser, logout } from '/js/auth.js';
+
+  const user = await getCurrentUser();
+
+  if (!user) {
+    window.location.href = '/html/LogIn.html';
+  } else {
+    // Show name and email
+    document.getElementById('profile-name').textContent = user.displayName;
+    document.getElementById('profile-email').textContent = user.email;
+
+    // Show Google profile photo if available
+    if (user.photo) {
+      const img = document.getElementById('profile-photo');
+      const icon = document.getElementById('profile-icon');
+      img.src = user.photo;
+      img.style.display = 'block';
+      icon.style.display = 'none';
+    }
+
+    // Load preferences from database
+    const interestList = document.getElementById('interestList');
+    const emptyState = document.getElementById('emptyState');
+
+    if (!user.preferences || user.preferences.length === 0) {
+      interestList.innerHTML = '';
+      emptyState.style.display = 'block';
+    } else {
+      emptyState.style.display = 'none';
+      interestList.innerHTML = user.preferences
+        .map(interest => `<span class="interest-chip">${interest}</span>`)
+        .join('');
+    }
+
+    // Sign out button
+    document.getElementById('signOutBtn').onclick = logout;
+  }
+</script>
+</body>
+</html>

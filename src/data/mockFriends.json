@@ -1,0 +1,18 @@
+[
+  {
+    "title": "Hiking at Rattlesnake Ledge",
+    "date": "2026-05-24",
+    "owner": "Alex",
+    "description": "Start the morning with a scenic hike through forest trails leading to breathtaking views of Rattlesnake Lake and the surrounding mountains. This beginner-friendly group hike is perfect for relaxing, taking photos, and enjoying fresh air with friends. Bring water, snacks, comfortable hiking shoes, and get ready for a fun outdoor adventure.",
+    "location": "Rattlesnake Ledge Trail",
+    "image": "https://www.wta.org/site_images/trip-reports/2022/tripreport-image-2022-02-21-4778124143/@@download/image/rattlesnake%20ledge.jpg"
+  },
+  {
+    "title": "Study Group at UW Bothell Library",
+    "date": "2026-05-26",
+    "owner": "Jordan",
+    "description": "Join a focused but welcoming study session at the UW Bothell Library as we prepare for finals together. We’ll review notes, quiz each other on important topics, work through practice problems, and keep the energy up with coffee and snacks. Whether you need motivation or extra help understanding concepts, everyone is welcome.",
+    "location": "UW Bothell Library",
+    "image": "https://www.uwb.edu/wp-content/uploads/m1-reading-room-library.jpg"
+  }
+]

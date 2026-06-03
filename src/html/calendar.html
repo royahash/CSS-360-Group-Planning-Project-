@@ -1,16 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
   <title>Calendar</title>
-  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
   <div class="page-layout">
+
+    <!-- LEFT SIDEBAR -->
     <aside class="sidebar-left">
-      <button class="side-btn" onclick="window.location.href='index.html'">⌂</button>
+      <a href="/html/index.html">
+        <button class="side-btn">
+          <i class="fa-solid fa-house"></i>
+        </button>
+      </a>
     </aside>
 
+    <!-- CENTER CONTENT -->
     <main class="main-content">
       <div class="header">
         <h1>Calendar</h1>
@@ -25,6 +34,8 @@
       </div>
 
       <div class="calendar-layout">
+
+        <!-- CALENDAR SIDEBAR -->
         <aside class="calendar-sidebar">
           <h3>Calendars</h3>
 
@@ -51,20 +62,43 @@
           </label>
         </aside>
 
+        <!-- CALENDAR MAIN -->
         <section class="calendar-main">
           <div id="calendarEvents" class="calendar-container"></div>
         </section>
+
       </div>
     </main>
 
+    <!-- RIGHT SIDEBAR -->
     <aside class="sidebar-right">
-      <button class="side-btn" onclick="window.location.href='profile.html'">👤</button>
-      <button class="side-btn active" onclick="window.location.href='calendar.html'">🗓</button>
-      <button class="side-btn" onclick="window.location.href='friends.html'">👥</button>
-      <button class="side-btn" onclick="window.location.href='event-request.html'">＋</button>
+      <a href="/html/profile.html">
+        <button class="side-btn">
+          <i class="fa-solid fa-user"></i>
+        </button>
+      </a>
+
+      <a href="/html/calendar.html">
+        <button class="side-btn active">
+          <i class="fa-solid fa-calendar"></i>
+        </button>
+      </a>
+
+      <a href="/html/friends.html">
+        <button class="side-btn">
+          <i class="fa-solid fa-user-group"></i>
+        </button>
+      </a>
+
+      <a href="/html/event-request.html">
+        <button class="side-btn">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </a>
     </aside>
+
   </div>
 
-  <script src="../js/calendar.js"></script>
+  <script src="/js/calendar.js"></script>
 </body>
 </html>

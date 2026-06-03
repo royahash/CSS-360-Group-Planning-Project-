@@ -1,46 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Event Request</title>
-  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-  >
+  <title>Event Request</title>
+
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
   <div class="page-layout">
 
+    <!-- LEFT SIDEBAR -->
     <aside class="sidebar-left">
-      <button class="side-btn" onclick="window.location.href='index.html'" title="Home">
-        <i class="fa-solid fa-house"></i>
-      </button>
-
-      <button class="side-btn" onclick="window.location.href='calendar.html'" title="Calendar">
-        <i class="fa-solid fa-calendar-days"></i>
-      </button>
-
-      <button class="side-btn active" onclick="window.location.href='event-request.html'" title="Request Event">
-        <i class="fa-solid fa-plus"></i>
-      </button>
+      <a href="/html/index.html">
+        <button class="side-btn" title="Home">
+          <i class="fa-solid fa-house"></i>
+        </button>
+      </a>
     </aside>
 
+    <!-- MAIN CONTENT -->
     <main class="main-content">
       <div class="container event-request-container">
         <h1>Request an Event</h1>
         <p>Create an event request and send it to friends from your friend list.</p>
 
         <form id="eventRequestForm">
-          <input type="text" id="eventTitle" placeholder="Event title" required>
+          <label for="eventTitle">Event Title</label>
+          <input type="text" id="eventTitle" placeholder="Example: Movie Night" required>
 
+          <label for="eventDate">Date</label>
           <input type="date" id="eventDate" required>
 
+          <label for="eventTime">Time</label>
           <input type="time" id="eventTime" required>
 
-          <input type="text" id="eventLocation" placeholder="Location" required>
+          <label for="eventLocation">Location</label>
+          <input type="text" id="eventLocation" placeholder="Example: UW Bothell Library" required>
 
+          <label for="eventDescription">Description</label>
           <textarea
             id="eventDescription"
             placeholder="Event description"
@@ -110,22 +109,35 @@
       </div>
     </main>
 
+    <!-- RIGHT SIDEBAR -->
     <aside class="sidebar-right">
-      <button class="side-btn" onclick="window.location.href='profile.html'" title="Profile">
-        <i class="fa-solid fa-user"></i>
-      </button>
+      <a href="/html/profile.html">
+        <button class="side-btn" title="Profile">
+          <i class="fa-solid fa-user"></i>
+        </button>
+      </a>
 
-      <button class="side-btn active" onclick="window.location.href='event-request.html'" title="Request Event">
-        <i class="fa-solid fa-plus"></i>
-      </button>
+      <a href="/html/calendar.html">
+        <button class="side-btn" title="Calendar">
+          <i class="fa-solid fa-calendar"></i>
+        </button>
+      </a>
 
-      <button class="side-btn" onclick="window.location.href='friends.html'" title="Friends">
-        <i class="fa-solid fa-user-group"></i>
-      </button>
+      <a href="/html/friends.html">
+        <button class="side-btn" title="Friends">
+          <i class="fa-solid fa-user-group"></i>
+        </button>
+      </a>
+
+      <a href="/html/event-request.html">
+        <button class="side-btn active" title="Request Event">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </a>
     </aside>
 
   </div>
 
-  <script src="../js/event-request.js"></script>
+  <script src="/js/event-request.js"></script>
 </body>
 </html>
