@@ -77,6 +77,147 @@ const friendRequestSchema = new mongoose.Schema({
 friendRequestSchema.index({ senderId: 1, receiverId: 1 }, { unique: true });
 const FriendRequest = mongoose.model('FriendRequest', friendRequestSchema);
 
+const FriendRequest = mongoose.model('FriendRequest', friendRequestSchema);
+
+// ── Event Request Schema ──────────────────────────────────────────────────
+const eventRequestSchema = new mongoose.Schema(
+  {
+    creatorUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
+    creatorName: {
+      type: String,
+      default: ""
+    },
+    title: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    startDate: {
+      type: String,
+      required: true
+    },
+    startTime: {
+      type: String,
+      default: ""
+    },
+    location: {
+      type: String,
+      default: ""
+    },
+    description: {
+      type: String,
+      default: ""
+    },
+    visibility: {
+      type: String,
+      enum: ["friends-only", "selected-users"],
+      default: "friends-only"
+    },
+    invitedUsers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+      }
+    ],
+    invitedGroups: {
+      type: [String],
+      default: []
+    },
+    reminderEnabled: {
+      type: Boolean,
+      default: false
+    },
+    reminderMinutesBefore: {
+      type: Number,
+      default: 30
+    },
+    notificationSystem: {
+      type: String,
+      default: "iliya-reminders"
+    },
+    status: {
+      type: String,
+      enum: ["pending", "confirmed", "declined"],
+      default: "pending"
+    },
+    pollOptions: {
+      dates: {
+        type: [String],
+        default: []
+      },
+      times: {
+        type: [String],
+        default: []
+      },
+      locations: {
+        type: [String],
+        default: []
+      },
+      activities: {
+        type: [String],
+        default: []
+      }
+    },
+    responses: [
+      {
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User"
+        },
+        displayName: {
+          type: String,
+          default: ""
+        },
+        email: {
+          type: String,
+          default: ""
+        },
+        responseStatus: {
+          type: String,
+          enum: ["accepted", "declined", "voted"],
+          required: true
+        },
+        votes: {
+          date: {
+            type: String,
+            default: ""
+          },
+          time: {
+            type: String,
+            default: ""
+          },
+          location: {
+            type: String,
+            default: ""
+          },
+          activity: {
+            type: String,
+            default: ""
+          }
+        },
+        respondedAt: {
+          type: Date,
+          default: Date.now
+        }
+      }
+    ]
+  },
+  {
+    timestamps: true
+  }
+);
+
+eventRequestSchema.index({ creatorUserId: 1, createdAt: -1 });
+eventRequestSchema.index({ invitedUsers: 1 });
+
+const EventRequest = mongoose.model("EventRequest", eventRequestSchema);
+
+// ── Passport / Google OAuth ───────────────────────────────────────────────
+
 // ── Passport / Google OAuth ───────────────────────────────────────────────
 passport.use(new GoogleStrategy({
   clientID:     process.env.GOOGLE_CLIENT_ID,
