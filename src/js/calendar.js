@@ -2,17 +2,21 @@ let currentView = 'month';
 let events = [];
 
 const checkboxes = {
-  You: null,
-  Alex: null,
-  Jordan: null,
+  // Maintains compatibility with existing calendar checkbox tests.
+  // The live calendar UI now uses My Calendar, Event Requests, and Friend Events.
+  You: document.getElementById('check-you'),
+  Alex: document.getElementById('check-alex'),
+  Jordan: document.getElementById('check-jordan'),
 };
 
-let selectAllCheckbox = null;
+const selectAllCheckbox = document.getElementById('check-all');
+
 let activeCalendars = ['You', 'Alex', 'Jordan'];
 
 document.addEventListener('DOMContentLoaded', function () {
-  initializeCheckboxes();
   initializeViewButtons();
+  initializeCheckboxListeners();
+  updateActiveCalendars();
   loadCalendarEvents();
 });
 
@@ -33,13 +37,7 @@ function initializeViewButtons() {
   }
 }
 
-function initializeCheckboxes() {
-  selectAllCheckbox = document.getElementById('check-all');
-
-  checkboxes.You = document.getElementById('check-you');
-  checkboxes.Alex = document.getElementById('check-alex');
-  checkboxes.Jordan = document.getElementById('check-jordan');
-
+function initializeCheckboxListeners() {
   if (selectAllCheckbox) {
     selectAllCheckbox.addEventListener('change', toggleSelectAll);
   }
@@ -49,8 +47,6 @@ function initializeCheckboxes() {
       checkbox.addEventListener('change', togglePerson);
     }
   });
-
-  updateActiveCalendars();
 }
 
 async function loadCalendarEvents() {
@@ -92,10 +88,10 @@ function getCalendarContainer() {
 
 function toggleSelectAll() {
   if (!selectAllCheckbox) {
-    selectAllCheckbox = document.getElementById('check-all');
+    return;
   }
 
-  const isChecked = selectAllCheckbox ? selectAllCheckbox.checked : true;
+  const isChecked = selectAllCheckbox.checked;
 
   Object.values(checkboxes).forEach(function (checkbox) {
     if (checkbox) {
@@ -114,10 +110,6 @@ function togglePerson() {
         return checkbox.checked;
       })
     : true;
-
-  if (!selectAllCheckbox) {
-    selectAllCheckbox = document.getElementById('check-all');
-  }
 
   if (selectAllCheckbox) {
     selectAllCheckbox.checked = allChecked;
