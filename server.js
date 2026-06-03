@@ -34,22 +34,17 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// ── MongoDB Connection ────────────────────────────────────────────────────
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((error) => console.error('MongoDB connection error:', error));
-
 // ── User Schema ───────────────────────────────────────────────────────────
 const userSchema = new mongoose.Schema({
-  googleId:    { type: String, sparse: true },
+  googleId: { type: String, sparse: true },
   displayName: { type: String, default: '' },
-  email:       { type: String, default: '' },
-  username:    { type: String, default: '', unique: true, sparse: true },
-  password:    { type: String, default: '' },
-  photo:       { type: String, default: '' },
+  email: { type: String, default: '' },
+  username: { type: String, default: '', unique: true, sparse: true },
+  password: { type: String, default: '' },
+  photo: { type: String, default: '' },
   preferences: { type: [String], default: [] },
-  friends:     [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  createdAt:   { type: Date, default: Date.now }
+  friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  createdAt: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model('User', userSchema);
@@ -57,14 +52,14 @@ const User = mongoose.model('User', userSchema);
 // ── Event Schema ──────────────────────────────────────────────────────────
 const eventSchema = new mongoose.Schema({
   ticketmasterId: { type: String, required: true },
-  userId:         { type: String, required: true },
-  title:          { type: String, required: true },
-  image:          { type: String, default: '' },
-  startDate:      { type: String, required: true },
-  startTime:      { type: String, default: '' },
-  venue:          { type: String, default: '' },
-  city:           { type: String, default: '' },
-  description:    { type: String, default: '' },
+  userId: { type: String, required: true },
+  title: { type: String, required: true },
+  image: { type: String, default: '' },
+  startDate: { type: String, required: true },
+  startTime: { type: String, default: '' },
+  venue: { type: String, default: '' },
+  city: { type: String, default: '' },
+  description: { type: String, default: '' },
 });
 
 // Each user can only save a given event once
@@ -74,10 +69,10 @@ const Event = mongoose.model('Event', eventSchema);
 
 // ── Friend Request Schema ─────────────────────────────────────────────────
 const friendRequestSchema = new mongoose.Schema({
-  senderId:   { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
+  senderId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
   receiverId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
-  status:     { type: String, enum: ['pending', 'accepted', 'declined'], default: 'pending' },
-  createdAt:  { type: Date, default: Date.now }
+  status: { type: String, enum: ['pending', 'accepted', 'declined'], default: 'pending' },
+  createdAt: { type: Date, default: Date.now }
 });
 
 // Ensure unique pending requests can't send duplicate requests
@@ -249,7 +244,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       return done(err, null);
     }
   }));
-} else {
+} else if (process.env.NODE_ENV !== 'test') {
   console.warn('Google OAuth is disabled because GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is missing.');
 }
 
@@ -295,10 +290,10 @@ app.get('/auth/me', (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
   res.json({
-    id:          req.user._id,
+    id: req.user._id,
     displayName: req.user.displayName,
-    email:       req.user.email,
-    photo:       req.user.photo,
+    email: req.user.email,
+    photo: req.user.photo,
     preferences: req.user.preferences,
   });
 });
@@ -1061,8 +1056,23 @@ Object.entries(pages).forEach(([route, file]) => {
 // ── Start Server ──────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 
+async function startServer() {
+  try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI is not set in the .env file.');
+    }
+
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('Connected to MongoDB');
+
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  } catch (error) {
+    console.error('MongoDB connection error:', error.message);
+  }
+}
+
 if (require.main === module) {
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  startServer();
 }
 
 module.exports = app;
