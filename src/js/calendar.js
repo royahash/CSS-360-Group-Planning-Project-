@@ -1,7 +1,22 @@
 let currentView = 'month';
 let events = [];
 
+const checkboxes = {
+  You: null,
+  Alex: null,
+  Jordan: null,
+};
+
+let selectAllCheckbox = null;
+let activeCalendars = ['You', 'Alex', 'Jordan'];
+
 document.addEventListener('DOMContentLoaded', function () {
+  initializeCheckboxes();
+  initializeViewButtons();
+  loadCalendarEvents();
+});
+
+function initializeViewButtons() {
   const monthViewBtn = document.getElementById('monthViewBtn');
   const weekViewBtn = document.getElementById('weekViewBtn');
 
@@ -16,9 +31,27 @@ document.addEventListener('DOMContentLoaded', function () {
       setView('week');
     });
   }
+}
 
-  loadCalendarEvents();
-});
+function initializeCheckboxes() {
+  selectAllCheckbox = document.getElementById('check-all');
+
+  checkboxes.You = document.getElementById('check-you');
+  checkboxes.Alex = document.getElementById('check-alex');
+  checkboxes.Jordan = document.getElementById('check-jordan');
+
+  if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener('change', toggleSelectAll);
+  }
+
+  Object.values(checkboxes).forEach(function (checkbox) {
+    if (checkbox) {
+      checkbox.addEventListener('change', togglePerson);
+    }
+  });
+
+  updateActiveCalendars();
+}
 
 async function loadCalendarEvents() {
   try {
@@ -57,6 +90,50 @@ function getCalendarContainer() {
   );
 }
 
+function toggleSelectAll() {
+  if (!selectAllCheckbox) {
+    selectAllCheckbox = document.getElementById('check-all');
+  }
+
+  const isChecked = selectAllCheckbox ? selectAllCheckbox.checked : true;
+
+  Object.values(checkboxes).forEach(function (checkbox) {
+    if (checkbox) {
+      checkbox.checked = isChecked;
+    }
+  });
+
+  updateActiveCalendars();
+}
+
+function togglePerson() {
+  const validCheckboxes = Object.values(checkboxes).filter(Boolean);
+
+  const allChecked = validCheckboxes.length > 0
+    ? validCheckboxes.every(function (checkbox) {
+        return checkbox.checked;
+      })
+    : true;
+
+  if (!selectAllCheckbox) {
+    selectAllCheckbox = document.getElementById('check-all');
+  }
+
+  if (selectAllCheckbox) {
+    selectAllCheckbox.checked = allChecked;
+  }
+
+  updateActiveCalendars();
+}
+
+function updateActiveCalendars() {
+  activeCalendars = Object.keys(checkboxes).filter(function (name) {
+    return checkboxes[name] && checkboxes[name].checked;
+  });
+
+  renderCalendar();
+}
+
 function setView(view) {
   currentView = view;
   renderCalendar();
@@ -66,7 +143,6 @@ function renderCalendar() {
   const calendarContainer = getCalendarContainer();
 
   if (!calendarContainer) {
-    console.error('Calendar container not found.');
     return;
   }
 
@@ -165,12 +241,6 @@ function createCalendarEventElement(event) {
     eventEl.classList.add('declined-event');
   }
 
-  if (event.source === 'event-request') {
-    eventEl.title = 'Event Request';
-  } else if (event.source === 'saved-event') {
-    eventEl.title = 'Saved Event';
-  }
-
   eventEl.addEventListener('click', function () {
     showEventDetails(event);
   });
@@ -230,50 +300,17 @@ function showEventDetails(event) {
 }
 
 function shouldShowEvent(event) {
-  const source = event.source || '';
-  const owner = event.owner || '';
+  const owner = event.owner || 'You';
 
-  const calendarCheckboxes = document.querySelectorAll('.calendar-sidebar input[type="checkbox"]');
-  const labels = Array.from(calendarCheckboxes).map(function (checkbox) {
-    return {
-      checked: checkbox.checked,
-      text: checkbox.parentElement ? checkbox.parentElement.textContent.trim() : ''
-    };
-  });
-
-  const selectAll = labels.find(function (label) {
-    return label.text.includes('Select All');
-  });
-
-  if (selectAll && selectAll.checked) {
-    return true;
+  if (activeCalendars.length === 0) {
+    return false;
   }
 
-  const myCalendar = labels.find(function (label) {
-    return label.text.includes('My Calendar');
-  });
-
-  const eventRequests = labels.find(function (label) {
-    return label.text.includes('Event Requests');
-  });
-
-  const friendEvents = labels.find(function (label) {
-    return label.text.includes('Friend Events');
-  });
-
-  if ((owner === 'You' || source === 'saved-event') && myCalendar && myCalendar.checked) {
-    return true;
+  if (owner === 'You') {
+    return activeCalendars.includes('You');
   }
 
-  if (source === 'event-request' && eventRequests && eventRequests.checked) {
-    return true;
-  }
-
-  if (owner !== 'You' && source !== 'event-request' && friendEvents && friendEvents.checked) {
-    return true;
-  }
-
-  return !myCalendar && !eventRequests && !friendEvents;
+  return true;
 }
 
 function showCalendarMessage(message) {
@@ -295,18 +332,29 @@ function escapeHTML(value) {
     .replaceAll("'", '&#039;');
 }
 
-// EXPORTS FOR TESTS
+if (typeof window !== 'undefined') {
+  window.toggleSelectAll = toggleSelectAll;
+  window.togglePerson = togglePerson;
+  window.updateActiveCalendars = updateActiveCalendars;
+  window.setView = setView;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
+    checkboxes,
+    selectAllCheckbox,
+    toggleSelectAll,
+    togglePerson,
+    shouldShowEvent,
+    updateActiveCalendars,
+    renderCalendar,
+    setView,
     loadCalendarEvents,
     getCalendarContainer,
-    setView,
-    renderCalendar,
     renderMonth,
     renderWeek,
     createCalendarEventElement,
     showEventDetails,
-    shouldShowEvent,
     showCalendarMessage,
     escapeHTML
   };
