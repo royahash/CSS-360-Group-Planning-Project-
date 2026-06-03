@@ -189,9 +189,11 @@ body {
 /* COLOR SYSTEM */
 :root {
   --color-you: #a5d6a7;
-  --color-alex: #90caf9;
-  --color-jordan: #ffcc80;
+  --color-friends: #90caf9;
   --color-group: #ce93d8;
+  --color-confirmed: #a5d6a7;
+  --color-pending: #ffb347;
+  --color-declined: #ff8a8a;
 }
 
 /* CALENDAR CONTROLS */
@@ -240,16 +242,12 @@ body {
   background: var(--color-you);
 }
 
-.calendar-alex {
-  background: var(--color-alex);
-}
-
-.calendar-jordan {
-  background: var(--color-jordan);
-}
-
 .calendar-group {
   background: var(--color-group);
+}
+
+.calendar-friends {
+  background: var(--color-friends, #90caf9);
 }
 
 .calendar-select-all {
@@ -414,17 +412,17 @@ body {
 }
 
 .pending-event {
-  border-left: 6px solid #ffb347;
+  border-left: 6px solid var(--color-pending);
   background-color: #fff8ed;
 }
 
 .confirmed-event {
-  border-left: 6px solid #a5d6a7;
+  border-left: 6px solid var(--color-confirmed);
   background-color: #f1fff2;
 }
 
 .declined-event {
-  border-left: 6px solid #ff8a8a;
+  border-left: 6px solid var(--color-declined);
   background-color: #fff0f0;
   opacity: 0.8;
 }
