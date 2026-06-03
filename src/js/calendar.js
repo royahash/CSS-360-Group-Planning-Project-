@@ -9,7 +9,8 @@ const checkboxes = {
   Jordan: document.getElementById('check-jordan'),
 };
 
-const selectAllCheckbox = document.getElementById('check-all');
+let selectAllCheckbox = null;
+let activeCalendars = ['You', 'Alex', 'Jordan'];
 
 let activeCalendars = ['You', 'Alex', 'Jordan'];
 
