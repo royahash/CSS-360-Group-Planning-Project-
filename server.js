@@ -67,7 +67,6 @@ const eventSchema = new mongoose.Schema({
   description:    { type: String, default: '' },
 });
 
-// Each user can only save a given event once
 eventSchema.index({ ticketmasterId: 1, userId: 1 }, { unique: true });
 
 const Event = mongoose.model('Event', eventSchema);
@@ -80,7 +79,6 @@ const friendRequestSchema = new mongoose.Schema({
   createdAt:  { type: Date, default: Date.now }
 });
 
-// Ensure unique pending requests can't send duplicate requests
 friendRequestSchema.index({ senderId: 1, receiverId: 1 }, { unique: true });
 
 const FriendRequest = mongoose.model('FriendRequest', friendRequestSchema);
@@ -277,7 +275,6 @@ app.get('/auth/logout', (req, res) => {
   req.logout(() => res.redirect('/html/LogIn.html'));
 });
 
-// Returns the logged-in user's info or 401 if not logged in
 app.get('/auth/me', (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
@@ -385,7 +382,6 @@ app.post('/api/user/preferences', async (req, res) => {
 });
 
 // ── Event Routes ──────────────────────────────────────────────────────────
-// GET only this user's saved events
 app.get('/api/events', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
@@ -397,7 +393,6 @@ app.get('/api/events', async (req, res) => {
   }
 });
 
-// SAVE an event for this user
 app.post('/api/events', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
@@ -420,7 +415,6 @@ app.post('/api/events', async (req, res) => {
   }
 });
 
-// DELETE a saved event for this user
 app.delete('/api/events/:ticketmasterId', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
@@ -437,7 +431,6 @@ app.delete('/api/events/:ticketmasterId', async (req, res) => {
 });
 
 // ── Event Request Routes ──────────────────────────────────────────────────
-// Create a new event request
 app.post('/api/event-requests', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
@@ -507,7 +500,6 @@ app.post('/api/event-requests', async (req, res) => {
   }
 });
 
-// Get event requests visible to the logged-in user
 app.get('/api/event-requests', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
@@ -531,7 +523,6 @@ app.get('/api/event-requests', async (req, res) => {
   }
 });
 
-// Get calendar events from saved events and event requests
 app.get('/api/calendar-events', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
@@ -613,7 +604,6 @@ app.get('/api/calendar-events', async (req, res) => {
   }
 });
 
-// Respond to an event request
 app.patch('/api/event-requests/:id/respond', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
@@ -679,7 +669,6 @@ app.patch('/api/event-requests/:id/respond', async (req, res) => {
   }
 });
 
-// Creator updates event request status
 app.patch('/api/event-requests/:id/status', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
@@ -721,7 +710,6 @@ app.patch('/api/event-requests/:id/status', async (req, res) => {
   }
 });
 
-// Update reminder settings
 app.patch('/api/event-requests/:id/reminders', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
@@ -766,7 +754,6 @@ app.patch('/api/event-requests/:id/reminders', async (req, res) => {
   }
 });
 
-// Delete an event request
 app.delete('/api/event-requests/:id', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
@@ -841,7 +828,6 @@ app.get('/api/ticketmaster/event/:id', async (req, res) => {
 });
 
 // ── Friend Routes ─────────────────────────────────────────────────────────
-// SEND friend request by username
 app.post('/api/friends/request', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
@@ -886,7 +872,6 @@ app.post('/api/friends/request', async (req, res) => {
   }
 });
 
-// GET pending friend requests for current user
 app.get('/api/friends/requests', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
@@ -902,7 +887,6 @@ app.get('/api/friends/requests', async (req, res) => {
   }
 });
 
-// ACCEPT friend request
 app.post('/api/friends/accept/:senderId', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
@@ -935,7 +919,6 @@ app.post('/api/friends/accept/:senderId', async (req, res) => {
   }
 });
 
-// DECLINE friend request
 app.post('/api/friends/decline/:senderId', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
@@ -959,7 +942,6 @@ app.post('/api/friends/decline/:senderId', async (req, res) => {
   }
 });
 
-// GET list of friends for current user
 app.get('/api/friends', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
@@ -971,7 +953,6 @@ app.get('/api/friends', async (req, res) => {
   }
 });
 
-// DELETE friend
 app.delete('/api/friends/:friendId', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
@@ -990,7 +971,6 @@ app.delete('/api/friends/:friendId', async (req, res) => {
   }
 });
 
-// GET a specific user's saved events for viewing friend's events
 app.get('/api/friends/:userId/events', async (req, res) => {
   try {
     const events = await Event.find({ userId: req.params.userId });
