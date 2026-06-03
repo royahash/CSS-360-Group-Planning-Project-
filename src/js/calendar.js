@@ -298,11 +298,7 @@ function shouldShowEvent(event) {
     return false;
   }
 
-  if (owner === 'You') {
-    return activeCalendars.includes('You');
-  }
-
-  return true;
+  return activeCalendars.includes(owner);
 }
 
 function showCalendarMessage(message) {
