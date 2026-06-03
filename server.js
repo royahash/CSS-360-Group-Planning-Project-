@@ -20,7 +20,7 @@ app.use(express.static(path.join(__dirname, 'src')));
 
 // ── Session Setup ─────────────────────────────────────────────────────────
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || 'local-dev-secret',
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }),
@@ -221,29 +221,35 @@ eventRequestSchema.index({ invitedUsers: 1 });
 const EventRequest = mongoose.model('EventRequest', eventRequestSchema);
 
 // ── Passport / Google OAuth ───────────────────────────────────────────────
-passport.use(new GoogleStrategy({
-  clientID:     process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL:  process.env.GOOGLE_CALLBACK_URL || '/auth/google/callback'
-},
-async (accessToken, refreshToken, profile, done) => {
-  try {
-    let user = await User.findOne({ googleId: profile.id });
+// Google OAuth is only enabled when credentials exist in .env.
+// This prevents local crashes when GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET are missing.
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: process.env.GOOGLE_CALLBACK_URL || '/auth/google/callback'
+  },
+  async (accessToken, refreshToken, profile, done) => {
+    try {
+      let user = await User.findOne({ googleId: profile.id });
 
-    if (!user) {
-      user = await User.create({
-        googleId:    profile.id,
-        displayName: profile.displayName,
-        email:       profile.emails?.[0]?.value || '',
-        photo:       profile.photos?.[0]?.value || '',
-      });
+      if (!user) {
+        user = await User.create({
+          googleId: profile.id,
+          displayName: profile.displayName,
+          email: profile.emails?.[0]?.value || '',
+          photo: profile.photos?.[0]?.value || '',
+        });
+      }
+
+      return done(null, user);
+    } catch (err) {
+      return done(err, null);
     }
-
-    return done(null, user);
-  } catch (err) {
-    return done(err, null);
-  }
-}));
+  }));
+} else {
+  console.warn('Google OAuth is disabled because GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is missing.');
+}
 
 passport.serializeUser((user, done) => done(null, user._id));
 
@@ -257,19 +263,26 @@ passport.deserializeUser(async (id, done) => {
 });
 
 // ── Auth Routes ───────────────────────────────────────────────────────────
-app.get('/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
-
-app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/html/LogIn.html' }),
-  (req, res) => {
-    req.session.save((err) => {
-      if (err) console.error('Session save error:', err);
-      res.redirect('/html/index.html');
-    });
+app.get('/auth/google', (req, res, next) => {
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    return res.status(503).send('Google login is not configured locally.');
   }
-);
+
+  return passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+});
+
+app.get('/auth/google/callback', (req, res, next) => {
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    return res.status(503).send('Google login is not configured locally.');
+  }
+
+  return passport.authenticate('google', { failureRedirect: '/html/LogIn.html' })(req, res, next);
+}, (req, res) => {
+  req.session.save((err) => {
+    if (err) console.error('Session save error:', err);
+    res.redirect('/html/index.html');
+  });
+});
 
 app.get('/auth/logout', (req, res) => {
   req.logout(() => res.redirect('/html/LogIn.html'));
