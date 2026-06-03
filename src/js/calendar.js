@@ -1,231 +1,205 @@
-/* global getSavedEvents */
-
-const calendarEl = document.getElementById('calendar');
-
 let currentView = 'month';
-
-let activeCalendars = ['You', 'Alex', 'Jordan'];
-
-// CHECKBOXES
-const checkboxes = {
-  You: document.getElementById('check-you'),
-  Alex: document.getElementById('check-alex'),
-  Jordan: document.getElementById('check-jordan'),
-};
-
-const selectAllCheckbox = document.getElementById('check-all');
-
-// EVENTS
 let events = [];
 
-// LOAD EVENTS
-async function loadCalendarEvents() {
-  try {
-    // DATABASE EVENTS
-    const savedEvents = await getSavedEvents();
+const checkboxes = {
+  You: null,
+  Alex: null,
+  Jordan: null,
+};
 
-    const savedEventsArray = Array.isArray(savedEvents) ? savedEvents : [];
+let selectAllCheckbox = null;
+let activeCalendars = ['You', 'Alex', 'Jordan'];
 
-    // FRIEND EVENTS
-    let friendEvents = [];
-    try {
-      const response = await fetch('/api/friends', { credentials: 'include' });
-      if (response.ok) {
-        const friends = await response.json();
-        // Fetch events for each friend
-        for (const friend of friends) {
-          try {
-            const friendEventsResponse = await fetch(
-              `/api/friends/${friend._id}/events`,
-              {
-                credentials: 'include',
-              },
-            );
-            if (friendEventsResponse.ok) {
-              const friendEventsList = await friendEventsResponse.json();
-              friendEvents = [
-                ...friendEvents,
-                ...friendEventsList.map((event) => ({
-                  title: event.title,
-                  date: event.startDate,
-                  owner: friend.displayName,
-                  ticketmasterId: event.ticketmasterId || '',
-                })),
-              ];
-            }
-          } catch (err) {
-            console.error(
-              `Failed to load events for friend ${friend.displayName}:`,
-              err,
-            );
-          }
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load friends events:', err);
-    }
+document.addEventListener('DOMContentLoaded', function () {
+  initializeCheckboxes();
+  initializeViewButtons();
+  loadCalendarEvents();
+});
 
-    // COMBINE
-    events = [
-      ...savedEventsArray.map((event) => ({
-        title: event.title,
-        date: event.startDate,
-        owner: event.owner,
-        ticketmasterId: event.ticketmasterId || '',
-      })),
+function initializeViewButtons() {
+  const monthViewBtn = document.getElementById('monthViewBtn');
+  const weekViewBtn = document.getElementById('weekViewBtn');
 
-      ...friendEvents,
-    ];
+  if (monthViewBtn) {
+    monthViewBtn.addEventListener('click', function () {
+      setView('month');
+    });
+  }
 
-    renderCalendar();
-  } catch (error) {
-    console.error('Failed to load calendar events:', error);
-
-    calendarEl.innerHTML = `
-      <p style="padding:20px;">
-        Failed to load calendar events
-      </p>
-    `;
+  if (weekViewBtn) {
+    weekViewBtn.addEventListener('click', function () {
+      setView('week');
+    });
   }
 }
 
-// LOAD ON START
-loadCalendarEvents();
+function initializeCheckboxes() {
+  selectAllCheckbox = document.getElementById('check-all');
 
-// COLOR HELPER
-function getColor(variable) {
-  return getComputedStyle(document.documentElement)
-    .getPropertyValue(variable)
-    .trim();
-}
+  checkboxes.You = document.getElementById('check-you');
+  checkboxes.Alex = document.getElementById('check-alex');
+  checkboxes.Jordan = document.getElementById('check-jordan');
 
-const ownerColors = {
-  You: () => getColor('--color-you'),
-  Alex: () => getColor('--color-alex'),
-  Jordan: () => getColor('--color-jordan'),
-};
+  if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener('change', toggleSelectAll);
+  }
 
-// SELECT ALL
-function toggleSelectAll() {
-  const isChecked = selectAllCheckbox.checked;
-
-  Object.values(checkboxes).forEach((cb) => {
-    cb.checked = isChecked;
+  Object.values(checkboxes).forEach(function (checkbox) {
+    if (checkbox) {
+      checkbox.addEventListener('change', togglePerson);
+    }
   });
 
   updateActiveCalendars();
 }
 
-// INDIVIDUAL TOGGLE
-function togglePerson() {
-  const allChecked = Object.values(checkboxes).every((cb) => cb.checked);
+async function loadCalendarEvents() {
+  try {
+    const response = await fetch('/api/calendar-events', {
+      credentials: 'include'
+    });
 
-  selectAllCheckbox.checked = allChecked;
+    if (response.status === 401) {
+      showCalendarMessage('Please log in to view your calendar.');
+      return;
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to load calendar events.');
+    }
+
+    events = Array.isArray(data) ? data : [];
+    renderCalendar();
+  } catch (error) {
+    console.error('Calendar loading error:', error);
+    showCalendarMessage(
+      'Could not load calendar events. Please make sure the backend server is running.'
+    );
+  }
+}
+
+function getCalendarContainer() {
+  return (
+    document.getElementById('calendarEvents') ||
+    document.getElementById('calendar-events') ||
+    document.getElementById('calendar') ||
+    document.querySelector('.calendar-container') ||
+    document.querySelector('.calendar')
+  );
+}
+
+function toggleSelectAll() {
+  if (!selectAllCheckbox) {
+    selectAllCheckbox = document.getElementById('check-all');
+  }
+
+  const isChecked = selectAllCheckbox ? selectAllCheckbox.checked : true;
+
+  Object.values(checkboxes).forEach(function (checkbox) {
+    if (checkbox) {
+      checkbox.checked = isChecked;
+    }
+  });
 
   updateActiveCalendars();
 }
 
-// UPDATE ACTIVE LIST
+function togglePerson() {
+  const validCheckboxes = Object.values(checkboxes).filter(Boolean);
+
+  const allChecked = validCheckboxes.length > 0
+    ? validCheckboxes.every(function (checkbox) {
+        return checkbox.checked;
+      })
+    : true;
+
+  if (!selectAllCheckbox) {
+    selectAllCheckbox = document.getElementById('check-all');
+  }
+
+  if (selectAllCheckbox) {
+    selectAllCheckbox.checked = allChecked;
+  }
+
+  updateActiveCalendars();
+}
+
 function updateActiveCalendars() {
-  activeCalendars = Object.keys(checkboxes).filter(
-    (name) => checkboxes[name].checked,
-  );
+  activeCalendars = Object.keys(checkboxes).filter(function (name) {
+    return checkboxes[name] && checkboxes[name].checked;
+  });
 
   renderCalendar();
 }
 
-// VIEW SWITCH
 function setView(view) {
   currentView = view;
-
   renderCalendar();
 }
 
-// FILTER
-function shouldShowEvent(event) {
-  return activeCalendars.includes(event.owner);
-}
-
-// MAIN RENDER
 function renderCalendar() {
-  calendarEl.innerHTML = '';
+  const calendarContainer = getCalendarContainer();
 
-  if (currentView === 'month') {
-    renderMonth();
+  if (!calendarContainer) {
+    return;
+  }
+
+  calendarContainer.innerHTML = '';
+
+  if (!events || events.length === 0) {
+    showCalendarMessage('No events on your calendar yet.');
+    return;
+  }
+
+  if (currentView === 'week') {
+    renderWeek(calendarContainer);
   } else {
-    renderWeek();
+    renderMonth(calendarContainer);
   }
 }
 
-// MONTH VIEW
-function renderMonth() {
-  calendarEl.className = 'calendar-container month-view';
+function renderMonth(calendarContainer) {
+  calendarContainer.className = 'calendar-container month-view';
 
   const today = new Date();
-
   const currentMonth = today.getMonth();
-
   const currentYear = today.getFullYear();
-
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-  for (let i = 1; i <= daysInMonth; i++) {
+  for (let dayNumber = 1; dayNumber <= daysInMonth; dayNumber++) {
     const day = document.createElement('div');
-
     day.className = 'calendar-day';
 
-    const date = `${currentYear}-${String(currentMonth + 1).padStart(
-      2,
-      '0',
-    )}-${String(i).padStart(2, '0')}`;
+    const date = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
 
-    day.innerHTML = `<strong>${i}</strong>`;
+    day.innerHTML = `<strong>${dayNumber}</strong>`;
 
-    events.forEach((event) => {
-      if (event.date === date && shouldShowEvent(event)) {
-        const eventEl = document.createElement('div');
+    events.forEach(function (event) {
+      const eventDate = event.startDate || event.date;
 
-        eventEl.className = 'calendar-event';
-
-        eventEl.innerText = event.title;
-
-        eventEl.style.backgroundColor = ownerColors[event.owner]
-          ? ownerColors[event.owner]()
-          : '#cccccc';
-
-        eventEl.onclick = () => {
-          if (event.ticketmasterId) {
-            window.location.href = `event.html?id=${event.ticketmasterId}`;
-          } else {
-            window.location.href = `event.html?title=${encodeURIComponent(
-              event.title,
-            )}`;
-          }
-        };
-
-        day.appendChild(eventEl);
+      if (eventDate === date && shouldShowEvent(event)) {
+        day.appendChild(createCalendarEventElement(event));
       }
     });
 
-    calendarEl.appendChild(day);
+    calendarContainer.appendChild(day);
   }
 }
 
-// WEEK VIEW
-function renderWeek() {
-  calendarEl.className = 'calendar-container week-view';
+function renderWeek(calendarContainer) {
+  calendarContainer.className = 'calendar-container week-view';
 
   const today = new Date();
 
-  for (let i = 0; i < 7; i++) {
+  for (let index = 0; index < 7; index++) {
     const currentDay = new Date();
-
-    currentDay.setDate(today.getDate() + i);
+    currentDay.setDate(today.getDate() + index);
 
     const formattedDate = currentDay.toISOString().split('T')[0];
 
     const day = document.createElement('div');
-
     day.className = 'calendar-day';
 
     day.innerHTML = `
@@ -233,42 +207,138 @@ function renderWeek() {
         ${currentDay.toLocaleDateString('en-US', {
           weekday: 'short',
           month: 'numeric',
-          day: 'numeric',
+          day: 'numeric'
         })}
       </strong>
     `;
 
-    events.forEach((event) => {
-      if (event.date === formattedDate && shouldShowEvent(event)) {
-        const eventEl = document.createElement('div');
+    events.forEach(function (event) {
+      const eventDate = event.startDate || event.date;
 
-        eventEl.className = 'calendar-event';
-
-        eventEl.innerText = event.title;
-
-        eventEl.style.backgroundColor = ownerColors[event.owner]
-          ? ownerColors[event.owner]()
-          : '#cccccc';
-
-        eventEl.onclick = () => {
-          if (event.ticketmasterId) {
-            window.location.href = `event.html?id=${event.ticketmasterId}`;
-          } else {
-            window.location.href = `event.html?title=${encodeURIComponent(
-              event.title,
-            )}`;
-          }
-        };
-
-        day.appendChild(eventEl);
+      if (eventDate === formattedDate && shouldShowEvent(event)) {
+        day.appendChild(createCalendarEventElement(event));
       }
     });
 
-    calendarEl.appendChild(day);
+    calendarContainer.appendChild(day);
   }
 }
 
-// EXPORTS FOR TESTS
+function createCalendarEventElement(event) {
+  const eventEl = document.createElement('div');
+  eventEl.classList.add('calendar-event');
+
+  const title = event.title || 'Untitled Event';
+  const status = event.status || 'pending';
+
+  eventEl.innerText = title;
+
+  if (status === 'pending') {
+    eventEl.classList.add('pending-event');
+  } else if (status === 'confirmed') {
+    eventEl.classList.add('confirmed-event');
+  } else if (status === 'declined') {
+    eventEl.classList.add('declined-event');
+  }
+
+  eventEl.addEventListener('click', function () {
+    showEventDetails(event);
+  });
+
+  return eventEl;
+}
+
+function showEventDetails(event) {
+  const calendarContainer = getCalendarContainer();
+
+  if (!calendarContainer) {
+    return;
+  }
+
+  const detailCard = document.createElement('div');
+  detailCard.className = 'calendar-event-card';
+
+  if (event.status === 'pending') {
+    detailCard.classList.add('pending-event');
+  } else if (event.status === 'confirmed') {
+    detailCard.classList.add('confirmed-event');
+  } else if (event.status === 'declined') {
+    detailCard.classList.add('declined-event');
+  }
+
+  const title = event.title || 'Untitled Event';
+  const date = event.startDate || event.date || 'No date listed';
+  const time = event.startTime || event.time || 'No time listed';
+  const location = event.location || event.venue || 'No location listed';
+  const description = event.description || '';
+  const status = event.status || 'pending';
+  const source = event.source === 'event-request' ? 'Event Request' : 'Saved Event';
+  const owner = event.owner || 'You';
+
+  detailCard.innerHTML = `
+    <h3>${escapeHTML(title)}</h3>
+    <p><strong>Date:</strong> ${escapeHTML(date)}</p>
+    <p><strong>Time:</strong> ${escapeHTML(time)}</p>
+    <p><strong>Location:</strong> ${escapeHTML(location)}</p>
+    <p><strong>Status:</strong> <span class="event-status">${escapeHTML(status)}</span></p>
+    <p><strong>Source:</strong> ${escapeHTML(source)}</p>
+    <p><strong>Owner:</strong> ${escapeHTML(owner)}</p>
+    ${
+      description
+        ? `<p><strong>Description:</strong> ${escapeHTML(description)}</p>`
+        : ''
+    }
+  `;
+
+  const existingDetail = document.querySelector('.calendar-event-card');
+
+  if (existingDetail) {
+    existingDetail.remove();
+  }
+
+  calendarContainer.insertAdjacentElement('beforebegin', detailCard);
+}
+
+function shouldShowEvent(event) {
+  const owner = event.owner || 'You';
+
+  if (activeCalendars.length === 0) {
+    return false;
+  }
+
+  if (owner === 'You') {
+    return activeCalendars.includes('You');
+  }
+
+  return true;
+}
+
+function showCalendarMessage(message) {
+  const calendarContainer = getCalendarContainer();
+
+  if (calendarContainer) {
+    calendarContainer.innerHTML = `
+      <p class="no-events-message">${escapeHTML(message)}</p>
+    `;
+  }
+}
+
+function escapeHTML(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+if (typeof window !== 'undefined') {
+  window.toggleSelectAll = toggleSelectAll;
+  window.togglePerson = togglePerson;
+  window.updateActiveCalendars = updateActiveCalendars;
+  window.setView = setView;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     checkboxes,
@@ -279,5 +349,13 @@ if (typeof module !== 'undefined' && module.exports) {
     updateActiveCalendars,
     renderCalendar,
     setView,
+    loadCalendarEvents,
+    getCalendarContainer,
+    renderMonth,
+    renderWeek,
+    createCalendarEventElement,
+    showEventDetails,
+    showCalendarMessage,
+    escapeHTML
   };
 }
