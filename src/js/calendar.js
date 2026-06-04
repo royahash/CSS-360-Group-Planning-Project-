@@ -51,7 +51,7 @@ function initializeCheckboxListeners() {
 async function loadCalendarEvents() {
   try {
     const response = await fetch('/api/calendar-events', {
-      credentials: 'include'
+      credentials: 'include',
     });
 
     if (response.status === 401) {
@@ -70,7 +70,7 @@ async function loadCalendarEvents() {
   } catch (error) {
     console.error('Calendar loading error:', error);
     showCalendarMessage(
-      'Could not load calendar events. Please make sure the backend server is running.'
+      'Could not load calendar events. Please make sure the backend server is running.',
     );
   }
 }
@@ -104,11 +104,12 @@ function toggleSelectAll() {
 function togglePerson() {
   const validCheckboxes = Object.values(checkboxes).filter(Boolean);
 
-  const allChecked = validCheckboxes.length > 0
-    ? validCheckboxes.every(function (checkbox) {
-        return checkbox.checked;
-      })
-    : true;
+  const allChecked =
+    validCheckboxes.length > 0
+      ? validCheckboxes.every(function (checkbox) {
+          return checkbox.checked;
+        })
+      : true;
 
   if (selectAllCheckbox) {
     selectAllCheckbox.checked = allChecked;
@@ -198,7 +199,7 @@ function renderWeek(calendarContainer) {
         ${currentDay.toLocaleDateString('en-US', {
           weekday: 'short',
           month: 'numeric',
-          day: 'numeric'
+          day: 'numeric',
         })}
       </strong>
     `;
@@ -263,7 +264,8 @@ function showEventDetails(event) {
   const location = event.location || event.venue || 'No location listed';
   const description = event.description || '';
   const status = event.status || 'pending';
-  const source = event.source === 'event-request' ? 'Event Request' : 'Saved Event';
+  const source =
+    event.source === 'event-request' ? 'Event Request' : 'Saved Event';
   const owner = event.owner || 'You';
 
   detailCard.innerHTML = `
@@ -343,6 +345,6 @@ if (typeof module !== 'undefined' && module.exports) {
     createCalendarEventElement,
     showEventDetails,
     showCalendarMessage,
-    escapeHTML
+    escapeHTML,
   };
 }

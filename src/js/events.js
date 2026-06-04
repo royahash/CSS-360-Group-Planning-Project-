@@ -11,6 +11,8 @@ let currentPage = 0;
 let allEvents = [];
 let currentSearch = '';
 
+let selectedCategories = [];
+
 function getCurrentSort() {
   return currentSort;
 }
@@ -146,10 +148,36 @@ function clearSearch() {
 // ── Allow pressing Enter to trigger search ─────────────────────────────────
 if (typeof window !== 'undefined') {
   window.addEventListener('DOMContentLoaded', () => {
+    setupFilters();
+
     const input = document.getElementById('search-input');
+
+    const categorySearch =
+      sessionStorage.getItem('searchCategory');
+
+    if (categorySearch) {
+      currentSearch = categorySearch;
+
+      if (input) {
+        input.value = categorySearch;
+      }
+
+      document.getElementById(
+        'clear-search-btn'
+      ).style.display = 'inline-block';
+
+      sessionStorage.removeItem('searchCategory');
+
+      loadEvents();
+    } else {
+      loadEvents();
+    }
+
     if (input) {
       input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') handleSearch();
+        if (e.key === 'Enter') {
+          handleSearch();
+        }
       });
     }
   });
@@ -249,34 +277,75 @@ function loadEvents() {
     });
 }
 
+function setupFilters() {
+  const filterBtn = document.getElementById('filter-btn');
+  const panel = document.getElementById('filter-panel');
+
+  filterBtn.addEventListener('click', () => {
+    panel.style.display =
+      panel.style.display === 'none'
+        ? 'flex'
+        : 'none';
+  });
+
+  panel
+    .querySelectorAll('input[type="checkbox"]')
+    .forEach((checkbox) => {
+      checkbox.addEventListener('change', applyFilters);
+    });
+}
+
+function applyFilters() {
+  selectedCategories = Array.from(
+    document.querySelectorAll(
+      '#filter-panel input[type="checkbox"]:checked'
+    )
+  ).map((checkbox) => checkbox.value);
+
+  currentPage = 0;
+
+  renderPage();
+}
+
 function renderPage() {
   const container = document.querySelector('.event-container');
   container.innerHTML = '';
 
-  if (allEvents.length === 0) {
+  let filteredEvents = allEvents;
+
+  if (selectedCategories.length > 0) {
+    filteredEvents = allEvents.filter((event) => {
+      const segment =
+        event.classifications?.[0]?.segment?.name;
+
+      return selectedCategories.includes(segment);
+    });
+  }
+
+  if (filteredEvents.length === 0) {
     container.innerHTML =
-      '<p>No events found. Try a different search term.</p>';
+      '<p>No events found for selected categories.</p>';
     return;
   }
 
   const start = currentPage * 12;
   const end = start + 12;
-  const pageEvents = allEvents.slice(start, end);
+
+  const pageEvents = filteredEvents.slice(start, end);
 
   pageEvents.forEach((event) => {
-    const card = buildEventCard(event);
-    container.appendChild(card);
+    container.appendChild(buildEventCard(event));
   });
 
-  renderPagination();
+  renderPagination(filteredEvents);
 }
 
-function renderPagination() {
+function renderPagination(events = allEvents) {
   // Remove existing pagination if any
   const existing = document.querySelector('.pagination');
   if (existing) existing.remove();
 
-  const totalPages = Math.ceil(allEvents.length / 12);
+  const totalPages = Math.ceil(events.length / 12);
   if (totalPages <= 1) return;
 
   const pagination = document.createElement('div');
@@ -321,11 +390,6 @@ function renderPagination() {
   // Insert after the event container
   const container = document.querySelector('.event-container');
   container.insertAdjacentElement('afterend', pagination);
-}
-
-// ── Run when page loads ────────────────────────────────────────────────────
-if (typeof window !== 'undefined' && typeof module === 'undefined') {
-  loadEvents();
 }
 
 // ── Expose functions to global scope for HTML onclick handlers ────────────
