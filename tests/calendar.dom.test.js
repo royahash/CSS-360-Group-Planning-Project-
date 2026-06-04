@@ -13,14 +13,24 @@ global.fetch = jest.fn(() =>
   Promise.resolve({
     json: () =>
       Promise.resolve([
-        { title: 'Friend Event', date: '2026-11-05', owner: 'Alex', ticketmasterId: '' },
+        {
+          title: 'Friend Event',
+          date: '2026-11-05',
+          owner: 'Alex',
+          ticketmasterId: '',
+        },
       ]),
   }),
 );
 
 global.getSavedEvents = jest.fn(() =>
   Promise.resolve([
-    { title: 'My Event', startDate: '2026-11-05', owner: 'You', ticketmasterId: '123' },
+    {
+      title: 'My Event',
+      startDate: '2026-11-05',
+      owner: 'You',
+      ticketmasterId: '123',
+    },
   ]),
 );
 
@@ -53,11 +63,10 @@ describe('Calendar UI Behavior Tests', () => {
     expect(calendar.shouldShowEvent({ owner: 'Alex' })).toBe(false);
   });
 
-  test('shouldShowEvent returns false when no calendars are active', () => {
-  // With null checkboxes in test environment, activeCalendars is empty
-  calendar.updateActiveCalendars();
-  expect(calendar.shouldShowEvent({ owner: 'Alex' })).toBe(false);
-});
+  test('shouldShowEvent returns false for owner not in any calendar', () => {
+    calendar.updateActiveCalendars();
+    expect(calendar.shouldShowEvent({ owner: 'UnknownPerson' })).toBe(false);
+  });
 
   test('should hide event when owner is unchecked', () => {
     const jordanEl = document.getElementById('check-jordan');

@@ -36,15 +36,16 @@ app.use(passport.session());
 
 // ── MongoDB Connection ────────────────────────────────────────────────────
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
+  .then(() => {
+    console.log('Connected to MongoDB');
+  })
   .catch((error) => console.error('MongoDB connection error:', error));
-
 // ── User Schema ───────────────────────────────────────────────────────────
 const userSchema = new mongoose.Schema({
-  googleId:    { type: String, sparse: true },
+  googleId:    { type: String, sparse: true, default: undefined },
   displayName: { type: String, default: '' },
   email:       { type: String, default: '' },
-  username:    { type: String, default: '', unique: true, sparse: true },
+  username:    { type: String, unique: true, sparse: true, default: undefined },
   password:    { type: String, default: '' },
   photo:       { type: String, default: '' },
   preferences: { type: [String], default: [] },
@@ -423,13 +424,11 @@ app.post('/api/events', async (req, res) => {
 // DELETE a saved event for this user
 app.delete('/api/events/:ticketmasterId', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
-
   try {
     await Event.findOneAndDelete({
       ticketmasterId: req.params.ticketmasterId,
       userId: req.user._id
     });
-
     res.json({ message: 'Event deleted' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete event' });
@@ -841,14 +840,15 @@ app.get('/api/ticketmaster/event/:id', async (req, res) => {
 });
 
 // ── Friend Routes ─────────────────────────────────────────────────────────
-// SEND friend request by username
+// SEND friend request
 app.post('/api/friends/request', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
   const { username } = req.body;
 
   try {
-    const targetUser = await User.findOne({ username });
+    // Find user by username OR email
+    const targetUser = await User.findOne({$or: [ { username },{ email: username } ] });
 
     if (!targetUser) return res.status(404).json({ error: 'User not found' });
 
@@ -861,15 +861,25 @@ app.post('/api/friends/request', async (req, res) => {
     }
 
     const existingRequest = await FriendRequest.findOne({
-      $or: [
-        { senderId: req.user._id, receiverId: targetUser._id },
-        { senderId: targetUser._id, receiverId: req.user._id }
-      ]
+    $or: [
+      { senderId: req.user._id, receiverId: targetUser._id },
+      { senderId: targetUser._id, receiverId: req.user._id }
+    ],
+    status: 'pending'
     });
 
     if (existingRequest) {
       return res.status(400).json({ error: 'Friend request already exists' });
     }
+
+    // Clean up any old declined requests before creating new one
+    await FriendRequest.deleteMany({
+      $or: [
+        { senderId: req.user._id, receiverId: targetUser._id },
+        { senderId: targetUser._id, receiverId: req.user._id }
+      ],
+      status: { $in: ['declined', 'accepted'] }
+    });
 
     const friendRequest = await FriendRequest.create({
       senderId: req.user._id,
@@ -919,11 +929,11 @@ app.post('/api/friends/accept/:senderId', async (req, res) => {
 
     friendRequest.status = 'accepted';
     await friendRequest.save();
-
+    
+    const senderId = new mongoose.Types.ObjectId(req.params.senderId);
     await User.findByIdAndUpdate(req.user._id, {
-      $addToSet: { friends: req.params.senderId }
+      $addToSet: { friends: senderId }
     });
-
     await User.findByIdAndUpdate(req.params.senderId, {
       $addToSet: { friends: req.user._id }
     });
@@ -938,9 +948,8 @@ app.post('/api/friends/accept/:senderId', async (req, res) => {
 // DECLINE friend request
 app.post('/api/friends/decline/:senderId', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
-
   try {
-    const friendRequest = await FriendRequest.findOne({
+    const friendRequest = await FriendRequest.findOneAndDelete({
       senderId: req.params.senderId,
       receiverId: req.user._id,
       status: 'pending'
@@ -949,9 +958,6 @@ app.post('/api/friends/decline/:senderId', async (req, res) => {
     if (!friendRequest) {
       return res.status(404).json({ error: 'Friend request not found' });
     }
-
-    friendRequest.status = 'declined';
-    await friendRequest.save();
 
     res.json({ message: 'Friend request declined' });
   } catch (err) {
@@ -962,10 +968,12 @@ app.post('/api/friends/decline/:senderId', async (req, res) => {
 // GET list of friends for current user
 app.get('/api/friends', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
-
   try {
-    const user = await User.findById(req.user._id).populate('friends', 'username displayName email photo');
-    res.json(user.friends || []);
+    const user = await User.findById(req.user._id);
+    const friendIds = user.friends || [];
+    const friends = await User.find({ _id: { $in: friendIds } })
+      .select('username displayName email photo');
+    res.json(friends);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch friends' });
   }
@@ -974,18 +982,40 @@ app.get('/api/friends', async (req, res) => {
 // DELETE friend
 app.delete('/api/friends/:friendId', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
-
   try {
-    await User.findByIdAndUpdate(req.user._id, {
-      $pull: { friends: req.params.friendId }
-    });
+    const friendIdStr = req.params.friendId.toString();
+    const myIdStr = req.user._id.toString();
 
-    await User.findByIdAndUpdate(req.params.friendId, {
-      $pull: { friends: req.user._id }
+    const currentUser = await User.findById(req.user._id);
+    const updatedMyFriends = currentUser.friends.filter(
+      f => f.toString() !== friendIdStr
+    );
+    await User.updateOne(
+      { _id: req.user._id },
+      { $set: { friends: updatedMyFriends } }
+    );
+
+    const friendUser = await User.findById(req.params.friendId);
+    if (friendUser) {
+      const updatedFriendFriends = friendUser.friends.filter(
+        f => f.toString() !== myIdStr
+      );
+      await User.updateOne(
+        { _id: req.params.friendId },
+        { $set: { friends: updatedFriendFriends } }
+      );
+    }
+
+    await FriendRequest.findOneAndDelete({
+      $or: [
+        { senderId: req.user._id, receiverId: req.params.friendId },
+        { senderId: req.params.friendId, receiverId: req.user._id }
+      ]
     });
 
     res.json({ message: 'Friend removed' });
   } catch (err) {
+    console.error('Delete friend error:', err);
     res.status(500).json({ error: 'Failed to remove friend' });
   }
 });

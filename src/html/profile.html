@@ -21,8 +21,10 @@
       <p>Your event preferences and onboarding choices</p>
     </div>
 
-    <div class="profile-card">
-      <div class="profile-header">
+    <div class="profile-card" style="position:relative;">
+      <button class="card-btn" id="signOutBtn" style=" position:absolute; top:53px; right:35px; background:rgb(252, 209, 209); color:black; border-color:black; font-weight:450;">
+        <i class="fa-solid fa-sign-out" style="margin-right:6px;"></i>Sign Out</button>
+      <div class="profile-header" style="justify-content: flex-start;">
         <div class="profile-avatar">
           <img id="profile-photo" src="" alt="Profile photo"
                style="width:100%; height:100%; border-radius:50%; display:none; object-fit:cover;">
@@ -42,25 +44,27 @@
         </div>
       </div>
 
-      <div class="profile-actions">
-        <a href="/html/friends.html"><button class="card-btn">Manage friends</button></a>
-        <a href="/html/onboarding.html"><button class="card-btn">Update interests</button></a>
-        <a href="/html/index.html"><button class="card-btn">Back to events</button></a>
-        <button class="card-btn" id="signOutBtn" 
-                style="color: #e74c3c; border-color: #e74c3c;">
-          Sign out
-        </button>
+      <div class="profile-actions" style="display:flex; align-items:center; justify-content:space-between;">
+      <div style="display:flex; gap:8px;">
+        <a href="/html/friends.html"><button class="card-btn" style="background:#d1e8fd; color:black; border-color:black; font-weight:450;">
+        <i class="fa-solid fa-user-group" style="margin-right:6px;"></i>Manage Friends</button></a>
+        <a href="/html/onboarding.html"><button class="card-btn" style="background:rgb(233, 253, 211); color:black; border-color:black; font-weight:450;">
+        <i class="fa-solid fa-tag" style="margin-right:6px;"></i>Update Interests</button></a>
+        </div>
+
       </div>
     </div>
   </div>
 
     <div class="sidebar-right">
-      <button class="side-btn active"><i class="fa-solid fa-user"></i></button>
+      <a href="/html/profile.html">
+        <button class="side-btn active"><i class="fa-solid fa-user"></i></button>
+      </a>
       <a href="/html/calendar.html">
         <button class="side-btn"><i class="fa-solid fa-calendar"></i></button>
       </a>
       <a href="/html/friends.html">
-        <button class="side-btn"><i class="fa-solid fa-user-group"></i></button>
+        <button class="side-btn "><i class="fa-solid fa-user-group"></i></button>
       </a>
       <a href="/html/event-request.html">
         <button class="side-btn"><i class="fa-solid fa-plus"></i></button>
