@@ -1061,9 +1061,16 @@ async function startServer() {
     if (!process.env.MONGODB_URI) {
       throw new Error('MONGODB_URI is not set in the .env file.');
     }
-
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('Connected to MongoDB');
+
+    // One-time fix: drop old username index
+    try {
+      await mongoose.connection.collection('users').dropIndex('username_1');
+      console.log('Dropped username index');
+    } catch (err) {
+      console.log('Username index already dropped or does not exist');
+    }
 
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (error) {
