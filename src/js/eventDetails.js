@@ -63,14 +63,45 @@ async function loadEventDetails() {
           categoryParts.length
             ? categoryParts
                 .map(
-                  (category) =>
-                    `<span class="category-pill">${category}</span>`,
+                  (category) => `
+                    <button
+                      class="category-pill category-link"
+                      data-category="${category}"
+                    >
+                      ${category}
+                    </button>
+                  `,
                 )
                 .join('')
-            : '<span class="category-pill">Unknown Category</span>'
+            : `
+                <button
+                  class="category-pill category-link"
+                  data-category="Unknown Category"
+                >
+                  Unknown Category
+                </button>
+              `
         }
       </div>
     `;
+
+    // =========================
+    // CATEGORY BUTTON HANDLERS
+    // =========================
+    document
+      .querySelectorAll('.category-link')
+      .forEach((button) => {
+        button.addEventListener('click', () => {
+          const category = button.dataset.category;
+
+          sessionStorage.setItem(
+            'searchCategory',
+            category,
+          );
+
+          window.location.href = '/html/index.html';
+        });
+      });
 
     // =========================
     // TICKETMASTER LINK
@@ -157,7 +188,12 @@ async function loadEventDetails() {
       <i class="fa-solid fa-tag" style="color:red;"></i>
 
       <div class="category-container">
-        <span class="category-pill">Friend Event</span>
+        <button
+          class="category-pill"
+          disabled
+        >
+          Friend Event
+        </button>
       </div>
     `;
 

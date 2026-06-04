@@ -412,3 +412,20 @@ body {
 #clear-search-btn:hover {
   background: #e0e0e0;
 }
+
+.filter-panel {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  padding: 12px;
+  width: fit-content;
+  margin: 10px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.filter-panel label {
+  cursor: pointer;
+}
