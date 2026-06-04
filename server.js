@@ -20,11 +20,11 @@ app.use(express.static(path.join(__dirname, 'src')));
 
 // ── Session Setup ─────────────────────────────────────────────────────────
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || 'local-dev-secret',
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }),
-  cookie: { 
+  cookie: {
     maxAge: 1000 * 60 * 60 * 24 * 7,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax'
@@ -34,23 +34,17 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// ── MongoDB Connection ────────────────────────────────────────────────────
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('Connected to MongoDB');
-  })
-  .catch((error) => console.error('MongoDB connection error:', error));
 // ── User Schema ───────────────────────────────────────────────────────────
 const userSchema = new mongoose.Schema({
-  googleId:    { type: String, sparse: true, default: undefined },
+  googleId: { type: String, sparse: true },
   displayName: { type: String, default: '' },
-  email:       { type: String, default: '' },
-  username:    { type: String, unique: true, sparse: true, default: undefined },
-  password:    { type: String, default: '' },
-  photo:       { type: String, default: '' },
+  email: { type: String, default: '' },
+  username: { type: String, default: '', unique: true, sparse: true },
+  password: { type: String, default: '' },
+  photo: { type: String, default: '' },
   preferences: { type: [String], default: [] },
-  friends:     [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  createdAt:   { type: Date, default: Date.now }
+  friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  createdAt: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model('User', userSchema);
@@ -58,14 +52,14 @@ const User = mongoose.model('User', userSchema);
 // ── Event Schema ──────────────────────────────────────────────────────────
 const eventSchema = new mongoose.Schema({
   ticketmasterId: { type: String, required: true },
-  userId:         { type: String, required: true },
-  title:          { type: String, required: true },
-  image:          { type: String, default: '' },
-  startDate:      { type: String, required: true },
-  startTime:      { type: String, default: '' },
-  venue:          { type: String, default: '' },
-  city:           { type: String, default: '' },
-  description:    { type: String, default: '' },
+  userId: { type: String, required: true },
+  title: { type: String, required: true },
+  image: { type: String, default: '' },
+  startDate: { type: String, required: true },
+  startTime: { type: String, default: '' },
+  venue: { type: String, default: '' },
+  city: { type: String, default: '' },
+  description: { type: String, default: '' },
 });
 
 // Each user can only save a given event once
@@ -75,10 +69,10 @@ const Event = mongoose.model('Event', eventSchema);
 
 // ── Friend Request Schema ─────────────────────────────────────────────────
 const friendRequestSchema = new mongoose.Schema({
-  senderId:   { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
+  senderId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
   receiverId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
-  status:     { type: String, enum: ['pending', 'accepted', 'declined'], default: 'pending' },
-  createdAt:  { type: Date, default: Date.now }
+  status: { type: String, enum: ['pending', 'accepted', 'declined'], default: 'pending' },
+  createdAt: { type: Date, default: Date.now }
 });
 
 // Ensure unique pending requests can't send duplicate requests
@@ -224,29 +218,35 @@ eventRequestSchema.index({ invitedUsers: 1 });
 const EventRequest = mongoose.model('EventRequest', eventRequestSchema);
 
 // ── Passport / Google OAuth ───────────────────────────────────────────────
-passport.use(new GoogleStrategy({
-  clientID:     process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL:  process.env.GOOGLE_CALLBACK_URL || '/auth/google/callback'
-},
-async (accessToken, refreshToken, profile, done) => {
-  try {
-    let user = await User.findOne({ googleId: profile.id });
+// Google OAuth is only enabled when credentials exist in .env.
+// This prevents local crashes when GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET are missing.
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: process.env.GOOGLE_CALLBACK_URL || '/auth/google/callback'
+  },
+  async (accessToken, refreshToken, profile, done) => {
+    try {
+      let user = await User.findOne({ googleId: profile.id });
 
-    if (!user) {
-      user = await User.create({
-        googleId:    profile.id,
-        displayName: profile.displayName,
-        email:       profile.emails?.[0]?.value || '',
-        photo:       profile.photos?.[0]?.value || '',
-      });
+      if (!user) {
+        user = await User.create({
+          googleId: profile.id,
+          displayName: profile.displayName,
+          email: profile.emails?.[0]?.value || '',
+          photo: profile.photos?.[0]?.value || '',
+        });
+      }
+
+      return done(null, user);
+    } catch (err) {
+      return done(err, null);
     }
-
-    return done(null, user);
-  } catch (err) {
-    return done(err, null);
-  }
-}));
+  }));
+} else if (process.env.NODE_ENV !== 'test') {
+  console.warn('Google OAuth is disabled because GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is missing.');
+}
 
 passport.serializeUser((user, done) => done(null, user._id));
 
@@ -260,19 +260,26 @@ passport.deserializeUser(async (id, done) => {
 });
 
 // ── Auth Routes ───────────────────────────────────────────────────────────
-app.get('/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
-
-app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/html/LogIn.html' }),
-  (req, res) => {
-    req.session.save((err) => {
-      if (err) console.error('Session save error:', err);
-      res.redirect('/html/index.html');
-    });
+app.get('/auth/google', (req, res, next) => {
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    return res.status(503).send('Google login is not configured locally.');
   }
-);
+
+  return passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+});
+
+app.get('/auth/google/callback', (req, res, next) => {
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    return res.status(503).send('Google login is not configured locally.');
+  }
+
+  return passport.authenticate('google', { failureRedirect: '/html/LogIn.html' })(req, res, next);
+}, (req, res) => {
+  req.session.save((err) => {
+    if (err) console.error('Session save error:', err);
+    res.redirect('/html/index.html');
+  });
+});
 
 app.get('/auth/logout', (req, res) => {
   req.logout(() => res.redirect('/html/LogIn.html'));
@@ -283,10 +290,10 @@ app.get('/auth/me', (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
   res.json({
-    id:          req.user._id,
+    id: req.user._id,
     displayName: req.user.displayName,
-    email:       req.user.email,
-    photo:       req.user.photo,
+    email: req.user.email,
+    photo: req.user.photo,
     preferences: req.user.preferences,
   });
 });
@@ -424,11 +431,13 @@ app.post('/api/events', async (req, res) => {
 // DELETE a saved event for this user
 app.delete('/api/events/:ticketmasterId', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+
   try {
     await Event.findOneAndDelete({
       ticketmasterId: req.params.ticketmasterId,
       userId: req.user._id
     });
+
     res.json({ message: 'Event deleted' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete event' });
@@ -840,15 +849,14 @@ app.get('/api/ticketmaster/event/:id', async (req, res) => {
 });
 
 // ── Friend Routes ─────────────────────────────────────────────────────────
-// SEND friend request
+// SEND friend request by username
 app.post('/api/friends/request', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
   const { username } = req.body;
 
   try {
-    // Find user by username OR email
-    const targetUser = await User.findOne({$or: [ { username },{ email: username } ] });
+    const targetUser = await User.findOne({ username });
 
     if (!targetUser) return res.status(404).json({ error: 'User not found' });
 
@@ -861,25 +869,15 @@ app.post('/api/friends/request', async (req, res) => {
     }
 
     const existingRequest = await FriendRequest.findOne({
-    $or: [
-      { senderId: req.user._id, receiverId: targetUser._id },
-      { senderId: targetUser._id, receiverId: req.user._id }
-    ],
-    status: 'pending'
+      $or: [
+        { senderId: req.user._id, receiverId: targetUser._id },
+        { senderId: targetUser._id, receiverId: req.user._id }
+      ]
     });
 
     if (existingRequest) {
       return res.status(400).json({ error: 'Friend request already exists' });
     }
-
-    // Clean up any old declined requests before creating new one
-    await FriendRequest.deleteMany({
-      $or: [
-        { senderId: req.user._id, receiverId: targetUser._id },
-        { senderId: targetUser._id, receiverId: req.user._id }
-      ],
-      status: { $in: ['declined', 'accepted'] }
-    });
 
     const friendRequest = await FriendRequest.create({
       senderId: req.user._id,
@@ -929,11 +927,11 @@ app.post('/api/friends/accept/:senderId', async (req, res) => {
 
     friendRequest.status = 'accepted';
     await friendRequest.save();
-    
-    const senderId = new mongoose.Types.ObjectId(req.params.senderId);
+
     await User.findByIdAndUpdate(req.user._id, {
-      $addToSet: { friends: senderId }
+      $addToSet: { friends: req.params.senderId }
     });
+
     await User.findByIdAndUpdate(req.params.senderId, {
       $addToSet: { friends: req.user._id }
     });
@@ -948,8 +946,9 @@ app.post('/api/friends/accept/:senderId', async (req, res) => {
 // DECLINE friend request
 app.post('/api/friends/decline/:senderId', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+
   try {
-    const friendRequest = await FriendRequest.findOneAndDelete({
+    const friendRequest = await FriendRequest.findOne({
       senderId: req.params.senderId,
       receiverId: req.user._id,
       status: 'pending'
@@ -958,6 +957,9 @@ app.post('/api/friends/decline/:senderId', async (req, res) => {
     if (!friendRequest) {
       return res.status(404).json({ error: 'Friend request not found' });
     }
+
+    friendRequest.status = 'declined';
+    await friendRequest.save();
 
     res.json({ message: 'Friend request declined' });
   } catch (err) {
@@ -968,12 +970,10 @@ app.post('/api/friends/decline/:senderId', async (req, res) => {
 // GET list of friends for current user
 app.get('/api/friends', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+
   try {
-    const user = await User.findById(req.user._id);
-    const friendIds = user.friends || [];
-    const friends = await User.find({ _id: { $in: friendIds } })
-      .select('username displayName email photo');
-    res.json(friends);
+    const user = await User.findById(req.user._id).populate('friends', 'username displayName email photo');
+    res.json(user.friends || []);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch friends' });
   }
@@ -982,40 +982,18 @@ app.get('/api/friends', async (req, res) => {
 // DELETE friend
 app.delete('/api/friends/:friendId', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+
   try {
-    const friendIdStr = req.params.friendId.toString();
-    const myIdStr = req.user._id.toString();
+    await User.findByIdAndUpdate(req.user._id, {
+      $pull: { friends: req.params.friendId }
+    });
 
-    const currentUser = await User.findById(req.user._id);
-    const updatedMyFriends = currentUser.friends.filter(
-      f => f.toString() !== friendIdStr
-    );
-    await User.updateOne(
-      { _id: req.user._id },
-      { $set: { friends: updatedMyFriends } }
-    );
-
-    const friendUser = await User.findById(req.params.friendId);
-    if (friendUser) {
-      const updatedFriendFriends = friendUser.friends.filter(
-        f => f.toString() !== myIdStr
-      );
-      await User.updateOne(
-        { _id: req.params.friendId },
-        { $set: { friends: updatedFriendFriends } }
-      );
-    }
-
-    await FriendRequest.findOneAndDelete({
-      $or: [
-        { senderId: req.user._id, receiverId: req.params.friendId },
-        { senderId: req.params.friendId, receiverId: req.user._id }
-      ]
+    await User.findByIdAndUpdate(req.params.friendId, {
+      $pull: { friends: req.user._id }
     });
 
     res.json({ message: 'Friend removed' });
   } catch (err) {
-    console.error('Delete friend error:', err);
     res.status(500).json({ error: 'Failed to remove friend' });
   }
 });
@@ -1078,8 +1056,23 @@ Object.entries(pages).forEach(([route, file]) => {
 // ── Start Server ──────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 
+async function startServer() {
+  try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI is not set in the .env file.');
+    }
+
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('Connected to MongoDB');
+
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  } catch (error) {
+    console.error('MongoDB connection error:', error.message);
+  }
+}
+
 if (require.main === module) {
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  startServer();
 }
 
 module.exports = app;

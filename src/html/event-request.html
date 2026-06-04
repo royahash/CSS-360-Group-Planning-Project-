@@ -6,119 +6,135 @@
   <title>Event Request</title>
 
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="/css/event-request.css">
 </head>
 
 <body>
-
   <div class="page-layout">
 
-    <!-- Left Navigation -->
-    <div class="sidebar-left">
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar-left">
       <a href="/html/index.html">
-        <button class="side-btn"><i class="fa-solid fa-house"></i></button>
+        <button class="side-btn" title="Home">
+          <i class="fa-solid fa-house"></i>
+        </button>
       </a>
-    </div>
+    </aside>
 
-    <!-- Main Content -->
-    <div class="main-content">
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <div class="container event-request-container">
+        <h1>Request an Event</h1>
+        <p>Create an event request and send it to friends from your friend list.</p>
 
-      <div class="header">
-        <h1>Event Request</h1>
-        <p>Create an event request and let your group vote on the details</p>
-      </div>
+        <form id="eventRequestForm">
+          <label for="eventTitle">Event Title</label>
+          <input type="text" id="eventTitle" placeholder="Example: Movie Night" required>
 
-      <div class="request-container">
+          <label for="eventDate">Date</label>
+          <input type="date" id="eventDate" required>
 
-        <!-- Event Request Form -->
-        <div class="request-card">
-          <h2>Request an Event</h2>
+          <label for="eventTime">Time</label>
+          <input type="time" id="eventTime" required>
 
-          <form id="eventRequestForm">
-            <label for="eventName">Event Name</label>
-            <input type="text" id="eventName" placeholder="Example: Movie Night" required>
+          <label for="eventLocation">Location</label>
+          <input type="text" id="eventLocation" placeholder="Example: UW Bothell Library" required>
 
-            <label for="eventDate">Date</label>
-            <input type="date" id="eventDate" required>
+          <label for="eventDescription">Description</label>
+          <textarea
+            id="eventDescription"
+            placeholder="Event description"
+            rows="4"
+          ></textarea>
 
-            <label for="eventTime">Time</label>
-            <input type="time" id="eventTime" required>
+          <label for="visibility">Event Visibility</label>
+          <select id="visibility">
+            <option value="friends-only">Friends Only</option>
+            <option value="selected-users">Selected Users</option>
+          </select>
 
-            <label for="eventLocation">Location</label>
-            <input type="text" id="eventLocation" placeholder="Example: UW Bothell Library" required>
+          <label for="friendSelect">Invite Friends</label>
+          <select id="friendSelect" multiple>
+            <option value="">Loading friends...</option>
+          </select>
 
-            <label for="eventActivity">Activity</label>
-            <input type="text" id="eventActivity" placeholder="Example: Dinner, study group, concert" required>
-
-            <button type="submit" class="submit-btn">Submit Event Request</button>
-          </form>
-
-          <p id="requestMessage"></p>
-        </div>
-
-        <!-- Poll System -->
-        <div class="request-card">
-          <h2>Group Poll</h2>
-
-          <p class="poll-description">
-            Vote on the best date, time, location, or activity for the event.
+          <p class="helper-text">
+            Hold Command on Mac or Control on Windows to select multiple friends.
           </p>
 
-          <div class="poll-section">
-            <h3>Choose a Date</h3>
-            <button class="poll-btn" data-category="date" data-option="Friday">Friday</button>
-            <button class="poll-btn" data-category="date" data-option="Saturday">Saturday</button>
-            <button class="poll-btn" data-category="date" data-option="Sunday">Sunday</button>
-          </div>
+          <label class="checkbox-label">
+            <input type="checkbox" id="reminderEnabled">
+            Enable event reminder
+          </label>
 
-          <div class="poll-section">
-            <h3>Choose a Time</h3>
-            <button class="poll-btn" data-category="time" data-option="3:00 PM">3:00 PM</button>
-            <button class="poll-btn" data-category="time" data-option="5:00 PM">5:00 PM</button>
-            <button class="poll-btn" data-category="time" data-option="7:00 PM">7:00 PM</button>
-          </div>
+          <section class="poll-section">
+            <h2>Vote on Event Options</h2>
 
-          <div class="poll-section">
-            <h3>Choose a Location</h3>
-            <button class="poll-btn" data-category="location" data-option="Cafe">Cafe</button>
-            <button class="poll-btn" data-category="location" data-option="Library">Library</button>
-            <button class="poll-btn" data-category="location" data-option="Park">Park</button>
-          </div>
+            <div class="poll-category">
+              <h3>Date Options</h3>
+              <button type="button" class="poll-btn" data-category="date" data-option="Selected Event Date">
+                Selected Event Date
+              </button>
+              <p>Your date vote: <span id="dateVote">None</span></p>
+            </div>
 
-          <div class="poll-section">
-            <h3>Choose an Activity</h3>
-            <button class="poll-btn" data-category="activity" data-option="Dinner">Dinner</button>
-            <button class="poll-btn" data-category="activity" data-option="Movie">Movie</button>
-            <button class="poll-btn" data-category="activity" data-option="Study Group">Study Group</button>
-          </div>
+            <div class="poll-category">
+              <h3>Time Options</h3>
+              <button type="button" class="poll-btn" data-category="time" data-option="Selected Event Time">
+                Selected Event Time
+              </button>
+              <p>Your time vote: <span id="timeVote">None</span></p>
+            </div>
 
-          <div class="poll-results">
-            <h3>Your Current Votes</h3>
-            <p><strong>Date:</strong> <span id="dateVote">None</span></p>
-            <p><strong>Time:</strong> <span id="timeVote">None</span></p>
-            <p><strong>Location:</strong> <span id="locationVote">None</span></p>
-            <p><strong>Activity:</strong> <span id="activityVote">None</span></p>
-          </div>
-        </div>
+            <div class="poll-category">
+              <h3>Location Options</h3>
+              <button type="button" class="poll-btn" data-category="location" data-option="Selected Event Location">
+                Selected Event Location
+              </button>
+              <p>Your location vote: <span id="locationVote">None</span></p>
+            </div>
 
+            <div class="poll-category">
+              <h3>Activity Options</h3>
+              <button type="button" class="poll-btn" data-category="activity" data-option="Main Event Activity">
+                Main Event Activity
+              </button>
+              <p>Your activity vote: <span id="activityVote">None</span></p>
+            </div>
+          </section>
+
+          <button type="submit" class="card-btn">Send Event Request</button>
+        </form>
+
+        <p id="requestMessage"></p>
       </div>
-    </div>
+    </main>
 
-    <!-- Right Navigation -->
-    <div class="sidebar-right">
+    <!-- RIGHT SIDEBAR -->
+    <aside class="sidebar-right">
       <a href="/html/profile.html">
-        <button class="side-btn"><i class="fa-solid fa-user"></i></button>
+        <button class="side-btn" title="Profile">
+          <i class="fa-solid fa-user"></i>
+        </button>
       </a>
+
       <a href="/html/calendar.html">
-        <button class="side-btn"><i class="fa-solid fa-calendar"></i></button>
+        <button class="side-btn" title="Calendar">
+          <i class="fa-solid fa-calendar"></i>
+        </button>
       </a>
+
       <a href="/html/friends.html">
-        <button class="side-btn"><i class="fa-solid fa-user-group"></i></button>
+        <button class="side-btn" title="Friends">
+          <i class="fa-solid fa-user-group"></i>
+        </button>
       </a>
+
       <a href="/html/event-request.html">
-        <button class="side-btn active"><i class="fa-solid fa-plus"></i></button>
+        <button class="side-btn active" title="Request Event">
+          <i class="fa-solid fa-plus"></i>
+        </button>
       </a>
-    </div>
+    </aside>
 
   </div>
 
