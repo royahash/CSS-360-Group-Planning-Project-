@@ -152,8 +152,7 @@ if (typeof window !== 'undefined') {
 
     const input = document.getElementById('search-input');
 
-    const categorySearch =
-      sessionStorage.getItem('searchCategory');
+    const categorySearch = sessionStorage.getItem('searchCategory');
 
     if (categorySearch) {
       currentSearch = categorySearch;
@@ -162,9 +161,8 @@ if (typeof window !== 'undefined') {
         input.value = categorySearch;
       }
 
-      document.getElementById(
-        'clear-search-btn'
-      ).style.display = 'inline-block';
+      document.getElementById('clear-search-btn').style.display =
+        'inline-block';
 
       sessionStorage.removeItem('searchCategory');
 
@@ -282,24 +280,17 @@ function setupFilters() {
   const panel = document.getElementById('filter-panel');
 
   filterBtn.addEventListener('click', () => {
-    panel.style.display =
-      panel.style.display === 'none'
-        ? 'flex'
-        : 'none';
+    panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
   });
 
-  panel
-    .querySelectorAll('input[type="checkbox"]')
-    .forEach((checkbox) => {
-      checkbox.addEventListener('change', applyFilters);
-    });
+  panel.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+    checkbox.addEventListener('change', applyFilters);
+  });
 }
 
 function applyFilters() {
   selectedCategories = Array.from(
-    document.querySelectorAll(
-      '#filter-panel input[type="checkbox"]:checked'
-    )
+    document.querySelectorAll('#filter-panel input[type="checkbox"]:checked'),
   ).map((checkbox) => checkbox.value);
 
   currentPage = 0;
@@ -315,16 +306,14 @@ function renderPage() {
 
   if (selectedCategories.length > 0) {
     filteredEvents = allEvents.filter((event) => {
-      const segment =
-        event.classifications?.[0]?.segment?.name;
+      const segment = event.classifications?.[0]?.segment?.name;
 
       return selectedCategories.includes(segment);
     });
   }
 
   if (filteredEvents.length === 0) {
-    container.innerHTML =
-      '<p>No events found for selected categories.</p>';
+    container.innerHTML = '<p>No events found for selected categories.</p>';
     return;
   }
 

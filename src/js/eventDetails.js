@@ -88,20 +88,15 @@ async function loadEventDetails() {
     // =========================
     // CATEGORY BUTTON HANDLERS
     // =========================
-    document
-      .querySelectorAll('.category-link')
-      .forEach((button) => {
-        button.addEventListener('click', () => {
-          const category = button.dataset.category;
+    document.querySelectorAll('.category-link').forEach((button) => {
+      button.addEventListener('click', () => {
+        const category = button.dataset.category;
 
-          sessionStorage.setItem(
-            'searchCategory',
-            category,
-          );
+        sessionStorage.setItem('searchCategory', category);
 
-          window.location.href = '/html/index.html';
-        });
+        window.location.href = '/html/index.html';
       });
+    });
 
     // =========================
     // TICKETMASTER LINK

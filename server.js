@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema({
   googleId: { type: String, sparse: true },
   displayName: { type: String, default: '' },
   email: { type: String, default: '' },
-  username: { type: String, default: '', unique: true, sparse: true },
+  username: { type: String, unique: true, sparse: true, default: undefined },
   password: { type: String, default: '' },
   photo: { type: String, default: '' },
   preferences: { type: [String], default: [] },
@@ -852,42 +852,40 @@ app.get('/api/ticketmaster/event/:id', async (req, res) => {
 // SEND friend request by username
 app.post('/api/friends/request', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
-
   const { username } = req.body;
-
   try {
-    const targetUser = await User.findOne({ username });
-
+    const targetUser = await User.findOne({
+      $or: [{ username }, { email: username }]
+    });
     if (!targetUser) return res.status(404).json({ error: 'User not found' });
-
     if (targetUser._id.toString() === req.user._id.toString()) {
       return res.status(400).json({ error: 'Cannot add yourself' });
     }
-
     if (req.user.friends.map(String).includes(targetUser._id.toString())) {
       return res.status(400).json({ error: 'Already friends' });
     }
-
     const existingRequest = await FriendRequest.findOne({
       $or: [
         { senderId: req.user._id, receiverId: targetUser._id },
         { senderId: targetUser._id, receiverId: req.user._id }
-      ]
+      ],
+      status: 'pending'
     });
-
     if (existingRequest) {
       return res.status(400).json({ error: 'Friend request already exists' });
     }
-
+    await FriendRequest.deleteMany({
+      $or: [
+        { senderId: req.user._id, receiverId: targetUser._id },
+        { senderId: targetUser._id, receiverId: req.user._id }
+      ],
+      status: { $in: ['declined', 'accepted'] }
+    });
     const friendRequest = await FriendRequest.create({
       senderId: req.user._id,
       receiverId: targetUser._id
     });
-
-    res.status(201).json({
-      message: 'Friend request sent',
-      request: friendRequest
-    });
+    res.status(201).json({ message: 'Friend request sent', request: friendRequest });
   } catch (err) {
     console.error('Error sending friend request:', err);
     res.status(500).json({ error: 'Failed to send friend request' });
@@ -928,10 +926,10 @@ app.post('/api/friends/accept/:senderId', async (req, res) => {
     friendRequest.status = 'accepted';
     await friendRequest.save();
 
+    const senderId = new mongoose.Types.ObjectId(req.params.senderId);
     await User.findByIdAndUpdate(req.user._id, {
-      $addToSet: { friends: req.params.senderId }
+      $addToSet: { friends: senderId }
     });
-
     await User.findByIdAndUpdate(req.params.senderId, {
       $addToSet: { friends: req.user._id }
     });
@@ -946,21 +944,15 @@ app.post('/api/friends/accept/:senderId', async (req, res) => {
 // DECLINE friend request
 app.post('/api/friends/decline/:senderId', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
-
   try {
-    const friendRequest = await FriendRequest.findOne({
+    const friendRequest = await FriendRequest.findOneAndDelete({
       senderId: req.params.senderId,
       receiverId: req.user._id,
       status: 'pending'
     });
-
     if (!friendRequest) {
       return res.status(404).json({ error: 'Friend request not found' });
     }
-
-    friendRequest.status = 'declined';
-    await friendRequest.save();
-
     res.json({ message: 'Friend request declined' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to decline friend request' });
@@ -970,10 +962,12 @@ app.post('/api/friends/decline/:senderId', async (req, res) => {
 // GET list of friends for current user
 app.get('/api/friends', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
-
   try {
-    const user = await User.findById(req.user._id).populate('friends', 'username displayName email photo');
-    res.json(user.friends || []);
+    const user = await User.findById(req.user._id);
+    const friendIds = user.friends || [];
+    const friends = await User.find({ _id: { $in: friendIds } })
+      .select('username displayName email photo');
+    res.json(friends);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch friends' });
   }
@@ -982,18 +976,30 @@ app.get('/api/friends', async (req, res) => {
 // DELETE friend
 app.delete('/api/friends/:friendId', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
-
   try {
-    await User.findByIdAndUpdate(req.user._id, {
-      $pull: { friends: req.params.friendId }
+    const friendIdStr = req.params.friendId.toString();
+    const myIdStr = req.user._id.toString();
+    const currentUser = await User.findById(req.user._id);
+    const updatedMyFriends = currentUser.friends.filter(
+      f => f.toString() !== friendIdStr
+    );
+    await User.updateOne({ _id: req.user._id }, { $set: { friends: updatedMyFriends } });
+    const friendUser = await User.findById(req.params.friendId);
+    if (friendUser) {
+      const updatedFriendFriends = friendUser.friends.filter(
+        f => f.toString() !== myIdStr
+      );
+      await User.updateOne({ _id: req.params.friendId }, { $set: { friends: updatedFriendFriends } });
+    }
+    await FriendRequest.findOneAndDelete({
+      $or: [
+        { senderId: req.user._id, receiverId: req.params.friendId },
+        { senderId: req.params.friendId, receiverId: req.user._id }
+      ]
     });
-
-    await User.findByIdAndUpdate(req.params.friendId, {
-      $pull: { friends: req.user._id }
-    });
-
     res.json({ message: 'Friend removed' });
   } catch (err) {
+    console.error('Delete friend error:', err);
     res.status(500).json({ error: 'Failed to remove friend' });
   }
 });
@@ -1053,33 +1059,27 @@ Object.entries(pages).forEach(([route, file]) => {
   });
 });
 
-// ── Start Server ──────────────────────────────────────────────────────────
+// ── MongoDB Connection + Server Start ─────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 
-async function startServer() {
-  try {
-    if (!process.env.MONGODB_URI) {
-      throw new Error('MONGODB_URI is not set in the .env file.');
-    }
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('Connected to MongoDB');
-
-    // One-time fix: drop old username index
-    try {
-      await mongoose.connection.collection('users').dropIndex('username_1');
-      console.log('Dropped username index');
-    } catch (err) {
-      console.log('Username index already dropped or does not exist');
-    }
-
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-  } catch (error) {
-    console.error('MongoDB connection error:', error.message);
-  }
+// Connect to MongoDB when module loads (required for Vercel)
+if (process.env.MONGODB_URI) {
+  mongoose.connect(process.env.MONGODB_URI)
+    .then(async () => {
+      console.log('Connected to MongoDB');
+      try {
+        await mongoose.connection.collection('users').dropIndex('username_1');
+        console.log('Dropped username index');
+      } catch (err) {
+        console.log('Username index already dropped or does not exist');
+      }
+    })
+    .catch((error) => console.error('MongoDB connection error:', error));
 }
 
+// Only start the HTTP server when run directly (not on Vercel)
 if (require.main === module) {
-  startServer();
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }
 
 module.exports = app;
