@@ -1067,12 +1067,6 @@ if (process.env.MONGODB_URI) {
   mongoose.connect(process.env.MONGODB_URI)
     .then(async () => {
       console.log('Connected to MongoDB');
-      try {
-        await mongoose.connection.collection('users').dropIndex('username_1');
-        console.log('Dropped username index');
-      } catch (err) {
-        console.log('Username index already dropped or does not exist');
-      }
     })
     .catch((error) => console.error('MongoDB connection error:', error));
 }
