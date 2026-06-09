@@ -1,6 +1,5 @@
 let events = [];
 let isLoggedIn = false;
-const DEV_BYPASS_LOGIN = false; // set false in production
 
 const today = new Date();
 
@@ -71,16 +70,8 @@ async function loadCalendarEvents() {
     });
 
     if (response.status === 401) {
-      if (DEV_BYPASS_LOGIN) {
-        // DEV MODE: pretend we are logged in with empty events
-        isLoggedIn = true;
-        events = [];
-        renderCalendar();
-        return;
-      }
-
-      // PRODUCTION MODE: show login message
       isLoggedIn = false;
+      events = [];
       showCalendarMessage('Please log in to view your calendar.');
       return;
     }
