@@ -1,5 +1,11 @@
-let currentView = 'month';
 let events = [];
+let isLoggedIn = false;
+const DEV_BYPASS_LOGIN = false; // set false in production
+
+const today = new Date();
+
+let currentMonth = today.getMonth();
+let currentYear = today.getFullYear();
 
 // Maintains compatibility with existing calendar checkbox tests.
 // The live calendar UI now uses My Calendar, Event Requests, and Friend Events.
@@ -13,26 +19,36 @@ let selectAllCheckbox = document.getElementById('check-all');
 let activeCalendars = ['You', 'Alex', 'Jordan'];
 
 document.addEventListener('DOMContentLoaded', function () {
-  initializeViewButtons();
+  initializeMonthNavigation();
   initializeCheckboxListeners();
   loadCalendarEvents();
 });
 
-function initializeViewButtons() {
-  const monthViewBtn = document.getElementById('monthViewBtn');
-  const weekViewBtn = document.getElementById('weekViewBtn');
+function initializeMonthNavigation() {
+  const prevBtn = document.getElementById('prevMonthBtn');
+  const nextBtn = document.getElementById('nextMonthBtn');
 
-  if (monthViewBtn) {
-    monthViewBtn.addEventListener('click', function () {
-      setView('month');
-    });
-  }
+  prevBtn?.addEventListener('click', () => {
+    currentMonth--;
 
-  if (weekViewBtn) {
-    weekViewBtn.addEventListener('click', function () {
-      setView('week');
-    });
-  }
+    if (currentMonth < 0) {
+      currentMonth = 11;
+      currentYear--;
+    }
+
+    renderCalendar();
+  });
+
+  nextBtn?.addEventListener('click', () => {
+    currentMonth++;
+
+    if (currentMonth > 11) {
+      currentMonth = 0;
+      currentYear++;
+    }
+
+    renderCalendar();
+  });
 }
 
 function initializeCheckboxListeners() {
@@ -68,6 +84,16 @@ async function loadCalendarEvents() {
     });
 
     if (response.status === 401) {
+      if (DEV_BYPASS_LOGIN) {
+        // DEV MODE: pretend we are logged in with empty events
+        isLoggedIn = true;
+        events = [];
+        renderCalendar();
+        return;
+      }
+
+      // PRODUCTION MODE: show login message
+      isLoggedIn = false;
       showCalendarMessage('Please log in to view your calendar.');
       return;
     }
@@ -78,7 +104,9 @@ async function loadCalendarEvents() {
       throw new Error(data.error || 'Failed to load calendar events.');
     }
 
+    isLoggedIn = true;
     events = Array.isArray(data) ? data : [];
+
     renderCalendar();
   } catch (error) {
     console.error('Calendar loading error:', error);
@@ -149,40 +177,92 @@ function updateActiveCalendars() {
   renderCalendar();
 }
 
-function setView(view) {
-  currentView = view;
-  renderCalendar();
-}
-
 function renderCalendar() {
   const calendarContainer = getCalendarContainer();
 
   if (!calendarContainer) return;
 
+
+  if (!isLoggedIn) return;
+
   calendarContainer.innerHTML = '';
 
-  if (!events || events.length === 0) {
-    showCalendarMessage('No events on your calendar yet.');
-    return;
+  if (!events) {
+    events = [];
   }
 
-  if (currentView === 'week') {
-    renderWeek(calendarContainer);
-  } else {
-    renderMonth(calendarContainer);
-  }
+  renderMonth(calendarContainer);
 }
 
 function renderMonth(calendarContainer) {
   calendarContainer.className = 'calendar-container month-view';
 
-  const today = new Date();
-  const currentMonth = today.getMonth();
-  const currentYear = today.getFullYear();
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const monthLabel = document.getElementById('currentMonthLabel');
+
+  const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  monthLabel.textContent =
+    `${monthNames[currentMonth]} ${currentYear}`;
+
+  calendarContainer.innerHTML = '';
+
+  const weekdays = [
+    'Sun',
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+  ];
+
+  weekdays.forEach((dayName) => {
+    const header = document.createElement('div');
+
+    header.className = 'calendar-header-day';
+
+    header.innerHTML = `<strong>${dayName}</strong>`;
+
+    calendarContainer.appendChild(header);
+  });
+
+  const firstDay = new Date(
+    currentYear,
+    currentMonth,
+    1
+  ).getDay();
+
+  const daysInMonth = new Date(
+    currentYear,
+    currentMonth + 1,
+    0
+  ).getDate();
+
+  for (let i = 0; i < firstDay; i++) {
+    const emptyCell = document.createElement('div');
+
+    emptyCell.className =
+      'calendar-day empty-day';
+
+    calendarContainer.appendChild(emptyCell);
+  }
 
   for (let dayNumber = 1; dayNumber <= daysInMonth; dayNumber++) {
     const day = document.createElement('div');
+
     day.className = 'calendar-day';
 
     const date = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
@@ -222,13 +302,26 @@ function renderWeek(calendarContainer) {
           day: 'numeric'
         })}
       </strong>
+    const date =
+      `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
+
+    day.innerHTML = `
+      <div class="day-number">
+        ${dayNumber}
+      </div>
     `;
 
-    events.forEach(function (event) {
-      const eventDate = event.startDate || event.date;
+    events.forEach((event) => {
+      const eventDate =
+        event.startDate || event.date;
 
-      if (eventDate === formattedDate && shouldShowEvent(event)) {
-        day.appendChild(createCalendarEventElement(event));
+      if (
+        eventDate === date &&
+        shouldShowEvent(event)
+      ) {
+        day.appendChild(
+          createCalendarEventElement(event)
+        );
       }
     });
 
@@ -482,11 +575,13 @@ function isCalendarFilterChecked(labelText) {
 function showCalendarMessage(message) {
   const calendarContainer = getCalendarContainer();
 
-  if (calendarContainer) {
-    calendarContainer.innerHTML = `
-      <p class="no-events-message">${escapeHTML(message)}</p>
-    `;
-  }
+  if (!calendarContainer) return;
+
+  calendarContainer.innerHTML = `
+    <div class="calendar-message-wrapper">
+      <p class="calendar-message">${escapeHTML(message)}</p>
+    </div>
+  `;
 }
 
 function escapeHTML(value) {
@@ -502,7 +597,6 @@ if (typeof window !== 'undefined') {
   window.toggleSelectAll = toggleSelectAll;
   window.togglePerson = togglePerson;
   window.updateActiveCalendars = updateActiveCalendars;
-  window.setView = setView;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -514,11 +608,9 @@ if (typeof module !== 'undefined' && module.exports) {
     shouldShowEvent,
     updateActiveCalendars,
     renderCalendar,
-    setView,
     loadCalendarEvents,
     getCalendarContainer,
     renderMonth,
-    renderWeek,
     createCalendarEventElement,
     showEventDetails,
     showCalendarMessage,
