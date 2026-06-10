@@ -2,6 +2,7 @@
 
 let events = [];
 let isLoggedIn = false;
+let currentUserId = null;
 
 const today = new Date();
 
@@ -92,8 +93,37 @@ function initializeCheckboxListeners() {
   });
 }
 
+async function fetchCurrentUser() {
+  try {
+    const response = await fetch('/auth/me', {
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const user = await response.json();
+    return user;
+  } catch (err) {
+    console.error('Error fetching current user:', err);
+    return null;
+  }
+}
+
 async function loadCalendarEvents() {
   try {
+    const currentUser = await fetchCurrentUser();
+
+    if (!currentUser) {
+      events = [];
+      isLoggedIn = false;
+      showCalendarMessage('Please log in to view calendar events.');
+      return;
+    }
+
+    currentUserId = currentUser.id;
+
     const saved = await getSavedEvents(); // <-- use your existing API helper
 
     if (!saved) {
@@ -104,11 +134,18 @@ async function loadCalendarEvents() {
 
     isLoggedIn = true;
 
-    // normalize dates so calendar can read them
-    events = saved.map((e) => ({
-      ...e,
-      date: e.startDate || e.date, // IMPORTANT FIX
-    }));
+    // normalize dates so calendar can read them and classify ownership
+    events = saved.map((e) => {
+      const source = e.source ||
+        (String(e.userId) === String(currentUserId) ? 'my' : 'friend');
+
+      return {
+        ...e,
+        date: e.startDate || e.date,
+        source,
+        owner: e.owner || (source === 'friend' ? 'friend' : 'my'),
+      };
+    });
 
     renderCalendar();
   } catch (err) {

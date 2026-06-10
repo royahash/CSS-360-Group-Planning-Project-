@@ -17,9 +17,21 @@ global.getSavedEvents = jest.fn(() =>
       title: 'Concert',
       startDate: '2026-11-05',
       ticketmasterId: '123',
+      userId: 'user1',
     },
   ]),
 );
+
+global.fetch = jest.fn((url) => {
+  if (url === '/auth/me') {
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ id: 'user1' }),
+    });
+  }
+
+  return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+});
 
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation(() => {});
