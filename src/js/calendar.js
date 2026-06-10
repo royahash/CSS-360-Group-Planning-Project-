@@ -136,7 +136,8 @@ async function loadCalendarEvents() {
 
     // normalize dates so calendar can read them and classify ownership
     events = saved.map((e) => {
-      const source = e.source ||
+      const source =
+        e.source ||
         (String(e.userId) === String(currentUserId) ? 'my' : 'friend');
 
       return {

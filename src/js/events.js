@@ -256,7 +256,16 @@ function loadEvents() {
       }
 
       const events = data._embedded.events;
-      const uniqueEvents = events.filter(
+
+      const now = new Date();
+      const futureEvents = events.filter((event) => {
+        const dateStr =
+          event.dates?.start?.dateTime || event.dates?.start?.localDate;
+        if (!dateStr) return true; // no date info, include it
+        return new Date(dateStr) >= now;
+      });
+
+      const uniqueEvents = futureEvents.filter(
         (event, index, self) =>
           index === self.findIndex((e) => e.name === event.name),
       );

@@ -819,7 +819,8 @@ app.delete('/api/event-requests/:id', async (req, res) => {
 // ── Ticketmaster Proxy ────────────────────────────────────────────────────
 app.get('/api/ticketmaster/events', async (req, res) => {
   try {
-    let url = `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${process.env.TICKETMASTER_API_KEY}&size=100&expand=venues`;
+    const now = new Date().toISOString().split('.')[0] + 'Z';
+    let url = `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${process.env.TICKETMASTER_API_KEY}&size=100&expand=venues&startDateTime=${now}`;
 
     const allowed = [
       'sort',
