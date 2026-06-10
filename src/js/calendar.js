@@ -1,5 +1,6 @@
 let currentView = 'month';
 let events = [];
+let currentUserId = null;
 
 let currentDate = new Date();
 let currentMonth = currentDate.getMonth();
@@ -8,7 +9,7 @@ let currentYear = currentDate.getFullYear();
 const checkboxes = {
   my: document.getElementById('check-my-calendar'),
   requests: document.getElementById('check-event-requests'),
-  friends: document.getElementById('check-friend-events')
+  friends: document.getElementById('check-friend-events'),
 };
 
 let selectAllCheckbox = document.getElementById('check-all');
@@ -79,7 +80,7 @@ function initializeCheckboxListeners() {
 async function loadCalendarEvents() {
   try {
     const response = await fetch('/api/calendar-events', {
-      credentials: 'include'
+      credentials: 'include',
     });
 
     if (response.status === 401) {
@@ -93,7 +94,7 @@ async function loadCalendarEvents() {
       return;
     }
 
-const saved = await response.json();
+    const saved = await response.json();
 
     // normalize dates so calendar can read them and classify ownership
     events = saved.map((e) => {
@@ -113,7 +114,7 @@ const saved = await response.json();
   } catch (error) {
     console.error('Calendar loading error:', error);
     showCalendarMessage(
-      'Could not load calendar events. Please make sure the backend server is running.'
+      'Could not load calendar events. Please make sure the backend server is running.',
     );
   }
 }
@@ -151,11 +152,12 @@ function togglePerson() {
 
   const validCheckboxes = Object.values(checkboxes).filter(Boolean);
 
-  const allChecked = validCheckboxes.length > 0
-    ? validCheckboxes.every(function (checkbox) {
-        return checkbox.checked;
-      })
-    : true;
+  const allChecked =
+    validCheckboxes.length > 0
+      ? validCheckboxes.every(function (checkbox) {
+          return checkbox.checked;
+        })
+      : true;
 
   if (selectAllCheckbox) {
     selectAllCheckbox.checked = allChecked;
@@ -232,7 +234,7 @@ function renderMonth(calendarContainer) {
     'September',
     'October',
     'November',
-    'December'
+    'December',
   ];
 
   if (monthLabel) {
@@ -272,28 +274,28 @@ function renderMonth(calendarContainer) {
     `;
 
     const dayEvents = events.filter((event) => {
-  const eventDateRaw = event.startDate || event.date;
-  const eventDate = eventDateRaw?.split('T')[0];
-  return eventDate === date && shouldShowEvent(event);
-});
-
-const maxVisible = 4;
-dayEvents.slice(0, maxVisible).forEach((event) => {
-  day.appendChild(createCalendarEventElement(event));
-});
-
-if (dayEvents.length > maxVisible) {
-  const overflow = document.createElement('div');
-  overflow.className = 'calendar-overflow';
-  overflow.innerText = `+${dayEvents.length - maxVisible} more`;
-  overflow.addEventListener('click', () => {
-    dayEvents.slice(maxVisible).forEach((event) => {
-      day.insertBefore(createCalendarEventElement(event), overflow);
+      const eventDateRaw = event.startDate || event.date;
+      const eventDate = eventDateRaw?.split('T')[0];
+      return eventDate === date && shouldShowEvent(event);
     });
-    overflow.remove();
-  });
-  day.appendChild(overflow);
-}
+
+    const maxVisible = 4;
+    dayEvents.slice(0, maxVisible).forEach((event) => {
+      day.appendChild(createCalendarEventElement(event));
+    });
+
+    if (dayEvents.length > maxVisible) {
+      const overflow = document.createElement('div');
+      overflow.className = 'calendar-overflow';
+      overflow.innerText = `+${dayEvents.length - maxVisible} more`;
+      overflow.addEventListener('click', () => {
+        dayEvents.slice(maxVisible).forEach((event) => {
+          day.insertBefore(createCalendarEventElement(event), overflow);
+        });
+        overflow.remove();
+      });
+      day.appendChild(overflow);
+    }
 
     calendarContainer.appendChild(day);
   }
@@ -318,7 +320,7 @@ function renderWeek(calendarContainer) {
         ${currentDay.toLocaleDateString('en-US', {
           weekday: 'short',
           month: 'numeric',
-          day: 'numeric'
+          day: 'numeric',
         })}
       </strong>
     `;
@@ -460,14 +462,16 @@ function buildOptionGroup(category, label, options) {
   return `
     <div class="poll-category">
       <h4>${escapeHTML(label)}</h4>
-      ${options.map(function (option) {
-        return `
+      ${options
+        .map(function (option) {
+          return `
           <label class="checkbox-label">
             <input type="radio" name="${escapeHTML(category)}Vote" value="${escapeHTML(option)}">
             ${escapeHTML(option)}
           </label>
         `;
-      }).join('')}
+        })
+        .join('')}
     </div>
   `;
 }
@@ -506,25 +510,32 @@ function collectVotes() {
     date: getValue('dateVote'),
     time: getValue('timeVote'),
     location: getValue('locationVote'),
-    activity: getValue('activityVote')
+    activity: getValue('activityVote'),
   };
 }
 
-async function submitEventRequestResponse(eventRequestId, responseStatus, votes = {}) {
+async function submitEventRequestResponse(
+  eventRequestId,
+  responseStatus,
+  votes = {},
+) {
   const message = document.getElementById('calendarResponseMessage');
 
   try {
-    const response = await fetch(`/api/event-requests/${eventRequestId}/respond`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json'
+    const response = await fetch(
+      `/api/event-requests/${eventRequestId}/respond`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          responseStatus,
+          votes,
+        }),
       },
-      credentials: 'include',
-      body: JSON.stringify({
-        responseStatus,
-        votes
-      })
-    });
+    );
 
     const result = await response.json();
 
@@ -559,7 +570,11 @@ function shouldShowEvent(event) {
     return activeCalendars.includes('requests');
   }
 
-  if (type === 'friend-events' || type === 'friend-event' || type === 'friend') {
+  if (
+    type === 'friend-events' ||
+    type === 'friend-event' ||
+    type === 'friend'
+  ) {
     return activeCalendars.includes('friends');
   }
 
@@ -611,6 +626,6 @@ if (typeof module !== 'undefined' && module.exports) {
     createCalendarEventElement,
     showEventDetails,
     showCalendarMessage,
-    escapeHTML
+    escapeHTML,
   };
 }
