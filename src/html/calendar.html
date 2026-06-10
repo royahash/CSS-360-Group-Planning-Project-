@@ -27,9 +27,16 @@
       </div>
 
       <div class="calendar-controls-wrapper">
-        <div class="calendar-controls">
-          <button class="card-btn" id="monthViewBtn">Monthly</button>
-          <button class="card-btn" id="weekViewBtn">Weekly</button>
+        <div class="calendar-nav">
+          <button class="card-btn" id="prevMonthBtn">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+
+          <h2 id="currentMonthLabel"></h2>
+
+          <button class="card-btn" id="nextMonthBtn">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
         </div>
       </div>
 
@@ -41,24 +48,24 @@
 
           <label class="calendar-select-all">
             <span>Select All</span>
-            <input type="checkbox" checked>
+            <input type="checkbox" id="check-all" checked>
           </label>
 
           <hr>
 
           <label class="calendar-you">
             <span>My Calendar</span>
-            <input type="checkbox" checked>
+            <input type="checkbox" id="check-my-calendar" checked>
           </label>
 
           <label class="calendar-group">
             <span>Event Requests</span>
-            <input type="checkbox" checked>
+            <input type="checkbox" id="check-event-requests" checked>
           </label>
 
           <label class="calendar-friends">
             <span>Friend Events</span>
-            <input type="checkbox" checked>
+            <input type="checkbox"id="check-friend-events" checked>
           </label>
         </aside>
 
@@ -99,6 +106,7 @@
 
   </div>
 
+  <script src="/js/api.js"></script>
   <script src="/js/calendar.js"></script>
 </body>
 </html>

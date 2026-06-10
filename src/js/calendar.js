@@ -1,77 +1,119 @@
-let currentView = 'month';
+/* global getSavedEvents */
+
 let events = [];
+let isLoggedIn = false;
+
+const today = new Date();
+
+let currentMonth = today.getMonth();
+let currentYear = today.getFullYear();
 
 const checkboxes = {
-  // Maintains compatibility with existing calendar checkbox tests.
-  // The live calendar UI now uses My Calendar, Event Requests, and Friend Events.
-  You: document.getElementById('check-you'),
-  Alex: document.getElementById('check-alex'),
-  Jordan: document.getElementById('check-jordan'),
+  all: document.getElementById('check-all'),
+  my: document.getElementById('check-my-calendar'),
+  requests: document.getElementById('check-event-requests'),
+  friends: document.getElementById('check-friend-events'),
 };
 
-let selectAllCheckbox = null;
-let activeCalendars = ['You', 'Alex', 'Jordan'];
+const selectAllCheckbox = checkboxes.all;
+
+let activeCalendars = {
+  my: true,
+  requests: true,
+  friends: true,
+};
 
 document.addEventListener('DOMContentLoaded', function () {
-  initializeViewButtons();
+  initializeMonthNavigation();
   initializeCheckboxListeners();
   updateActiveCalendars();
   loadCalendarEvents();
 });
 
-function initializeViewButtons() {
-  const monthViewBtn = document.getElementById('monthViewBtn');
-  const weekViewBtn = document.getElementById('weekViewBtn');
+function initializeMonthNavigation() {
+  const prevBtn = document.getElementById('prevMonthBtn');
+  const nextBtn = document.getElementById('nextMonthBtn');
 
-  if (monthViewBtn) {
-    monthViewBtn.addEventListener('click', function () {
-      setView('month');
-    });
-  }
+  prevBtn?.addEventListener('click', () => {
+    currentMonth--;
 
-  if (weekViewBtn) {
-    weekViewBtn.addEventListener('click', function () {
-      setView('week');
-    });
-  }
+    if (currentMonth < 0) {
+      currentMonth = 11;
+      currentYear--;
+    }
+
+    renderCalendar();
+  });
+
+  nextBtn?.addEventListener('click', () => {
+    currentMonth++;
+
+    if (currentMonth > 11) {
+      currentMonth = 0;
+      currentYear++;
+    }
+
+    renderCalendar();
+  });
 }
 
 function initializeCheckboxListeners() {
-  if (selectAllCheckbox) {
-    selectAllCheckbox.addEventListener('change', toggleSelectAll);
+  const { all, my, requests, friends } = checkboxes;
+
+  if (!all || !my || !requests || !friends) return;
+
+  function syncState() {
+    activeCalendars = {
+      my: my.checked,
+      requests: requests.checked,
+      friends: friends.checked,
+    };
+
+    // Select All logic (derived state)
+    all.checked = my.checked && requests.checked && friends.checked;
+
+    renderCalendar();
   }
 
-  Object.values(checkboxes).forEach(function (checkbox) {
-    if (checkbox) {
-      checkbox.addEventListener('change', togglePerson);
-    }
+  // SELECT ALL
+  all.addEventListener('change', () => {
+    const value = all.checked;
+
+    my.checked = value;
+    requests.checked = value;
+    friends.checked = value;
+
+    syncState();
+  });
+
+  // INDIVIDUAL CHECKBOXES
+  [my, requests, friends].forEach((cb) => {
+    cb.addEventListener('change', syncState);
   });
 }
 
 async function loadCalendarEvents() {
   try {
-    const response = await fetch('/api/calendar-events', {
-      credentials: 'include',
-    });
+    const saved = await getSavedEvents(); // <-- use your existing API helper
 
-    if (response.status === 401) {
-      showCalendarMessage('Please log in to view your calendar.');
+    if (!saved) {
+      events = [];
+      showCalendarMessage('Could not load events.');
       return;
     }
 
-    const data = await response.json();
+    isLoggedIn = true;
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to load calendar events.');
-    }
+    // normalize dates so calendar can read them
+    events = saved.map((e) => ({
+      ...e,
+      date: e.startDate || e.date, // IMPORTANT FIX
+    }));
 
-    events = Array.isArray(data) ? data : [];
     renderCalendar();
-  } catch (error) {
-    console.error('Calendar loading error:', error);
-    showCalendarMessage(
-      'Could not load calendar events. Please make sure the backend server is running.',
-    );
+  } catch (err) {
+    console.error(err);
+    showCalendarMessage('Failed to load calendar events.');
   }
 }
 
@@ -119,95 +161,99 @@ function togglePerson() {
 }
 
 function updateActiveCalendars() {
-  activeCalendars = Object.keys(checkboxes).filter(function (name) {
-    return checkboxes[name] && checkboxes[name].checked;
-  });
+  const { my, requests, friends } = checkboxes;
 
-  renderCalendar();
-}
+  activeCalendars = {
+    my: !!my?.checked,
+    requests: !!requests?.checked,
+    friends: !!friends?.checked,
+  };
 
-function setView(view) {
-  currentView = view;
   renderCalendar();
 }
 
 function renderCalendar() {
   const calendarContainer = getCalendarContainer();
 
-  if (!calendarContainer) {
+  if (!calendarContainer) return;
+
+  if (!isLoggedIn) {
+    calendarContainer.innerHTML = '';
     return;
   }
 
   calendarContainer.innerHTML = '';
 
-  if (!events || events.length === 0) {
-    showCalendarMessage('No events on your calendar yet.');
-    return;
-  }
+  if (!Array.isArray(events)) events = [];
 
-  if (currentView === 'week') {
-    renderWeek(calendarContainer);
-  } else {
-    renderMonth(calendarContainer);
-  }
+  renderMonth(calendarContainer);
 }
 
 function renderMonth(calendarContainer) {
   calendarContainer.className = 'calendar-container month-view';
 
-  const today = new Date();
-  const currentMonth = today.getMonth();
-  const currentYear = today.getFullYear();
+  const monthLabel = document.getElementById('currentMonthLabel');
+
+  const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  monthLabel.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+  calendarContainer.innerHTML = '';
+
+  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  weekdays.forEach((dayName) => {
+    const header = document.createElement('div');
+
+    header.className = 'calendar-header-day';
+
+    header.innerHTML = `<strong>${dayName}</strong>`;
+
+    calendarContainer.appendChild(header);
+  });
+
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+  for (let i = 0; i < firstDay; i++) {
+    const emptyCell = document.createElement('div');
+
+    emptyCell.className = 'calendar-day empty-day';
+
+    calendarContainer.appendChild(emptyCell);
+  }
 
   for (let dayNumber = 1; dayNumber <= daysInMonth; dayNumber++) {
     const day = document.createElement('div');
+
     day.className = 'calendar-day';
 
     const date = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
 
-    day.innerHTML = `<strong>${dayNumber}</strong>`;
-
-    events.forEach(function (event) {
-      const eventDate = event.startDate || event.date;
-
-      if (eventDate === date && shouldShowEvent(event)) {
-        day.appendChild(createCalendarEventElement(event));
-      }
-    });
-
-    calendarContainer.appendChild(day);
-  }
-}
-
-function renderWeek(calendarContainer) {
-  calendarContainer.className = 'calendar-container week-view';
-
-  const today = new Date();
-
-  for (let index = 0; index < 7; index++) {
-    const currentDay = new Date();
-    currentDay.setDate(today.getDate() + index);
-
-    const formattedDate = currentDay.toISOString().split('T')[0];
-
-    const day = document.createElement('div');
-    day.className = 'calendar-day';
-
     day.innerHTML = `
-      <strong>
-        ${currentDay.toLocaleDateString('en-US', {
-          weekday: 'short',
-          month: 'numeric',
-          day: 'numeric',
-        })}
-      </strong>
+      <div class="day-number">
+        ${dayNumber}
+      </div>
     `;
 
-    events.forEach(function (event) {
-      const eventDate = event.startDate || event.date;
-
-      if (eventDate === formattedDate && shouldShowEvent(event)) {
+    events.forEach((event) => {
+      const eventDateRaw = event.startDate || event.date;
+      const eventDate = eventDateRaw?.split('T')[0]; // normalize ISO → YYYY-MM-DD
+      if (eventDate === date && shouldShowEvent(event)) {
         day.appendChild(createCalendarEventElement(event));
       }
     });
@@ -219,6 +265,16 @@ function renderWeek(calendarContainer) {
 function createCalendarEventElement(event) {
   const eventEl = document.createElement('div');
   eventEl.classList.add('calendar-event');
+
+  const source = event.source || 'my';
+
+  if (source === 'event-request') {
+    eventEl.classList.add('request-event');
+  } else if (source === 'friend') {
+    eventEl.classList.add('friend-event');
+  } else {
+    eventEl.classList.add('my-event');
+  }
 
   const title = event.title || 'Untitled Event';
   const status = event.status || 'pending';
@@ -234,7 +290,7 @@ function createCalendarEventElement(event) {
   }
 
   eventEl.addEventListener('click', function () {
-    showEventDetails(event);
+    window.location.href = `/html/event.html?id=${event.ticketmasterId}`;
   });
 
   return eventEl;
@@ -293,23 +349,25 @@ function showEventDetails(event) {
 }
 
 function shouldShowEvent(event) {
-  const owner = event.owner || 'You';
+  const source = event.source || 'my';
 
-  if (activeCalendars.length === 0) {
-    return false;
-  }
+  if (source === 'event-request') return activeCalendars.requests;
+  if (source === 'friend') return activeCalendars.friends;
 
-  return activeCalendars.includes(owner);
+  // default: Ticketmaster saved events
+  return activeCalendars.my;
 }
 
 function showCalendarMessage(message) {
   const calendarContainer = getCalendarContainer();
 
-  if (calendarContainer) {
-    calendarContainer.innerHTML = `
-      <p class="no-events-message">${escapeHTML(message)}</p>
-    `;
-  }
+  if (!calendarContainer) return;
+
+  calendarContainer.innerHTML = `
+    <div class="calendar-message-wrapper">
+      <p class="calendar-message">${escapeHTML(message)}</p>
+    </div>
+  `;
 }
 
 function escapeHTML(value) {
@@ -325,7 +383,6 @@ if (typeof window !== 'undefined') {
   window.toggleSelectAll = toggleSelectAll;
   window.togglePerson = togglePerson;
   window.updateActiveCalendars = updateActiveCalendars;
-  window.setView = setView;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -337,14 +394,14 @@ if (typeof module !== 'undefined' && module.exports) {
     shouldShowEvent,
     updateActiveCalendars,
     renderCalendar,
-    setView,
     loadCalendarEvents,
     getCalendarContainer,
     renderMonth,
-    renderWeek,
     createCalendarEventElement,
     showEventDetails,
     showCalendarMessage,
     escapeHTML,
   };
 }
+
+window.addEventListener('calendarUpdated', loadCalendarEvents);
