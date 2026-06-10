@@ -1,34 +1,21 @@
 /**
  * @jest-environment jsdom
  */
+
 document.body.innerHTML = `
   <input id="check-all" type="checkbox" checked>
-  <input id="check-you" type="checkbox" checked>
-  <input id="check-alex" type="checkbox" checked>
-  <input id="check-jordan" type="checkbox" checked>
-  <div id="calendar"></div>
-`;
+  <input id="check-my-calendar" type="checkbox" checked>
+  <input id="check-event-requests" type="checkbox" checked>
+  <input id="check-friend-events" type="checkbox" checked>
 
-global.fetch = jest.fn(() =>
-  Promise.resolve({
-    json: () =>
-      Promise.resolve([
-        {
-          title: 'Friend Event',
-          date: '2026-11-05',
-          owner: 'Alex',
-          ticketmasterId: '',
-        },
-      ]),
-  }),
-);
+  <div id="calendarEvents"></div>
+`;
 
 global.getSavedEvents = jest.fn(() =>
   Promise.resolve([
     {
-      title: 'My Event',
+      title: 'Concert',
       startDate: '2026-11-05',
-      owner: 'You',
       ticketmasterId: '123',
     },
   ]),
@@ -41,37 +28,57 @@ beforeAll(() => {
 jest.resetModules();
 const calendar = require('../src/js/calendar.js');
 
-beforeEach(() => {
-  const youEl = document.getElementById('check-you');
-  const alexEl = document.getElementById('check-alex');
-  const jordanEl = document.getElementById('check-jordan');
-  if (youEl) youEl.checked = true;
-  if (alexEl) alexEl.checked = true;
-  if (jordanEl) jordanEl.checked = true;
-  calendar.updateActiveCalendars();
-});
+describe('Calendar DOM Tests', () => {
+  beforeEach(() => {
+    document.getElementById('check-all').checked = true;
+    document.getElementById('check-my-calendar').checked = true;
+    document.getElementById('check-event-requests').checked = true;
+    document.getElementById('check-friend-events').checked = true;
 
-describe('Calendar UI Behavior Tests', () => {
-  test('toggleSelectAll does not throw when selectAllCheckbox is null', () => {
+    calendar.updateActiveCalendars();
+  });
+
+  test('toggleSelectAll does not throw', () => {
     expect(() => calendar.toggleSelectAll()).not.toThrow();
   });
 
-  test('Unchecking one user removes them from active calendars', () => {
-    const alexEl = document.getElementById('check-alex');
-    if (alexEl) alexEl.checked = false;
-    calendar.updateActiveCalendars();
-    expect(calendar.shouldShowEvent({ owner: 'Alex' })).toBe(false);
+  test('my calendar events are visible when checked', () => {
+    expect(
+      calendar.shouldShowEvent({
+        source: 'my',
+      }),
+    ).toBe(true);
   });
 
-  test('shouldShowEvent returns false for owner not in any calendar', () => {
+  test('event request events are hidden when unchecked', () => {
+    document.getElementById('check-event-requests').checked = false;
+
     calendar.updateActiveCalendars();
-    expect(calendar.shouldShowEvent({ owner: 'UnknownPerson' })).toBe(false);
+
+    expect(
+      calendar.shouldShowEvent({
+        source: 'event-request',
+      }),
+    ).toBe(false);
   });
 
-  test('should hide event when owner is unchecked', () => {
-    const jordanEl = document.getElementById('check-jordan');
-    if (jordanEl) jordanEl.checked = false;
+  test('friend events are hidden when unchecked', () => {
+    document.getElementById('check-friend-events').checked = false;
+
     calendar.updateActiveCalendars();
-    expect(calendar.shouldShowEvent({ owner: 'Jordan' })).toBe(false);
+
+    expect(
+      calendar.shouldShowEvent({
+        source: 'friend',
+      }),
+    ).toBe(false);
+  });
+
+  test('events without a source default to My Calendar', () => {
+    expect(
+      calendar.shouldShowEvent({
+        title: 'Saved Ticketmaster Event',
+      }),
+    ).toBe(true);
   });
 });

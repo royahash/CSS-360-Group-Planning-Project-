@@ -13,6 +13,8 @@ const checkboxes = {
   friends: document.getElementById('check-friend-events'),
 };
 
+const selectAllCheckbox = checkboxes.all;
+
 let activeCalendars = {
   my: true,
   requests: true,
