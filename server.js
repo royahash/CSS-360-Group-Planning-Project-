@@ -544,19 +544,29 @@ app.get('/api/calendar-events', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
 
   try {
-    const savedEvents = await Event.find({ userId: req.user._id });
+    const currentUser = await User.findById(req.user._id).lean();
+    const currentUserId = req.user._id.toString();
+    const friendIds = (currentUser?.friends || []).map((id) => id.toString());
+    const queryUserIds = [currentUserId, ...friendIds];
 
-    const eventRequests = await EventRequest.find({
-      $or: [
-        { creatorUserId: req.user._id },
-        { invitedUsers: req.user._id }
-      ]
-    })
-      .populate('creatorUserId', 'username displayName email photo')
-      .populate('invitedUsers', 'username displayName email photo')
-      .sort({ createdAt: -1 });
+    const savedEvents = await Event.find({ userId: { $in: queryUserIds } }).lean();
+    const users = await User.find({ _id: { $in: queryUserIds } })
+      .select('displayName username email')
+      .lean();
+
+    const userMap = users.reduce((map, user) => {
+      map[user._id.toString()] = user;
+      return map;
+    }, {});
 
     const savedCalendarEvents = savedEvents.map((event) => {
+      const ownerId = event.userId?.toString?.() || event.userId;
+      const isMine = ownerId === currentUserId;
+      const ownerUser = userMap[ownerId];
+      const ownerName = isMine
+        ? 'You'
+        : ownerUser?.displayName || ownerUser?.username || ownerUser?.email || 'Friend';
+
       return {
         id: event._id,
         title: event.title,
@@ -566,8 +576,8 @@ app.get('/api/calendar-events', async (req, res) => {
         city: event.city || '',
         description: event.description || '',
         status: 'confirmed',
-        source: 'saved-event',
-        owner: 'You'
+        source: isMine ? 'my' : 'friend',
+        owner: ownerName
       };
     });
 
