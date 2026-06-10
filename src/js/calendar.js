@@ -1,3 +1,5 @@
+/* global getSavedEvents */
+
 let events = [];
 let isLoggedIn = false;
 
@@ -207,20 +209,11 @@ function renderMonth(calendarContainer) {
     'December',
   ];
 
-  monthLabel.textContent =
-    `${monthNames[currentMonth]} ${currentYear}`;
+  monthLabel.textContent = `${monthNames[currentMonth]} ${currentYear}`;
 
   calendarContainer.innerHTML = '';
 
-  const weekdays = [
-    'Sun',
-    'Mon',
-    'Tue',
-    'Wed',
-    'Thu',
-    'Fri',
-    'Sat',
-  ];
+  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   weekdays.forEach((dayName) => {
     const header = document.createElement('div');
@@ -232,23 +225,14 @@ function renderMonth(calendarContainer) {
     calendarContainer.appendChild(header);
   });
 
-  const firstDay = new Date(
-    currentYear,
-    currentMonth,
-    1
-  ).getDay();
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
 
-  const daysInMonth = new Date(
-    currentYear,
-    currentMonth + 1,
-    0
-  ).getDate();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
   for (let i = 0; i < firstDay; i++) {
     const emptyCell = document.createElement('div');
 
-    emptyCell.className =
-      'calendar-day empty-day';
+    emptyCell.className = 'calendar-day empty-day';
 
     calendarContainer.appendChild(emptyCell);
   }
@@ -258,8 +242,7 @@ function renderMonth(calendarContainer) {
 
     day.className = 'calendar-day';
 
-    const date =
-      `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
+    const date = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
 
     day.innerHTML = `
       <div class="day-number">
@@ -270,13 +253,8 @@ function renderMonth(calendarContainer) {
     events.forEach((event) => {
       const eventDateRaw = event.startDate || event.date;
       const eventDate = eventDateRaw?.split('T')[0]; // normalize ISO → YYYY-MM-DD
-      if (
-        eventDate === date &&
-        shouldShowEvent(event)
-      ) {
-        day.appendChild(
-          createCalendarEventElement(event)
-        );
+      if (eventDate === date && shouldShowEvent(event)) {
+        day.appendChild(createCalendarEventElement(event));
       }
     });
 
