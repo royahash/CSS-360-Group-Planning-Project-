@@ -1,3 +1,5 @@
+/* global getSavedEvents */
+
 let currentView = 'month';
 let events = [];
 
@@ -8,7 +10,7 @@ let currentYear = currentDate.getFullYear();
 const checkboxes = {
   my: document.getElementById('check-my-calendar'),
   requests: document.getElementById('check-event-requests'),
-  friends: document.getElementById('check-friend-events'),
+  friends: document.getElementById('check-friend-events')
 };
 
 let selectAllCheckbox = document.getElementById('check-all');
@@ -61,6 +63,8 @@ function initializeViewButtons() {
 }
 
 function initializeCheckboxListeners() {
+  refreshCheckboxReferences();
+
   if (selectAllCheckbox) {
     selectAllCheckbox.addEventListener('change', toggleSelectAll);
   }
@@ -370,7 +374,7 @@ function showEventDetails(event) {
 
   if (event.source === 'event-request') {
     source = 'Event Request';
-  } else if (event.source === 'friend-event') {
+  } else if (event.source === 'friend-event' || event.source === 'friend') {
     source = 'Friend Event';
   }
 
@@ -523,19 +527,21 @@ async function submitEventRequestResponse(eventRequestId, responseStatus, votes 
 }
 
 function shouldShowEvent(event) {
-  if (event.calendarType === 'my-calendar') {
+  const type = event.calendarType || event.source || 'my-calendar';
+
+  if (type === 'my-calendar' || type === 'saved-event') {
     return activeCalendars.includes('my');
   }
 
-  if (event.calendarType === 'event-requests') {
+  if (type === 'event-requests' || type === 'event-request') {
     return activeCalendars.includes('requests');
   }
 
-  if (event.calendarType === 'friend-events') {
+  if (type === 'friend-events' || type === 'friend-event' || type === 'friend') {
     return activeCalendars.includes('friends');
   }
 
-  return true;
+  return activeCalendars.includes('my');
 }
 
 function showCalendarMessage(message) {
