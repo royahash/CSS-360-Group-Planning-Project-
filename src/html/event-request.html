@@ -65,40 +65,33 @@
           </label>
 
           <section class="poll-section">
-            <h2>Vote on Event Options</h2>
+  <h2>Vote on Event Options</h2>
+  <p class="helper-text">Add options for your friends to vote on. Separate multiple options with a comma.</p>
 
-            <div class="poll-category">
-              <h3>Date Options</h3>
-              <button type="button" class="poll-btn" data-category="date" data-option="Selected Event Date">
-                Selected Event Date
-              </button>
-              <p>Your date vote: <span id="dateVote">None</span></p>
-            </div>
+  <div class="poll-category">
+    <h3>Date Options</h3>
+    <input type="text" id="pollDates" placeholder="e.g. June 20, June 21"
+      style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; font-size:15px; font-family:inherit;">
+  </div>
 
-            <div class="poll-category">
-              <h3>Time Options</h3>
-              <button type="button" class="poll-btn" data-category="time" data-option="Selected Event Time">
-                Selected Event Time
-              </button>
-              <p>Your time vote: <span id="timeVote">None</span></p>
-            </div>
+  <div class="poll-category">
+    <h3>Time Options</h3>
+    <input type="text" id="pollTimes" placeholder="e.g. 6:00 PM, 8:00 PM"
+      style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; font-size:15px; font-family:inherit;">
+  </div>
 
-            <div class="poll-category">
-              <h3>Location Options</h3>
-              <button type="button" class="poll-btn" data-category="location" data-option="Selected Event Location">
-                Selected Event Location
-              </button>
-              <p>Your location vote: <span id="locationVote">None</span></p>
-            </div>
+  <div class="poll-category">
+    <h3>Location Options</h3>
+    <input type="text" id="pollLocations" placeholder="e.g. Sophia's house, The park"
+      style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; font-size:15px; font-family:inherit;">
+  </div>
 
-            <div class="poll-category">
-              <h3>Activity Options</h3>
-              <button type="button" class="poll-btn" data-category="activity" data-option="Main Event Activity">
-                Main Event Activity
-              </button>
-              <p>Your activity vote: <span id="activityVote">None</span></p>
-            </div>
-          </section>
+  <div class="poll-category">
+    <h3>Activity Options</h3>
+    <input type="text" id="pollActivities" placeholder="e.g. Board games, Movie night"
+      style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; font-size:15px; font-family:inherit;">
+  </div>
+</section>
 
           <button type="submit" class="card-btn">Send Event Request</button>
         </form>

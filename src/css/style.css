@@ -345,7 +345,7 @@ body {
   grid-template-columns: repeat(7, 1fr);
   gap: 10px;
   align-items: start;
-  grid-auto-rows: minmax(140px, auto);
+  grid-auto-rows: auto;
 }
 
 .calendar-day {
@@ -365,7 +365,7 @@ body {
 .calendar-header-day {
   font-weight: bold;
   text-align: center;
-  padding: 15px;
+  padding: 4px;
 }
 
 .day-number {
@@ -381,8 +381,9 @@ body {
 .empty-day {
   background: transparent;
   box-shadow: none;
-  min-height: 140px;
+  min-height: 0px;
   border: none;
+  padding: 0;
 }
 
 .calendar-event {
@@ -533,13 +534,13 @@ body {
 
 /* EVENT REQUEST CALENDAR CARDS */
 .calendar-event-card {
-  background-color: white;
   border: 1px solid #ddd;
   border-radius: 12px;
   padding: 12px;
   margin: 12px 0;
   text-align: left;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background-color: white;
 }
 
 .pending-event {

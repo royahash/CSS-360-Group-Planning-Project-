@@ -1,13 +1,5 @@
 const eventRequestForm = document.getElementById('eventRequestForm');
 const requestMessage = document.getElementById('requestMessage');
-const pollButtons = document.querySelectorAll('.poll-btn');
-
-const votes = {
-  date: 'None',
-  time: 'None',
-  location: 'None',
-  activity: 'None',
-};
 
 document.addEventListener('DOMContentLoaded', function () {
   loadFriendsIntoDropdown();
@@ -78,31 +70,6 @@ async function loadFriendsIntoDropdown() {
   }
 }
 
-pollButtons.forEach(function (button) {
-  button.addEventListener('click', function () {
-    const category = button.dataset.category;
-    const option = button.dataset.option;
-
-    votes[category] = option;
-
-    const voteDisplay = document.getElementById(category + 'Vote');
-
-    if (voteDisplay) {
-      voteDisplay.textContent = option;
-    }
-
-    const categoryButtons = document.querySelectorAll(
-      '.poll-btn[data-category="' + category + '"]',
-    );
-
-    categoryButtons.forEach(function (btn) {
-      btn.classList.remove('selected');
-    });
-
-    button.classList.add('selected');
-  });
-});
-
 if (eventRequestForm) {
   eventRequestForm.addEventListener('submit', async function (event) {
     event.preventDefault();
@@ -146,6 +113,14 @@ if (eventRequestForm) {
       return;
     }
 
+    const parsePoll = (id) => {
+      const val = document.getElementById(id)?.value || '';
+      return val
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+    };
+
     const eventRequestData = {
       title,
       startDate,
@@ -158,10 +133,10 @@ if (eventRequestForm) {
       reminderEnabled,
       reminderMinutesBefore: 30,
       pollOptions: {
-        dates: startDate ? [startDate] : [],
-        times: startTime ? [startTime] : [],
-        locations: location ? [location] : [],
-        activities: votes.activity !== 'None' ? [votes.activity] : [],
+        dates: parsePoll('pollDates'),
+        times: parsePoll('pollTimes'),
+        locations: parsePoll('pollLocations'),
+        activities: parsePoll('pollActivities'),
       },
     };
 
@@ -195,7 +170,6 @@ if (eventRequestForm) {
       );
 
       eventRequestForm.reset();
-      resetVotes();
 
       setTimeout(function () {
         window.location.href = 'calendar.html';
@@ -207,25 +181,6 @@ if (eventRequestForm) {
         'red',
       );
     }
-  });
-}
-
-function resetVotes() {
-  votes.date = 'None';
-  votes.time = 'None';
-  votes.location = 'None';
-  votes.activity = 'None';
-
-  ['date', 'time', 'location', 'activity'].forEach(function (category) {
-    const voteDisplay = document.getElementById(category + 'Vote');
-
-    if (voteDisplay) {
-      voteDisplay.textContent = 'None';
-    }
-  });
-
-  pollButtons.forEach(function (button) {
-    button.classList.remove('selected');
   });
 }
 

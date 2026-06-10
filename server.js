@@ -425,6 +425,7 @@ app.post('/api/events', async (req, res) => {
 
     res.status(201).json(newEvent);
   } catch (err) {
+    console.error('Save event error:', err.message, err.code);
     res.status(500).json({ error: 'Failed to save event' });
   }
 });
@@ -831,6 +832,55 @@ app.patch('/api/event-requests/:id/reminders', async (req, res) => {
   }
 });
 
+// Update an event request (creator only)
+app.patch('/api/event-requests/:id', async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+
+  try {
+    const eventRequest = await EventRequest.findById(req.params.id);
+
+    if (!eventRequest) {
+      return res.status(404).json({ error: 'Event request not found.' });
+    }
+
+    if (String(eventRequest.creatorUserId) !== String(req.user._id)) {
+      return res.status(403).json({ error: 'Only the creator can edit this event request.' });
+    }
+
+    const { title, startDate, startTime, location, description, pollOptions, newInvites } = req.body;
+
+    if (title) eventRequest.title = title;
+    if (startDate) eventRequest.startDate = startDate;
+    if (startTime !== undefined) eventRequest.startTime = startTime;
+    if (location !== undefined) eventRequest.location = location;
+    if (description !== undefined) eventRequest.description = description;
+    if (pollOptions) eventRequest.pollOptions = pollOptions;
+
+    // Add new friends by username, email, or displayName
+    if (newInvites && newInvites.length > 0) {
+      const newUsers = await User.find({
+        $or: newInvites.flatMap(invite => [
+          { username: invite },
+          { email: invite },
+          { displayName: invite }
+        ])
+      }).select('_id');
+
+      const newIds = newUsers.map(u => u._id.toString());
+      const existingIds = eventRequest.invitedUsers.map(id => id.toString());
+      const toAdd = newIds.filter(id => !existingIds.includes(id));
+      eventRequest.invitedUsers.push(...toAdd);
+    }
+
+    await eventRequest.save();
+
+    res.json({ message: 'Event request updated.', eventRequest });
+  } catch (error) {
+    console.error('Error updating event request:', error);
+    res.status(500).json({ error: 'Failed to update event request.' });
+  }
+});
+
 // Delete an event request
 app.delete('/api/event-requests/:id', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
@@ -860,21 +910,6 @@ app.delete('/api/event-requests/:id', async (req, res) => {
     res.status(500).json({
       error: 'Failed to delete event request.'
     });
-  }
-});
-
-// TEMPORARY DEBUG ROUTE - remove after demo
-app.get('/api/debug/user/:identifier', async (req, res) => {
-  try {
-    const { identifier } = req.params;
-    const user = await User.findOne({
-      $or: [{ username: identifier }, { email: identifier }, { displayName: identifier }]
-    }).select('username displayName email googleId createdAt');
-
-    if (!user) return res.json({ found: false });
-    res.json({ found: true, user });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
 });
 

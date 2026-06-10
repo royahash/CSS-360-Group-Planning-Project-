@@ -395,35 +395,68 @@ function showEventDetails(event) {
 
   const detailCard = document.createElement('div');
   detailCard.className = 'calendar-event-card';
-
-  if (event.status === 'pending') {
-    detailCard.classList.add('pending-event');
-  } else if (event.status === 'confirmed') {
-    detailCard.classList.add('confirmed-event');
-  } else if (event.status === 'declined') {
-    detailCard.classList.add('declined-event');
-  }
+  detailCard.style.cssText = 'background: white; border-left: 4px solid #ccc;';
 
   const title = event.title || 'Untitled Event';
   const date = event.startDate || event.date || 'No date listed';
-  const time = formatTime(event.startTime || event.time || 'No time listed');
+  const time = formatTime(event.startTime || event.time || '');
   const location = event.location || event.venue || 'No location listed';
   const description = event.description || '';
   const status = event.status || 'pending';
   const owner = event.owner || 'You';
   const isCreator = owner === 'You';
+  const isTicketmaster =
+    event.source === 'saved-event' || event.source === 'my-calendar';
+  const isFriendEvent =
+    event.source === 'friend-event' || event.source === 'friend-events';
+  const isEventRequest = event.source === 'event-request';
 
-  let sourceLabel = 'Saved Event';
-  if (event.source === 'event-request') sourceLabel = 'Event Request';
-  else if (event.source === 'friend-event' || event.source === 'friend')
-    sourceLabel = 'Friend Event';
+  let bannerBg = 'white';
+  let bannerBorder = '#ccc';
+  if (isEventRequest) {
+    bannerBg = status === 'confirmed' ? '#f1fff2' : '#fff8ed';
+    bannerBorder = status === 'confirmed' ? '#4caf50' : '#ff9800';
+  }
+  detailCard.style.cssText = `background: ${bannerBg}; border-left: 4px solid ${bannerBorder};`;
 
-  // Build responses summary for creator
+  // ── TICKETMASTER EVENT ─────────────────────────────────────────────
+  if (isTicketmaster || isFriendEvent) {
+    detailCard.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+        <h3 style="margin:0;">${escapeHTML(title)}</h3>
+        <p style="margin:0; white-space:nowrap;"><strong>Status:</strong> ${escapeHTML(status)}</p>
+      </div>
+      <div style="display:flex; gap:20px; margin-top:8px; flex-wrap:wrap; align-items:center;">
+        <p style="margin:0;"><strong>Date:</strong> ${escapeHTML(date)}</p>
+        <p style="margin:0;"><strong>Time:</strong> ${escapeHTML(time || 'No time listed')}</p>
+        <p style="margin:0;"><strong>Location:</strong> ${escapeHTML(location)}</p>
+      </div>
+      ${isFriendEvent ? `<p style="color:#666; font-size:13px; margin-top:4px;">From ${escapeHTML(owner)}'s calendar</p>` : ''}
+      ${event.ticketmasterId ? `<button id="eventDetailsBtn" class="card-btn" style="margin-top:10px;">Event Details</button>` : ''}
+    `;
+
+    calendarContainer.insertAdjacentElement('beforebegin', detailCard);
+
+    const detailsBtn = document.getElementById('eventDetailsBtn');
+    if (detailsBtn) {
+      detailsBtn.addEventListener('click', () => {
+        window.location.href = `/html/event.html?id=${event.ticketmasterId}`;
+      });
+    }
+    return;
+  }
+
+  // ── EVENT REQUEST ──────────────────────────────────────────────────
+  const createdByHTML = `<p style="color:#666; font-size:13px; margin-top:6px; margin-bottom:8px;">
+    ${isCreator ? 'Created by you' : `Created by ${escapeHTML(owner)}`}
+  </p>`;
+
+  // Responses summary for creator
   let responsesSummaryHTML = '';
-  if (isCreator && event.source === 'event-request') {
+  if (isCreator && isEventRequest) {
     const responses = event.responses || [];
     if (responses.length === 0) {
-      responsesSummaryHTML = `<p><em>No responses yet.</em></p>`;
+      responsesSummaryHTML = `<p style="margin-top:8px;"><em>No responses yet.</em></p>`;
     } else {
       const rows = responses.map((r) => {
         const name = escapeHTML(r.displayName || r.email || 'Someone');
@@ -432,7 +465,10 @@ function showEventDetails(event) {
         const voteStr = [votes.date, votes.time, votes.location, votes.activity]
           .filter(Boolean)
           .join(', ');
-        return `<li><strong>${name}</strong>: ${rs}${voteStr ? ` — voted: ${escapeHTML(voteStr)}` : ''}</li>`;
+        const responseLabel = rs === 'voted' ? 'voted' : rs;
+        const voteDisplay = voteStr ? `: ${escapeHTML(voteStr)}` : '';
+        const displayLabel = voteStr ? 'voted' : responseLabel;
+        return `<li><strong>${name}</strong>: ${displayLabel}${voteDisplay}</li>`;
       });
       responsesSummaryHTML = `
         <div class="poll-section">
@@ -442,36 +478,37 @@ function showEventDetails(event) {
     }
   }
 
-  // Confirm event button for creator
-  const confirmBtnHTML =
-    isCreator && event.source === 'event-request'
+  // Creator action buttons
+  const creatorActionsHTML =
+    isCreator && isEventRequest
       ? `
-    <div style="margin-top:10px;">
+    <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
       <button type="button" class="card-btn" id="confirmEventBtn">
-        ${status === 'confirmed' ? '✓ Event Confirmed' : 'Confirm Event for Everyone'}
+        ${status === 'confirmed' ? '✓ Confirmed' : 'Confirm Event'}
       </button>
+      <button type="button" class="card-btn" id="editEventBtn">Edit Event</button>
+      <button type="button" class="card-btn" id="deleteEventBtn" style="background:#ef9a9a;">Delete Event</button>
     </div>`
       : '';
 
   detailCard.innerHTML = `
-    <h3>${escapeHTML(title)}</h3>
-    <p style="color:#666; font-size:13px; margin-top:-4px; margin-bottom:8px;">
-      ${isCreator ? 'Created by you' : `Created by ${escapeHTML(owner)}`}
-    </p>
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+      <h3 style="margin:0; flex:1;">${escapeHTML(title)}</h3>
+      <p style="margin:0; white-space:nowrap;"><strong>Status:</strong> ${escapeHTML(status)}</p>
+    </div>
+    ${createdByHTML}
     <p><strong>Date:</strong> ${escapeHTML(date)}</p>
-    <p><strong>Time:</strong> ${escapeHTML(time)}</p>
+    <p><strong>Time:</strong> ${escapeHTML(formatTime(event.startTime || '') || 'No time listed')}</p>
     <p><strong>Location:</strong> ${escapeHTML(location)}</p>
-    <p><strong>Status:</strong> <span class="event-status">${escapeHTML(status)}</span></p>
-    <p><strong>Type:</strong> ${escapeHTML(sourceLabel)}</p>
     ${description ? `<p><strong>Description:</strong> ${escapeHTML(description)}</p>` : ''}
     ${responsesSummaryHTML}
-    ${confirmBtnHTML}
-    ${event.source === 'event-request' && event.canRespond ? buildPollHTML(event) : ''}
+    ${creatorActionsHTML}
+    ${isEventRequest && event.canRespond ? buildPollHTML(event) : ''}
   `;
 
   calendarContainer.insertAdjacentElement('beforebegin', detailCard);
 
-  // Confirm button listener (creator only)
+  // Confirm button
   const confirmBtn = document.getElementById('confirmEventBtn');
   if (confirmBtn && status !== 'confirmed') {
     confirmBtn.addEventListener('click', async () => {
@@ -483,7 +520,7 @@ function showEventDetails(event) {
           body: JSON.stringify({ status: 'confirmed' }),
         });
         if (res.ok) {
-          confirmBtn.textContent = '✓ Event Confirmed';
+          confirmBtn.textContent = '✓ Confirmed';
           confirmBtn.disabled = true;
           await loadCalendarEvents();
         }
@@ -493,14 +530,187 @@ function showEventDetails(event) {
     });
   }
 
-  if (event.source === 'event-request' && event.canRespond) {
+  // Edit button
+  const editBtn = document.getElementById('editEventBtn');
+  if (editBtn) {
+    editBtn.addEventListener('click', () => showEditModal(event));
+  }
+
+  // Delete button
+  const deleteBtn = document.getElementById('deleteEventBtn');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', async () => {
+      if (!confirm('Delete this event request? This cannot be undone.')) return;
+      try {
+        const res = await fetch(`/api/event-requests/${event.id}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+        if (res.ok) {
+          detailCard.remove();
+          await loadCalendarEvents();
+        }
+      } catch (err) {
+        console.error('Failed to delete event:', err);
+      }
+    });
+  }
+
+  if (isEventRequest && event.canRespond) {
     attachPollListeners(event);
   }
 }
 
+function showEditModal(event) {
+  const existing = document.getElementById('editEventModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'editEventModal';
+  modal.style.cssText = `
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4); z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+  `;
+
+  modal.innerHTML = `
+    <div style="background:white; border-radius:16px; padding:28px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto;">
+      <h2 style="color:red; margin-top:0;">Edit Event Request</h2>
+
+      <label><strong>Title</strong></label>
+      <input id="editTitle" type="text" value="${escapeHTML(event.title || '')}"
+        style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin:6px 0 14px; box-sizing:border-box; font-size:15px;">
+
+      <label><strong>Date</strong></label>
+      <input id="editDate" type="date" value="${escapeHTML(event.startDate || '')}"
+        style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin:6px 0 14px; box-sizing:border-box; font-size:15px;">
+
+      <label><strong>Time</strong></label>
+      <input id="editTime" type="time" value="${escapeHTML(event.startTime || '')}"
+        style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin:6px 0 14px; box-sizing:border-box; font-size:15px;">
+
+      <label><strong>Location</strong></label>
+      <input id="editLocation" type="text" value="${escapeHTML(event.location || '')}"
+        style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin:6px 0 14px; box-sizing:border-box; font-size:15px;">
+
+      <label><strong>Description</strong></label>
+      <textarea id="editDescription"
+        style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin:6px 0 14px; box-sizing:border-box; font-size:15px; resize:vertical; min-height:80px;"
+      >${escapeHTML(event.description || '')}</textarea>
+
+      <label><strong>Add More Friends</strong></label>
+      <p style="color:#666; font-size:13px; margin:2px 0 6px;">Enter usernames or emails, one per line</p>
+      <textarea id="editInviteMore"
+        placeholder="username1&#10;friend@email.com"
+        style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin:6px 0 14px; box-sizing:border-box; font-size:15px; resize:vertical; min-height:70px;"
+      ></textarea>
+
+      <label><strong>Poll Options</strong></label>
+      <p style="color:#666; font-size:13px; margin:2px 0 6px;">Comma separated options for each category (leave blank to skip)</p>
+
+      <label style="font-size:13px;">Date options</label>
+      <input id="editPollDates" type="text"
+        value="${escapeHTML((event.pollOptions?.dates || []).join(', '))}"
+        placeholder="e.g. 2026-06-20, 2026-06-21"
+        style="width:100%; padding:8px; border:1px solid #ddd; border-radius:8px; margin:4px 0 10px; box-sizing:border-box; font-size:14px;">
+
+      <label style="font-size:13px;">Time options</label>
+      <input id="editPollTimes" type="text"
+        value="${escapeHTML((event.pollOptions?.times || []).join(', '))}"
+        placeholder="e.g. 18:00, 20:00"
+        style="width:100%; padding:8px; border:1px solid #ddd; border-radius:8px; margin:4px 0 10px; box-sizing:border-box; font-size:14px;">
+
+      <label style="font-size:13px;">Location options</label>
+      <input id="editPollLocations" type="text"
+        value="${escapeHTML((event.pollOptions?.locations || []).join(', '))}"
+        placeholder="e.g. Sophia's house, The park"
+        style="width:100%; padding:8px; border:1px solid #ddd; border-radius:8px; margin:4px 0 10px; box-sizing:border-box; font-size:14px;">
+
+      <label style="font-size:13px;">Activity options</label>
+      <input id="editPollActivities" type="text"
+        value="${escapeHTML((event.pollOptions?.activities || []).join(', '))}"
+        placeholder="e.g. Board games, Movie night"
+        style="width:100%; padding:8px; border:1px solid #ddd; border-radius:8px; margin:4px 0 14px; box-sizing:border-box; font-size:14px;">
+
+      <p id="editModalMessage" style="margin:0;"></p>
+      <div style="display:flex; gap:10px; margin-top:8px;">
+        <button id="saveEditBtn" class="card-btn">Save Changes</button>
+        <button id="cancelEditBtn" class="card-btn" style="background:#eee; color:#333;">Cancel</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  document
+    .getElementById('cancelEditBtn')
+    .addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+
+  document.getElementById('saveEditBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('editModalMessage');
+
+    // Parse comma-separated poll options
+    const parseCsv = (id) =>
+      document
+        .getElementById(id)
+        .value.split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+    // Parse new friends to invite (one per line)
+    const newInvites = document
+      .getElementById('editInviteMore')
+      .value.split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const body = {
+      title: document.getElementById('editTitle').value.trim(),
+      startDate: document.getElementById('editDate').value,
+      startTime: document.getElementById('editTime').value,
+      location: document.getElementById('editLocation').value.trim(),
+      description: document.getElementById('editDescription').value.trim(),
+      pollOptions: {
+        dates: parseCsv('editPollDates'),
+        times: parseCsv('editPollTimes'),
+        locations: parseCsv('editPollLocations'),
+        activities: parseCsv('editPollActivities'),
+      },
+      newInvites,
+    };
+
+    if (!body.title || !body.startDate) {
+      msg.textContent = 'Title and date are required.';
+      msg.style.color = 'red';
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/event-requests/${event.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) throw new Error('Failed to update event.');
+      msg.textContent = 'Saved!';
+      msg.style.color = 'green';
+      setTimeout(() => {
+        modal.remove();
+        loadCalendarEvents();
+      }, 800);
+    } catch (err) {
+      msg.textContent = err.message;
+      msg.style.color = 'red';
+    }
+  });
+}
 function buildPollHTML(event) {
   const pollOptions = event.pollOptions || {};
-
   const dateOptions = pollOptions.dates || [];
   const timeOptions = pollOptions.times || [];
   const locationOptions = pollOptions.locations || [];
@@ -514,10 +724,10 @@ function buildPollHTML(event) {
       ${buildOptionGroup('location', 'Location Options', locationOptions)}
       ${buildOptionGroup('activity', 'Activity Options', activityOptions)}
       <div class="profile-actions">
-        <button type="button" class="card-btn" id="acceptRequestBtn">I&#39;ll Attend</button>
         <button type="button" class="card-btn" id="voteRequestBtn">Submit Vote</button>
-        <button type="button" class="card-btn" id="cantAttendBtn">Can&#39;t Attend</button>
         <button type="button" class="card-btn" id="noOptionsBtn">None of these options work</button>
+        <button type="button" class="card-btn" id="acceptRequestBtn">I&#39;ll Attend</button>
+        <button type="button" class="card-btn" id="cantAttendBtn" style="background:#ef9a9a;">Can&#39;t Attend</button>
       </div>
       <p id="calendarResponseMessage"></p>
     </div>
