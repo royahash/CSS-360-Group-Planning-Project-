@@ -341,11 +341,25 @@ function createCalendarEventElement(event) {
   const eventEl = document.createElement('div');
   eventEl.classList.add('calendar-event');
 
+  const source = event.source || event.calendarType || 'my';
+
+  if (source === 'event-request' || source === 'event-requests') {
+    eventEl.classList.add('request-event');
+  } else if (
+    source === 'friend' ||
+    source === 'friend-event' ||
+    source === 'friend-events'
+  ) {
+    eventEl.classList.add('friend-event');
+  } else {
+    eventEl.classList.add('my-event');
+  }
+
   const title = event.title || 'Untitled Event';
   const status = event.status || 'pending';
 
   eventEl.innerText = title;
-  eventEl.title = title; // shows full title on hover as tooltip
+  eventEl.title = title;
 
   if (status === 'pending') {
     eventEl.classList.add('pending-event');
