@@ -376,18 +376,22 @@ function createCalendarEventElement(event) {
   return eventEl;
 }
 
+function formatTime(timeStr) {
+  if (!timeStr || timeStr === 'No time listed') return timeStr;
+  const [hourStr, minuteStr] = timeStr.split(':');
+  const hour = parseInt(hourStr, 10);
+  const minute = minuteStr || '00';
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = hour % 12 || 12;
+  return `${hour12}:${minute} ${ampm}`;
+}
+
 function showEventDetails(event) {
   const existingDetail = document.querySelector('.calendar-event-card');
-
-  if (existingDetail) {
-    existingDetail.remove();
-  }
+  if (existingDetail) existingDetail.remove();
 
   const calendarContainer = getCalendarContainer();
-
-  if (!calendarContainer) {
-    return;
-  }
+  if (!calendarContainer) return;
 
   const detailCard = document.createElement('div');
   detailCard.className = 'calendar-event-card';
@@ -402,33 +406,92 @@ function showEventDetails(event) {
 
   const title = event.title || 'Untitled Event';
   const date = event.startDate || event.date || 'No date listed';
-  const time = event.startTime || event.time || 'No time listed';
+  const time = formatTime(event.startTime || event.time || 'No time listed');
   const location = event.location || event.venue || 'No location listed';
   const description = event.description || '';
   const status = event.status || 'pending';
   const owner = event.owner || 'You';
+  const isCreator = owner === 'You';
 
-  let source = 'Saved Event';
+  let sourceLabel = 'Saved Event';
+  if (event.source === 'event-request') sourceLabel = 'Event Request';
+  else if (event.source === 'friend-event' || event.source === 'friend')
+    sourceLabel = 'Friend Event';
 
-  if (event.source === 'event-request') {
-    source = 'Event Request';
-  } else if (event.source === 'friend-event' || event.source === 'friend') {
-    source = 'Friend Event';
+  // Build responses summary for creator
+  let responsesSummaryHTML = '';
+  if (isCreator && event.source === 'event-request') {
+    const responses = event.responses || [];
+    if (responses.length === 0) {
+      responsesSummaryHTML = `<p><em>No responses yet.</em></p>`;
+    } else {
+      const rows = responses.map((r) => {
+        const name = escapeHTML(r.displayName || r.email || 'Someone');
+        const rs = escapeHTML(r.responseStatus || '');
+        const votes = r.votes || {};
+        const voteStr = [votes.date, votes.time, votes.location, votes.activity]
+          .filter(Boolean)
+          .join(', ');
+        return `<li><strong>${name}</strong>: ${rs}${voteStr ? ` — voted: ${escapeHTML(voteStr)}` : ''}</li>`;
+      });
+      responsesSummaryHTML = `
+        <div class="poll-section">
+          <h4>Responses (${responses.length})</h4>
+          <ul style="margin:4px 0; padding-left:18px;">${rows.join('')}</ul>
+        </div>`;
+    }
   }
+
+  // Confirm event button for creator
+  const confirmBtnHTML =
+    isCreator && event.source === 'event-request'
+      ? `
+    <div style="margin-top:10px;">
+      <button type="button" class="card-btn" id="confirmEventBtn">
+        ${status === 'confirmed' ? '✓ Event Confirmed' : 'Confirm Event for Everyone'}
+      </button>
+    </div>`
+      : '';
 
   detailCard.innerHTML = `
     <h3>${escapeHTML(title)}</h3>
+    <p style="color:#666; font-size:13px; margin-top:-4px; margin-bottom:8px;">
+      ${isCreator ? 'Created by you' : `Created by ${escapeHTML(owner)}`}
+    </p>
     <p><strong>Date:</strong> ${escapeHTML(date)}</p>
     <p><strong>Time:</strong> ${escapeHTML(time)}</p>
     <p><strong>Location:</strong> ${escapeHTML(location)}</p>
     <p><strong>Status:</strong> <span class="event-status">${escapeHTML(status)}</span></p>
-    <p><strong>Source:</strong> ${escapeHTML(source)}</p>
-    <p><strong>Owner:</strong> ${escapeHTML(owner)}</p>
+    <p><strong>Type:</strong> ${escapeHTML(sourceLabel)}</p>
     ${description ? `<p><strong>Description:</strong> ${escapeHTML(description)}</p>` : ''}
+    ${responsesSummaryHTML}
+    ${confirmBtnHTML}
     ${event.source === 'event-request' && event.canRespond ? buildPollHTML(event) : ''}
   `;
 
   calendarContainer.insertAdjacentElement('beforebegin', detailCard);
+
+  // Confirm button listener (creator only)
+  const confirmBtn = document.getElementById('confirmEventBtn');
+  if (confirmBtn && status !== 'confirmed') {
+    confirmBtn.addEventListener('click', async () => {
+      try {
+        const res = await fetch(`/api/event-requests/${event.id}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ status: 'confirmed' }),
+        });
+        if (res.ok) {
+          confirmBtn.textContent = '✓ Event Confirmed';
+          confirmBtn.disabled = true;
+          await loadCalendarEvents();
+        }
+      } catch (err) {
+        console.error('Failed to confirm event:', err);
+      }
+    });
+  }
 
   if (event.source === 'event-request' && event.canRespond) {
     attachPollListeners(event);
@@ -446,18 +509,16 @@ function buildPollHTML(event) {
   return `
     <div class="poll-section">
       <h3>Respond to Event Request</h3>
-
-      ${buildOptionGroup('date', 'Date Vote', dateOptions)}
-      ${buildOptionGroup('time', 'Time Vote', timeOptions)}
-      ${buildOptionGroup('location', 'Location Vote', locationOptions)}
-      ${buildOptionGroup('activity', 'Activity Vote', activityOptions)}
-
+      ${buildOptionGroup('date', 'Date Options', dateOptions)}
+      ${buildOptionGroup('time', 'Time Options', timeOptions)}
+      ${buildOptionGroup('location', 'Location Options', locationOptions)}
+      ${buildOptionGroup('activity', 'Activity Options', activityOptions)}
       <div class="profile-actions">
-        <button type="button" class="card-btn" id="acceptRequestBtn">Accept</button>
+        <button type="button" class="card-btn" id="acceptRequestBtn">I&#39;ll Attend</button>
         <button type="button" class="card-btn" id="voteRequestBtn">Submit Vote</button>
-        <button type="button" class="card-btn" id="declineRequestBtn">Decline</button>
+        <button type="button" class="card-btn" id="cantAttendBtn">Can&#39;t Attend</button>
+        <button type="button" class="card-btn" id="noOptionsBtn">None of these options work</button>
       </div>
-
       <p id="calendarResponseMessage"></p>
     </div>
   `;
@@ -493,7 +554,8 @@ function buildOptionGroup(category, label, options) {
 function attachPollListeners(event) {
   const acceptBtn = document.getElementById('acceptRequestBtn');
   const voteBtn = document.getElementById('voteRequestBtn');
-  const declineBtn = document.getElementById('declineRequestBtn');
+  const cantAttendBtn = document.getElementById('cantAttendBtn');
+  const noOptionsBtn = document.getElementById('noOptionsBtn');
 
   if (acceptBtn) {
     acceptBtn.addEventListener('click', function () {
@@ -507,9 +569,16 @@ function attachPollListeners(event) {
     });
   }
 
-  if (declineBtn) {
-    declineBtn.addEventListener('click', function () {
+  if (cantAttendBtn) {
+    cantAttendBtn.addEventListener('click', function () {
       submitEventRequestResponse(event.id, 'declined');
+    });
+  }
+
+  if (noOptionsBtn) {
+    noOptionsBtn.addEventListener('click', function () {
+      // Voted with no selections — signals options need revisiting
+      submitEventRequestResponse(event.id, 'voted', {});
     });
   }
 }

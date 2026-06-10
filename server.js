@@ -863,6 +863,21 @@ app.delete('/api/event-requests/:id', async (req, res) => {
   }
 });
 
+// TEMPORARY DEBUG ROUTE - remove after demo
+app.get('/api/debug/user/:identifier', async (req, res) => {
+  try {
+    const { identifier } = req.params;
+    const user = await User.findOne({
+      $or: [{ username: identifier }, { email: identifier }, { displayName: identifier }]
+    }).select('username displayName email googleId createdAt');
+
+    if (!user) return res.json({ found: false });
+    res.json({ found: true, user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Ticketmaster Proxy ────────────────────────────────────────────────────
 app.get('/api/ticketmaster/events', async (req, res) => {
   try {
@@ -914,7 +929,7 @@ app.post('/api/friends/request', async (req, res) => {
   const { username } = req.body;
 
   try {
-    const targetUser = await User.findOne({ username });
+   const targetUser = await User.findOne({ $or: [{ username }, { email: username }, { displayName: username }] });
 
     if (!targetUser) return res.status(404).json({ error: 'User not found' });
 
@@ -927,15 +942,24 @@ app.post('/api/friends/request', async (req, res) => {
     }
 
     const existingRequest = await FriendRequest.findOne({
-      $or: [
-        { senderId: req.user._id, receiverId: targetUser._id },
-        { senderId: targetUser._id, receiverId: req.user._id }
-      ]
-    });
+  $or: [
+    { senderId: req.user._id, receiverId: targetUser._id },
+    { senderId: targetUser._id, receiverId: req.user._id }
+  ],
+  status: 'pending'
+});
 
-    if (existingRequest) {
-      return res.status(400).json({ error: 'Friend request already exists' });
-    }
+if (existingRequest) {
+  return res.status(400).json({ error: 'Friend request already exists' });
+}
+
+await FriendRequest.deleteMany({
+  $or: [
+    { senderId: req.user._id, receiverId: targetUser._id },
+    { senderId: targetUser._id, receiverId: req.user._id }
+  ],
+  status: { $in: ['declined', 'accepted'] }
+});
 
     const friendRequest = await FriendRequest.create({
       senderId: req.user._id,
