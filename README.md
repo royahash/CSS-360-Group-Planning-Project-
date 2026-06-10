@@ -200,3 +200,44 @@ The project is deployed to **Vercel** at:
 Environment variables for production are configured in the Vercel dashboard under Settings → Environment Variables. `NODE_ENV` is set to `production` in Vercel directly.
 
 ---
+## Using the App
+
+### Getting Started
+1. Visit https://css-360-group-planning-project.vercel.app
+2. Click **Sign Up** to create an account with a username, email, and password
+3. Select your event interest categories on the onboarding page and save
+
+### Browsing Events
+- The homepage shows upcoming local events from Ticketmaster
+- Use the **Search** bar to search by event name, category (e.g. Music, Sports), or US state code (e.g. WA)
+- Use **Soonest / Latest** to sort events
+- Use **Filter** to narrow by category
+- Click any event card to see full event details
+- Click **Save** on an event to add it to your calendar (button turns green when saved, click again to unsave)
+
+### Calendar
+- Click the calendar icon in the right sidebar to view your calendar
+- **Green events** are Ticketmaster events you saved
+- **Blue events** are events your friends saved
+- **Purple/orange events** are event requests created by you or your friends
+- Click any event to see its details
+- Use the **Calendars** panel on the left to show/hide each type
+- Use the **< >** arrows to navigate between months
+
+### Friends
+- Click the friends icon in the right sidebar
+- Type a friend's username or email in the **Add Friend** box and click Add
+- Incoming friend requests appear in the **Pending Requests** section — click ✓ to accept or ✗ to decline
+- Click **Calendar Events** next to a friend to see their saved events
+
+### Event Requests
+- Click the **+** icon in the right sidebar to create an event request
+- Fill in the event details and optionally add poll options (comma separated) for friends to vote on
+- Choose **Friends Only** to send to all friends, or **Selected Users** to pick specific friends
+- Submit — the event appears on your calendar as pending (orange)
+- Friends can click the event on their calendar to respond: **I'll Attend**, **Submit Vote**, **None of these options work**, or **Can't Attend**
+- As the creator, click the event on your calendar to see responses and confirm the event
+
+### Notes
+- Google sign-in is only available for UW Bothell (@uw.edu) accounts
+- Events shown are upcoming only — past events are filtered out
