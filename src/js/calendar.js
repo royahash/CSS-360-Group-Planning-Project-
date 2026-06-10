@@ -124,13 +124,13 @@ async function loadCalendarEvents() {
 
     currentUserId = currentUser.id;
 
-    const saved = await getSavedEvents(); // <-- use your existing API helper
-
-    if (!saved) {
+    const response = await fetch('/api/calendar-events', { credentials: 'include' });
+    if (!response.ok) {
       events = [];
       showCalendarMessage('Could not load events.');
       return;
     }
+    const saved = await response.json();
 
     isLoggedIn = true;
 
@@ -288,13 +288,29 @@ function renderMonth(calendarContainer) {
       </div>
     `;
 
-    events.forEach((event) => {
-      const eventDateRaw = event.startDate || event.date;
-      const eventDate = eventDateRaw?.split('T')[0]; // normalize ISO → YYYY-MM-DD
-      if (eventDate === date && shouldShowEvent(event)) {
-        day.appendChild(createCalendarEventElement(event));
-      }
+    const dayEvents = events.filter((event) => {
+  const eventDateRaw = event.startDate || event.date;
+  const eventDate = eventDateRaw?.split('T')[0];
+  return eventDate === date && shouldShowEvent(event);
+});
+
+const maxVisible = 4;
+dayEvents.slice(0, maxVisible).forEach((event) => {
+  day.appendChild(createCalendarEventElement(event));
+});
+
+if (dayEvents.length > maxVisible) {
+  const overflow = document.createElement('div');
+  overflow.className = 'calendar-overflow';
+  overflow.innerText = `+${dayEvents.length - maxVisible} more`;
+  overflow.addEventListener('click', () => {
+    dayEvents.slice(maxVisible).forEach((event) => {
+      day.insertBefore(createCalendarEventElement(event), overflow);
     });
+    overflow.remove();
+  });
+  day.appendChild(overflow);
+}
 
     calendarContainer.appendChild(day);
   }
@@ -318,6 +334,7 @@ function createCalendarEventElement(event) {
   const status = event.status || 'pending';
 
   eventEl.innerText = title;
+  eventEl.title = title; // shows full title on hover as tooltip
 
   if (status === 'pending') {
     eventEl.classList.add('pending-event');

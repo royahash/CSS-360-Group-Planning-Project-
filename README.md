@@ -12,7 +12,7 @@ The project is deployed to Vercel at: https://css-360-group-planning-project.ver
 
 ## Features
 
-- Browse real events from the Ticketmaster API
+- Browse real events from the Ticketmaster API (upcoming events only)
 - Search events by name, category, or US state
 - Sort events by soonest or latest
 - Save and unsave events to your personal calendar
@@ -20,6 +20,9 @@ The project is deployed to Vercel at: https://css-360-group-planning-project.ver
 - Select interest categories during onboarding (saved to your account)
 - Profile page showing your saved preferences
 - Submit event requests with group polling
+- Send, accept, decline, and remove friends by username or email
+- View friends' saved events on your shared calendar
+- Calendar displays your saved events, event requests, and friend events with color coding
 - Google OAuth login or email/password registration
 - Data persists across sessions — saved events and preferences tied to your account
 
@@ -86,7 +89,7 @@ All three should pass with no errors before submitting a pull request.
 npm test
 ```
 
-This runs all unit, integration, and smoke tests across 6 test suites. You should see all tests passing:
+This runs all unit, integration, and smoke tests across 7 test suites. You should see all tests passing:
 
 ```
 PASS tests/index.test.js
@@ -94,9 +97,10 @@ PASS tests/calendar.test.js
 PASS tests/poll.test.js
 PASS tests/events.test.js
 PASS tests/calendar.dom.test.js
+PASS tests/friends.test.js
 PASS tests/server.test.js
 
-Test Suites: 6 passed, 6 total
+Test Suites: 7 passed, 7 total
 ```
 
 To run a specific test file:

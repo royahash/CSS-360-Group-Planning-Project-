@@ -554,6 +554,16 @@ app.get('/api/calendar-events', async (req, res) => {
       .select('displayName username email')
       .lean();
 
+          const eventRequests = await EventRequest.find({
+      $or: [
+        { creatorUserId: req.user._id },
+        { invitedUsers: req.user._id }
+      ]
+    })
+      .populate('creatorUserId', 'username displayName email photo')
+      .populate('invitedUsers', 'username displayName email photo');
+
+
     const userMap = users.reduce((map, user) => {
       map[user._id.toString()] = user;
       return map;
