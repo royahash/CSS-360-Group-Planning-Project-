@@ -148,8 +148,8 @@ async function loadEventDetails() {
     // =========================
     saveBtn.addEventListener('click', async () => {
       await handleSaveEvent(event, saveBtn);
+      window.dispatchEvent(new Event('calendarUpdated'));
     });
-
     return;
   }
 

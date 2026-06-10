@@ -364,7 +364,7 @@ body {
 .calendar-header-day {
   font-weight: bold;
   text-align: center;
-  padding: 10px;
+  padding: 15px;
 }
 
 .day-number {
@@ -397,6 +397,22 @@ body {
   white-space: normal;
   word-break: break-word;
   overflow-wrap: break-word;
+}
+
+/* CALENDAR EVENT */
+.calendar-event.my-event {
+  background-color: #a5d6a7; /* green */
+  border-left: 5px solid #4caf50;
+}
+
+.calendar-event.request-event {
+  background-color: #ce93d8;
+  border-left: 5px solid #8e24aa;
+}
+
+.calendar-event.friend-event {
+  background-color: #90caf9;
+  border-left: 5px solid #1e88e5;
 }
 
 /* EVENT REQUEST FORM */

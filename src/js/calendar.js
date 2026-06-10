@@ -1,6 +1,8 @@
+/* global getSavedEvents */
+
 let events = [];
 let isLoggedIn = false;
-const DEV_BYPASS_LOGIN = false; // set false in production
+let currentUserId = null;
 
 const today = new Date();
 
@@ -10,6 +12,7 @@ let currentYear = today.getFullYear();
 // Maintains compatibility with existing calendar checkbox tests.
 // The live calendar UI now uses My Calendar, Event Requests, and Friend Events.
 const checkboxes = {
+<<<<<<< HEAD
   You: document.getElementById('check-you'),
   Alex: document.getElementById('check-alex'),
   Jordan: document.getElementById('check-jordan'),
@@ -17,6 +20,21 @@ const checkboxes = {
 
 let selectAllCheckbox = document.getElementById('check-all');
 let activeCalendars = ['You', 'Alex', 'Jordan'];
+=======
+  all: document.getElementById('check-all'),
+  my: document.getElementById('check-my-calendar'),
+  requests: document.getElementById('check-event-requests'),
+  friends: document.getElementById('check-friend-events'),
+};
+
+const selectAllCheckbox = checkboxes.all;
+
+let activeCalendars = {
+  my: true,
+  requests: true,
+  friends: true,
+};
+>>>>>>> 8a48f30e8d47a12eddc9b16ce632c52bba4e03a2
 
 document.addEventListener('DOMContentLoaded', function () {
   initializeMonthNavigation();
@@ -52,20 +70,44 @@ function initializeMonthNavigation() {
 }
 
 function initializeCheckboxListeners() {
+<<<<<<< HEAD
   if (!selectAllCheckbox) {
     selectAllCheckbox = document.querySelector('.calendar-select-all input[type="checkbox"]');
   }
 
   if (selectAllCheckbox) {
     selectAllCheckbox.addEventListener('change', toggleSelectAll);
+=======
+  const { all, my, requests, friends } = checkboxes;
+
+  if (!all || !my || !requests || !friends) return;
+
+  function syncState() {
+    activeCalendars = {
+      my: my.checked,
+      requests: requests.checked,
+      friends: friends.checked,
+    };
+
+    // Select All logic (derived state)
+    all.checked = my.checked && requests.checked && friends.checked;
+
+    renderCalendar();
+>>>>>>> 8a48f30e8d47a12eddc9b16ce632c52bba4e03a2
   }
 
-  Object.values(checkboxes).forEach(function (checkbox) {
-    if (checkbox) {
-      checkbox.addEventListener('change', togglePerson);
-    }
+  // SELECT ALL
+  all.addEventListener('change', () => {
+    const value = all.checked;
+
+    my.checked = value;
+    requests.checked = value;
+    friends.checked = value;
+
+    syncState();
   });
 
+<<<<<<< HEAD
   document.querySelectorAll('.calendar-sidebar label input[type="checkbox"]').forEach(function (checkbox) {
     checkbox.addEventListener('change', function () {
       if (!checkbox.closest('.calendar-select-all')) {
@@ -75,44 +117,86 @@ function initializeCheckboxListeners() {
   });
 
   updateActiveCalendars();
+=======
+  // INDIVIDUAL CHECKBOXES
+  [my, requests, friends].forEach((cb) => {
+    cb.addEventListener('change', syncState);
+  });
+}
+
+async function fetchCurrentUser() {
+  try {
+    const response = await fetch('/auth/me', {
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const user = await response.json();
+    return user;
+  } catch (err) {
+    console.error('Error fetching current user:', err);
+    return null;
+  }
+>>>>>>> 8a48f30e8d47a12eddc9b16ce632c52bba4e03a2
 }
 
 async function loadCalendarEvents() {
   try {
+<<<<<<< HEAD
     const response = await fetch('/api/calendar-events', {
       credentials: 'include'
     });
+=======
+    const currentUser = await fetchCurrentUser();
+>>>>>>> 8a48f30e8d47a12eddc9b16ce632c52bba4e03a2
 
-    if (response.status === 401) {
-      if (DEV_BYPASS_LOGIN) {
-        // DEV MODE: pretend we are logged in with empty events
-        isLoggedIn = true;
-        events = [];
-        renderCalendar();
-        return;
-      }
-
-      // PRODUCTION MODE: show login message
+    if (!currentUser) {
+      events = [];
       isLoggedIn = false;
-      showCalendarMessage('Please log in to view your calendar.');
+      showCalendarMessage('Please log in to view calendar events.');
       return;
     }
 
-    const data = await response.json();
+    currentUserId = currentUser.id;
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to load calendar events.');
+    const saved = await getSavedEvents(); // <-- use your existing API helper
+
+    if (!saved) {
+      events = [];
+      showCalendarMessage('Could not load events.');
+      return;
     }
 
     isLoggedIn = true;
-    events = Array.isArray(data) ? data : [];
+
+    // normalize dates so calendar can read them and classify ownership
+    events = saved.map((e) => {
+      const source = e.source ||
+        (String(e.userId) === String(currentUserId) ? 'my' : 'friend');
+
+      return {
+        ...e,
+        date: e.startDate || e.date,
+        source,
+        owner: e.owner || (source === 'friend' ? 'friend' : 'my'),
+      };
+    });
 
     renderCalendar();
+<<<<<<< HEAD
   } catch (error) {
     console.error('Calendar loading error:', error);
     showCalendarMessage(
       'Could not load calendar events. Please make sure the backend server is running.'
     );
+=======
+  } catch (err) {
+    console.error(err);
+    showCalendarMessage('Failed to load calendar events.');
+>>>>>>> 8a48f30e8d47a12eddc9b16ce632c52bba4e03a2
   }
 }
 
@@ -170,9 +254,13 @@ function togglePerson() {
 }
 
 function updateActiveCalendars() {
-  activeCalendars = Object.keys(checkboxes).filter(function (name) {
-    return checkboxes[name] && checkboxes[name].checked;
-  });
+  const { my, requests, friends } = checkboxes;
+
+  activeCalendars = {
+    my: !!my?.checked,
+    requests: !!requests?.checked,
+    friends: !!friends?.checked,
+  };
 
   renderCalendar();
 }
@@ -182,14 +270,19 @@ function renderCalendar() {
 
   if (!calendarContainer) return;
 
+<<<<<<< HEAD
 
   if (!isLoggedIn) return;
+=======
+  if (!isLoggedIn) {
+    calendarContainer.innerHTML = '';
+    return;
+  }
+>>>>>>> 8a48f30e8d47a12eddc9b16ce632c52bba4e03a2
 
   calendarContainer.innerHTML = '';
 
-  if (!events) {
-    events = [];
-  }
+  if (!Array.isArray(events)) events = [];
 
   renderMonth(calendarContainer);
 }
@@ -214,20 +307,11 @@ function renderMonth(calendarContainer) {
     'December',
   ];
 
-  monthLabel.textContent =
-    `${monthNames[currentMonth]} ${currentYear}`;
+  monthLabel.textContent = `${monthNames[currentMonth]} ${currentYear}`;
 
   calendarContainer.innerHTML = '';
 
-  const weekdays = [
-    'Sun',
-    'Mon',
-    'Tue',
-    'Wed',
-    'Thu',
-    'Fri',
-    'Sat',
-  ];
+  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   weekdays.forEach((dayName) => {
     const header = document.createElement('div');
@@ -239,23 +323,14 @@ function renderMonth(calendarContainer) {
     calendarContainer.appendChild(header);
   });
 
-  const firstDay = new Date(
-    currentYear,
-    currentMonth,
-    1
-  ).getDay();
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
 
-  const daysInMonth = new Date(
-    currentYear,
-    currentMonth + 1,
-    0
-  ).getDate();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
   for (let i = 0; i < firstDay; i++) {
     const emptyCell = document.createElement('div');
 
-    emptyCell.className =
-      'calendar-day empty-day';
+    emptyCell.className = 'calendar-day empty-day';
 
     calendarContainer.appendChild(emptyCell);
   }
@@ -266,6 +341,7 @@ function renderMonth(calendarContainer) {
     day.className = 'calendar-day';
 
     const date = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
+<<<<<<< HEAD
     day.innerHTML = `<strong>${dayNumber}</strong>`;
 
     events.forEach(function (event) {
@@ -304,6 +380,8 @@ function renderWeek(calendarContainer) {
       </strong>
     const date =
       `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
+=======
+>>>>>>> 8a48f30e8d47a12eddc9b16ce632c52bba4e03a2
 
     day.innerHTML = `
       <div class="day-number">
@@ -312,16 +390,10 @@ function renderWeek(calendarContainer) {
     `;
 
     events.forEach((event) => {
-      const eventDate =
-        event.startDate || event.date;
-
-      if (
-        eventDate === date &&
-        shouldShowEvent(event)
-      ) {
-        day.appendChild(
-          createCalendarEventElement(event)
-        );
+      const eventDateRaw = event.startDate || event.date;
+      const eventDate = eventDateRaw?.split('T')[0]; // normalize ISO → YYYY-MM-DD
+      if (eventDate === date && shouldShowEvent(event)) {
+        day.appendChild(createCalendarEventElement(event));
       }
     });
 
@@ -332,6 +404,16 @@ function renderWeek(calendarContainer) {
 function createCalendarEventElement(event) {
   const eventEl = document.createElement('div');
   eventEl.classList.add('calendar-event');
+
+  const source = event.source || 'my';
+
+  if (source === 'event-request') {
+    eventEl.classList.add('request-event');
+  } else if (source === 'friend') {
+    eventEl.classList.add('friend-event');
+  } else {
+    eventEl.classList.add('my-event');
+  }
 
   const title = event.title || 'Untitled Event';
   const status = event.status || 'pending';
@@ -347,7 +429,7 @@ function createCalendarEventElement(event) {
   }
 
   eventEl.addEventListener('click', function () {
-    showEventDetails(event);
+    window.location.href = `/html/event.html?id=${event.ticketmasterId}`;
   });
 
   return eventEl;
@@ -536,8 +618,9 @@ async function submitEventRequestResponse(eventRequestId, responseStatus, votes 
 }
 
 function shouldShowEvent(event) {
-  const owner = event.owner || 'You';
+  const source = event.source || 'my';
 
+<<<<<<< HEAD
   if (event.calendarType === 'my-calendar') {
     return isCalendarFilterChecked('My Calendar');
   }
@@ -553,8 +636,13 @@ function shouldShowEvent(event) {
   if (activeCalendars.length === 0) {
     return false;
   }
+=======
+  if (source === 'event-request') return activeCalendars.requests;
+  if (source === 'friend') return activeCalendars.friends;
+>>>>>>> 8a48f30e8d47a12eddc9b16ce632c52bba4e03a2
 
-  return activeCalendars.includes(owner);
+  // default: Ticketmaster saved events
+  return activeCalendars.my;
 }
 
 function isCalendarFilterChecked(labelText) {
@@ -617,3 +705,5 @@ if (typeof module !== 'undefined' && module.exports) {
     escapeHTML
   };
 }
+
+window.addEventListener('calendarUpdated', loadCalendarEvents);
