@@ -1,5 +1,3 @@
-/* global getSavedEvents */
-
 let currentView = 'month';
 let events = [];
 
