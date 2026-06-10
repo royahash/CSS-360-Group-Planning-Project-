@@ -89,6 +89,7 @@
     "convert-source-map": "^2.0.0",
     "cors": "^2.8.6",
     "cross-spawn": "^7.0.6",
+    "dayjs": "^1.11.21",
     "debug": "^4.4.3",
     "dedent": "^1.7.2",
     "deep-is": "^0.1.4",
@@ -140,6 +141,7 @@
     "imurmurhash": "^0.1.4",
     "inflight": "^1.0.6",
     "inherits": "^2.0.4",
+    "inngest": "^4.4.0",
     "is-arrayish": "^0.2.1",
     "is-extglob": "^2.1.1",
     "is-fullwidth-code-point": "^3.0.0",
@@ -180,6 +182,7 @@
     "mongodb": "^7.2.0",
     "mongoose": "^9.6.2",
     "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "resend": "^6.12.4"
   }
 }
