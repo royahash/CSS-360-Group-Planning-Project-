@@ -1,5 +1,3 @@
-// ── Friend Request API Functions ──────────────────────────────────────────
-
 /**
  * Send a friend request to a user by username
  * @param {string} username - The username of the user to add as friend
@@ -161,3 +159,27 @@ export async function getFriendEvents(userId) {
     throw err;
   }
 }
+
+/**
+ * Get interests/preferences for a specific friend
+ * @param {string} userId
+ * @returns {Promise<Array>}
+ */
+export async function getFriendInterests(userId) {
+  try {
+    const response = await fetch(`/api/friends/${userId}/interests`, {
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch friend interests');
+    }
+
+    return await response.json();
+  } catch (err) {
+    console.error('Error fetching friend interests:', err);
+    throw err;
+  }
+}
+
+
