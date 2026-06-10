@@ -1,5 +1,5 @@
 async function getSavedEvents() {
-  const response = await fetch('/api/events', {
+  const response = await fetch('/api/calendar-events', {
     credentials: 'include',
   });
   if (!response.ok) return [];
