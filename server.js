@@ -1066,6 +1066,24 @@ app.get('/api/friends/:userId/events', async (req, res) => {
   }
 });
 
+// GET a specific user's interests (preferences)
+app.get('/api/friends/:userId/interests', async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+
+  try {
+    const user = await User.findById(req.params.userId).select('preferences');
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(user.preferences || []);
+  } catch (err) {
+    console.error('Error fetching interests:', err);
+    res.status(500).json({ error: 'Failed to fetch interests' });
+  }
+});
+
 // ── Page Routes ───────────────────────────────────────────────────────────
 const pages = {
   '/': 'index.html',
