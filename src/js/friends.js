@@ -181,5 +181,3 @@ export async function getFriendInterests(userId) {
     throw err;
   }
 }
-
-

@@ -31,7 +31,7 @@ const inngest = new Inngest({
   id: "reminder-system",
   eventKey: process.env.INNGEST_EVENT_KEY || "local-key" 
 });
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 const schedule = [
     { name: "1 week", ms: 7 * 24 * 60 * 60 * 1000 },
@@ -78,6 +78,7 @@ const eventReminderWorkflow = inngest.createFunction(
                 const formattedDate = dayjs(eventDate).format('dddd, MMMM D, YYYY');
                 const formattedTime = dayjs(eventDate).format('h:mm A');
 
+                if (!resend) return { error: 'Resend not configured' };
                 return await resend.emails.send({
                     from: 'onboarding@resend.dev',
                     to: eventUsers[0].email,
@@ -535,9 +536,6 @@ app.get('/api/calendar-events', async (req, res) => {
       };
     });
 
-    const eventRequests = await EventRequest.find({
-      $or: [ { creatorUserId: req.user._id }, { invitedUsers: req.user._id } ]
-    }).lean();
 
     const requestCalendarEvents = eventRequests
       .map((eventRequest) => {

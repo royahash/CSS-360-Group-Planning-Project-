@@ -235,6 +235,7 @@ Environment variables for production are configured in the Vercel dashboard unde
 - Fill in the event details and optionally add poll options (comma separated) for friends to vote on
 - Choose **Friends Only** to send to all friends, or **Selected Users** to pick specific friends
 - Submit — the event appears on your calendar as pending (orange)
+- Click to send event reminders
 - Friends can click the event on their calendar to respond: **I'll Attend**, **Submit Vote**, **None of these options work**, or **Can't Attend**
 - As the creator, click the event on your calendar to see responses and confirm the event
 
