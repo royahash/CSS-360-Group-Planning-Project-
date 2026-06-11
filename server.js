@@ -130,7 +130,7 @@ const userSchema = new mongoose.Schema({
   googleId: { type: String, sparse: true },
   displayName: { type: String, default: '' },
   email: { type: String, default: '' },
-  username: { type: String, unique: true, sparse: true, default: undefined },
+  username: { type: String, default: '', unique: true, sparse: true },
   password: { type: String, default: '' },
   photo: { type: String, default: '' },
   preferences: { type: [String], default: [] },
@@ -150,7 +150,7 @@ const eventSchema = new mongoose.Schema({
   startTime: { type: String, default: '' },
   venue: { type: String, default: '' },
   city: { type: String, default: '' },
-  description: { type: String, default: '' },
+  description: { type: String, default: '' }
 });
 
 eventSchema.index({ ticketmasterId: 1, userId: 1 }, { unique: true });
@@ -229,7 +229,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
           googleId: profile.id,
           displayName: profile.displayName,
           email: profile.emails?.[0]?.value || '',
-          photo: profile.photos?.[0]?.value || '',
+          photo: profile.photos?.[0]?.value || ''
         });
       }
       return done(null, user);
@@ -282,7 +282,7 @@ app.get('/auth/me', (req, res) => {
     displayName: req.user.displayName,
     email: req.user.email,
     photo: req.user.photo,
-    preferences: req.user.preferences,
+    preferences: req.user.preferences
   });
 });
 
@@ -293,7 +293,14 @@ app.post('/auth/register', async (req, res) => {
     const existing = await User.findOne({ $or: [{ email }, { username }] });
     if (existing) return res.status(400).json({ error: 'Username or email already exists' });
     const hashed = await bcrypt.hash(password, 10);
-    const user = await User.create({ username, email, password: hashed, displayName: username });
+
+    const user = await User.create({
+      username,
+      email,
+      password: hashed,
+      displayName: username
+    });
+
     req.login(user, (err) => {
       if (err) return res.status(500).json({ error: 'Login after register failed' });
       res.json({ success: true, user: { displayName: user.displayName, email: user.email } });
@@ -349,6 +356,7 @@ app.post('/api/events', async (req, res) => {
     const newEvent = await Event.create({ ...req.body, userId: req.user._id });
     res.status(201).json(newEvent);
   } catch (err) {
+    console.error('Save event error:', err.message, err.code);
     res.status(500).json({ error: 'Failed to save event' });
   }
 });
@@ -373,11 +381,29 @@ app.post('/api/event-requests', async (req, res) => {
       reminderMinutesBefore, pollOptions
     } = req.body;
 
-    if (!title || !startDate) return res.status(400).json({ error: 'Event title and date are required.' });
+    if (!title || !startDate) {
+      return res.status(400).json({
+        error: 'Event title and date are required.'
+      });
+    }
 
-    const selectedInvitedUsers = Array.isArray(invitedUsers) ? invitedUsers.filter(Boolean) : [];
-    if (visibility === 'selected-users' && selectedInvitedUsers.length === 0) {
-      return res.status(400).json({ error: 'Selected-user events require at least one invited friend.' });
+    const currentUser = await User.findById(req.user._id).select('friends');
+
+    let selectedInvitedUsers = [];
+
+    if (visibility === 'selected-users') {
+      selectedInvitedUsers = Array.isArray(invitedUsers)
+        ? invitedUsers.filter(Boolean)
+        : [];
+
+      if (selectedInvitedUsers.length === 0) {
+        return res.status(400).json({
+          error: 'Selected-user events require at least one invited friend.'
+        });
+      }
+    } else {
+      // Friends Only sends the request to all current friends.
+      selectedInvitedUsers = currentUser?.friends || [];
     }
 
     const eventRequest = await EventRequest.create({
@@ -418,8 +444,15 @@ app.post('/api/event-requests', async (req, res) => {
         }
       });
     }
+    
+    const populatedEventRequest = await EventRequest.findById(eventRequest._id)
+      .populate('creatorUserId', 'username displayName email photo')
+      .populate('invitedUsers', 'username displayName email photo');
 
-    res.status(201).json({ message: 'Event request created successfully.', eventRequest });
+    res.status(201).json({
+      message: 'Event request created successfully.',
+      eventRequest: populatedEventRequest
+    });
   } catch (error) {
     console.error('Error creating event request:', error);
     res.status(500).json({ error: 'Failed to create event request.' });
@@ -441,27 +474,50 @@ app.get('/api/event-requests', async (req, res) => {
   }
 });
 
+// Get calendar events from saved events, event requests, and friends' saved events
 app.get('/api/calendar-events', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
   try {
-    const currentUser = await User.findById(req.user._id).lean();
-    const currentUserId = req.user._id.toString();
-    const friendIds = (currentUser?.friends || []).map((id) => id.toString());
-    const queryUserIds = [currentUserId, ...friendIds];
+    const currentUser = await User.findById(req.user._id)
+      .populate('friends', 'username displayName email photo');
 
-    const savedEvents = await Event.find({ userId: { $in: queryUserIds } }).lean();
-    const users = await User.find({ _id: { $in: queryUserIds } }).select('displayName username email').lean();
+    const friendIds = currentUser?.friends?.map((friend) => friend._id) || [];
 
-    const userMap = users.reduce((map, user) => {
-      map[user._id.toString()] = user;
-      return map;
-    }, {});
+    const savedEvents = await Event.find({ userId: req.user._id });
 
-    const savedCalendarEvents = savedEvents.map((event) => {
-      const ownerId = event.userId?.toString?.() || event.userId;
-      const isMine = ownerId === currentUserId;
-      const ownerUser = userMap[ownerId];
-      const ownerName = isMine ? 'You' : ownerUser?.displayName || ownerUser?.username || ownerUser?.email || 'Friend';
+    const friendSavedEvents = friendIds.length
+      ? await Event.find({ userId: { $in: friendIds } })
+      : [];
+
+    const eventRequests = await EventRequest.find({
+      $or: [
+        { creatorUserId: req.user._id },
+        { invitedUsers: req.user._id }
+      ]
+    })
+      .populate('creatorUserId', 'username displayName email photo')
+      .populate('invitedUsers', 'username displayName email photo')
+      .sort({ createdAt: -1 });
+
+    const savedCalendarEvents = savedEvents.map((event) => ({
+      id: event._id,
+      title: event.title,
+      startDate: event.startDate,
+      startTime: event.startTime || '',
+      location: event.venue || '',
+      city: event.city || '',
+      description: event.description || '',
+      status: 'confirmed',
+      source: 'saved-event',
+      calendarType: 'my-calendar',
+      owner: 'You',
+      ticketmasterId: event.ticketmasterId || ''
+    }));
+
+    const friendCalendarEvents = friendSavedEvents.map((event) => {
+      const friend = currentUser.friends.find((friendItem) => {
+        return String(friendItem._id) === String(event.userId);
+      });
 
       return {
         id: event._id,
@@ -472,8 +528,10 @@ app.get('/api/calendar-events', async (req, res) => {
         city: event.city || '',
         description: event.description || '',
         status: 'confirmed',
-        source: isMine ? 'my' : 'friend',
-        owner: ownerName
+        source: 'friend-event',
+        calendarType: 'friend-events',
+        owner: friend?.displayName || friend?.username || friend?.email || 'Friend',
+        ticketmasterId: event.ticketmasterId || ''
       };
     });
 
@@ -483,7 +541,7 @@ app.get('/api/calendar-events', async (req, res) => {
 
     const requestCalendarEvents = eventRequests
       .map((eventRequest) => {
-        const creatorId = eventRequest.creatorUserId._id || eventRequest.creatorUserId;
+        const creatorId = eventRequest.creatorUserId?._id || eventRequest.creatorUserId;
         const isCreator = String(creatorId) === String(req.user._id);
         const userResponse = eventRequest.responses.find((response) => String(response.userId) === String(req.user._id));
 
@@ -496,9 +554,9 @@ app.get('/api/calendar-events', async (req, res) => {
           id: eventRequest._id,
           title: eventRequest.title,
           startDate: eventRequest.startDate,
-          startTime: eventRequest.startTime,
-          location: eventRequest.location,
-          description: eventRequest.description,
+          startTime: eventRequest.startTime || '',
+          location: eventRequest.location || '',
+          description: eventRequest.description || '',
           visibility: eventRequest.visibility,
           invitedUsers: eventRequest.invitedUsers,
           invitedGroups: eventRequest.invitedGroups,
@@ -508,13 +566,22 @@ app.get('/api/calendar-events', async (req, res) => {
           status,
           pollOptions: eventRequest.pollOptions,
           responses: eventRequest.responses,
+          myResponse: userResponse || null,
           source: 'event-request',
-          owner: isCreator ? 'You' : eventRequest.creatorName
+          calendarType: 'event-requests',
+          owner: isCreator
+            ? 'You'
+            : eventRequest.creatorName || eventRequest.creatorUserId?.displayName || 'Friend',
+          canRespond: !isCreator
         };
       })
       .filter(Boolean);
 
-    res.json([...savedCalendarEvents, ...requestCalendarEvents]);
+    res.json([
+      ...savedCalendarEvents,
+      ...friendCalendarEvents,
+      ...requestCalendarEvents
+    ]);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch calendar events.' });
   }
@@ -550,7 +617,15 @@ app.patch('/api/event-requests/:id/respond', async (req, res) => {
     }
 
     await eventRequest.save();
-    res.json({ message: 'Response saved successfully.', eventRequest });
+
+    const populatedEventRequest = await EventRequest.findById(eventRequest._id)
+      .populate('creatorUserId', 'username displayName email photo')
+      .populate('invitedUsers', 'username displayName email photo');
+
+    res.json({
+      message: 'Response saved successfully.',
+      eventRequest: populatedEventRequest
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to save response.' });
   }
@@ -625,6 +700,56 @@ app.patch('/api/event-requests/:id/reminders', async (req, res) => {
   }
 });
 
+// Update an event request (creator only)
+app.patch('/api/event-requests/:id', async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+
+  try {
+    const eventRequest = await EventRequest.findById(req.params.id);
+
+    if (!eventRequest) {
+      return res.status(404).json({ error: 'Event request not found.' });
+    }
+
+    if (String(eventRequest.creatorUserId) !== String(req.user._id)) {
+      return res.status(403).json({ error: 'Only the creator can edit this event request.' });
+    }
+
+    const { title, startDate, startTime, location, description, pollOptions, newInvites } = req.body;
+
+    if (title) eventRequest.title = title;
+    if (startDate) eventRequest.startDate = startDate;
+    if (startTime !== undefined) eventRequest.startTime = startTime;
+    if (location !== undefined) eventRequest.location = location;
+    if (description !== undefined) eventRequest.description = description;
+    if (pollOptions) eventRequest.pollOptions = pollOptions;
+
+    // Add new friends by username, email, or displayName
+    if (newInvites && newInvites.length > 0) {
+      const newUsers = await User.find({
+        $or: newInvites.flatMap(invite => [
+          { username: invite },
+          { email: invite },
+          { displayName: invite }
+        ])
+      }).select('_id');
+
+      const newIds = newUsers.map(u => u._id.toString());
+      const existingIds = eventRequest.invitedUsers.map(id => id.toString());
+      const toAdd = newIds.filter(id => !existingIds.includes(id));
+      eventRequest.invitedUsers.push(...toAdd);
+    }
+
+    await eventRequest.save();
+
+    res.json({ message: 'Event request updated.', eventRequest });
+  } catch (error) {
+    console.error('Error updating event request:', error);
+    res.status(500).json({ error: 'Failed to update event request.' });
+  }
+});
+
+// Delete an event request
 app.delete('/api/event-requests/:id', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
   try {
@@ -644,8 +769,21 @@ app.get('/api/ticketmaster/events', async (req, res) => {
   try {
     const now = new Date().toISOString().split('.')[0] + 'Z';
     let url = `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${process.env.TICKETMASTER_API_KEY}&size=100&expand=venues&startDateTime=${now}`;
-    const allowed = ['sort', 'latlong', 'radius', 'unit', 'stateCode', 'classificationName', 'keyword', 'countryCode'];
-    allowed.forEach(param => { if (req.query[param]) url += `&${param}=${req.query[param]}`; });
+
+    const allowed = [
+      'sort',
+      'latlong',
+      'radius',
+      'unit',
+      'stateCode',
+      'classificationName',
+      'keyword',
+      'countryCode'
+    ];
+
+    allowed.forEach((param) => {
+      if (req.query[param]) url += `&${param}=${req.query[param]}`;
+    });
 
     const response = await fetch(url);
     const data = await response.json();
@@ -669,26 +807,51 @@ app.get('/api/ticketmaster/event/:id', async (req, res) => {
 // ── FRIEND ROUTES ─────────────────────────────────────────────────────────
 app.post('/api/friends/request', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+
   const { username } = req.body;
+
   try {
-    const targetUser = await User.findOne({ $or: [{ username }, { email: username }] });
+   const targetUser = await User.findOne({ $or: [{ username }, { email: username }, { displayName: username }] });
+
     if (!targetUser) return res.status(404).json({ error: 'User not found' });
-    if (targetUser._id.toString() === req.user._id.toString()) return res.status(400).json({ error: 'Cannot add yourself' });
-    if (req.user.friends.map(String).includes(targetUser._id.toString())) return res.status(400).json({ error: 'Already friends' });
+
+    if (targetUser._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ error: 'Cannot add yourself' });
+    }
+
+    if (req.user.friends.map(String).includes(targetUser._id.toString())) {
+      return res.status(400).json({ error: 'Already friends' });
+    }
 
     const existingRequest = await FriendRequest.findOne({
-      $or: [ { senderId: req.user._id, receiverId: targetUser._id }, { senderId: targetUser._id, receiverId: req.user._id } ],
-      status: 'pending'
-    });
-    if (existingRequest) return res.status(400).json({ error: 'Friend request already exists' });
+  $or: [
+    { senderId: req.user._id, receiverId: targetUser._id },
+    { senderId: targetUser._id, receiverId: req.user._id }
+  ],
+  status: 'pending'
+});
 
-    await FriendRequest.deleteMany({
-      $or: [ { senderId: req.user._id, receiverId: targetUser._id }, { senderId: targetUser._id, receiverId: req.user._id } ],
-      status: { $in: ['declined', 'accepted'] }
+if (existingRequest) {
+  return res.status(400).json({ error: 'Friend request already exists' });
+}
+
+await FriendRequest.deleteMany({
+  $or: [
+    { senderId: req.user._id, receiverId: targetUser._id },
+    { senderId: targetUser._id, receiverId: req.user._id }
+  ],
+  status: { $in: ['declined', 'accepted'] }
+});
+
+    const friendRequest = await FriendRequest.create({
+      senderId: req.user._id,
+      receiverId: targetUser._id
     });
 
-    const friendRequest = await FriendRequest.create({ senderId: req.user._id, receiverId: targetUser._id });
-    res.status(201).json({ message: 'Friend request sent', request: friendRequest });
+    res.status(201).json({
+      message: 'Friend request sent',
+      request: friendRequest
+    });
   } catch (err) {
     res.status(500).json({ error: 'Failed to send friend request' });
   }
@@ -713,9 +876,13 @@ app.post('/api/friends/accept/:senderId', async (req, res) => {
     friendRequest.status = 'accepted';
     await friendRequest.save();
 
-    const senderId = new mongoose.Types.ObjectId(req.params.senderId);
-    await User.findByIdAndUpdate(req.user._id, { $addToSet: { friends: senderId } });
-    await User.findByIdAndUpdate(req.params.senderId, { $addToSet: { friends: req.user._id } });
+    await User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { friends: req.params.senderId }
+    });
+
+    await User.findByIdAndUpdate(req.params.senderId, {
+      $addToSet: { friends: req.user._id }
+    });
 
     res.json({ message: 'Friend request accepted' });
   } catch (err) {
@@ -725,9 +892,21 @@ app.post('/api/friends/accept/:senderId', async (req, res) => {
 
 app.post('/api/friends/decline/:senderId', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+
   try {
-    const friendRequest = await FriendRequest.findOneAndDelete({ senderId: req.params.senderId, receiverId: req.user._id, status: 'pending' });
-    if (!friendRequest) return res.status(404).json({ error: 'Friend request not found' });
+    const friendRequest = await FriendRequest.findOne({
+      senderId: req.params.senderId,
+      receiverId: req.user._id,
+      status: 'pending'
+    });
+
+    if (!friendRequest) {
+      return res.status(404).json({ error: 'Friend request not found' });
+    }
+
+    friendRequest.status = 'declined';
+    await friendRequest.save();
+
     res.json({ message: 'Friend request declined' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to decline friend request' });
@@ -736,10 +915,10 @@ app.post('/api/friends/decline/:senderId', async (req, res) => {
 
 app.get('/api/friends', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+
   try {
-    const user = await User.findById(req.user._id);
-    const friends = await User.find({ _id: { $in: user.friends || [] } }).select('username displayName email photo');
-    res.json(friends);
+    const user = await User.findById(req.user._id).populate('friends', 'username displayName email photo');
+    res.json(user.friends || []);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch friends' });
   }
@@ -747,19 +926,16 @@ app.get('/api/friends', async (req, res) => {
 
 app.delete('/api/friends/:friendId', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+
   try {
-    const friendIdStr = req.params.friendId.toString();
-    const myIdStr = req.user._id.toString();
-    const currentUser = await User.findById(req.user._id);
-    
-    await User.updateOne({ _id: req.user._id }, { $set: { friends: currentUser.friends.filter(f => f.toString() !== friendIdStr) } });
-    const friendUser = await User.findById(req.params.friendId);
-    if (friendUser) {
-      await User.updateOne({ _id: req.params.friendId }, { $set: { friends: friendUser.friends.filter(f => f.toString() !== myIdStr) } });
-    }
-    await FriendRequest.findOneAndDelete({
-      $or: [ { senderId: req.user._id, receiverId: req.params.friendId }, { senderId: req.params.friendId, receiverId: req.user._id } ]
+    await User.findByIdAndUpdate(req.user._id, {
+      $pull: { friends: req.params.friendId }
     });
+
+    await User.findByIdAndUpdate(req.params.friendId, {
+      $pull: { friends: req.user._id }
+    });
+
     res.json({ message: 'Friend removed' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to remove friend' });
@@ -775,24 +951,68 @@ app.get('/api/friends/:userId/events', async (req, res) => {
   }
 });
 
-// ── PAGE ROUTES ───────────────────────────────────────────────────────────
+// GET a specific user's interests (preferences)
+app.get('/api/friends/:userId/interests', async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+
+  try {
+    const user = await User.findById(req.params.userId).select('preferences');
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(user.preferences || []);
+  } catch (err) {
+    console.error('Error fetching interests:', err);
+    res.status(500).json({ error: 'Failed to fetch interests' });
+  }
+});
+
+// ── Page Routes ───────────────────────────────────────────────────────────
 const pages = {
-  '/': 'index.html', '/index.html': 'index.html', '/html/index.html': 'index.html',
-  '/calendar': 'calendar.html', '/calendar.html': 'calendar.html', '/html/calendar.html': 'calendar.html',
-  '/profile': 'profile.html', '/profile.html': 'profile.html', '/html/profile.html': 'profile.html',
-  '/friends': 'friends.html', '/friends.html': 'friends.html', '/html/friends.html': 'friends.html',
-  '/onboarding': 'onboarding.html', '/onboarding.html': 'onboarding.html', '/html/onboarding.html': 'onboarding.html',
-  '/login': 'LogIn.html', '/login.html': 'LogIn.html', '/html/LogIn.html': 'LogIn.html',
-  '/signup': 'SignUp.html', '/signup.html': 'SignUp.html', '/html/SignUp.html': 'SignUp.html',
-  '/event': 'event.html', '/event.html': 'event.html', '/html/event.html': 'event.html',
-  '/event-request': 'event-request.html', '/event-request.html': 'event-request.html', '/html/event-request.html': 'event-request.html',
+  '/': 'index.html',
+  '/index.html': 'index.html',
+  '/html/index.html': 'index.html',
+
+  '/calendar': 'calendar.html',
+  '/calendar.html': 'calendar.html',
+  '/html/calendar.html': 'calendar.html',
+
+  '/profile': 'profile.html',
+  '/profile.html': 'profile.html',
+  '/html/profile.html': 'profile.html',
+
+  '/friends': 'friends.html',
+  '/friends.html': 'friends.html',
+  '/html/friends.html': 'friends.html',
+
+  '/onboarding': 'onboarding.html',
+  '/onboarding.html': 'onboarding.html',
+  '/html/onboarding.html': 'onboarding.html',
+
+  '/login': 'LogIn.html',
+  '/login.html': 'LogIn.html',
+  '/html/LogIn.html': 'LogIn.html',
+
+  '/signup': 'SignUp.html',
+  '/signup.html': 'SignUp.html',
+  '/html/SignUp.html': 'SignUp.html',
+
+  '/event': 'event.html',
+  '/event.html': 'event.html',
+  '/html/event.html': 'event.html',
+
+  '/event-request': 'event-request.html',
+  '/event-request.html': 'event-request.html',
+  '/html/event-request.html': 'event-request.html'
 };
 
 Object.entries(pages).forEach(([route, file]) => {
   app.get(route, (_req, res) => { res.sendFile(path.join(__dirname, 'src', 'html', file)); });
 });
 
-// ── SERVER ACTIVATION ─────────────────────────────────────────────────────
+// ── Start Server ──────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 
 if (process.env.MONGODB_URI) {

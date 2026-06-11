@@ -345,7 +345,7 @@ body {
   grid-template-columns: repeat(7, 1fr);
   gap: 10px;
   align-items: start;
-  grid-auto-rows: minmax(140px, auto);
+  grid-auto-rows: auto;
 }
 
 .calendar-day {
@@ -354,17 +354,18 @@ body {
   padding: 8px;
   min-height: 140px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   position: relative;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .calendar-header-day {
   font-weight: bold;
   text-align: center;
-  padding: 15px;
+  padding: 4px;
 }
 
 .day-number {
@@ -380,23 +381,38 @@ body {
 .empty-day {
   background: transparent;
   box-shadow: none;
-  min-height: 140px;
+  min-height: 0px;
   border: none;
+  padding: 0;
 }
 
 .calendar-event {
-  margin-top: 5px;
-  padding: 6px;
-  border-radius: 6px;
-  font-size: 12px;
+  margin-top: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
   cursor: pointer;
   color: #333;
   font-weight: 500;
   text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.6;
+  width: 100%;
+  box-sizing: border-box;
+}
 
-  white-space: normal;
-  word-break: break-word;
-  overflow-wrap: break-word;
+.calendar-overflow {
+  font-size: 11px;
+  color: #666;
+  cursor: pointer;
+  padding: 1px 4px;
+  margin-top: 2px;
+}
+
+.calendar-overflow:hover {
+  text-decoration: underline;
 }
 
 /* CALENDAR EVENT */
@@ -518,13 +534,13 @@ body {
 
 /* EVENT REQUEST CALENDAR CARDS */
 .calendar-event-card {
-  background-color: white;
   border: 1px solid #ddd;
   border-radius: 12px;
   padding: 12px;
   margin: 12px 0;
   text-align: left;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background-color: white;
 }
 
 .pending-event {
